@@ -5,23 +5,20 @@ channels:
   - conda-forge
 
 dependencies:
-  - dill>=0.3
-  - h5py>=2.10.0
+  - dill
+  - h5py
   - python=3.8
-  - jupyter
   - jupyterlab
   - matplotlib
-  - numba
-  - numpy>=1.16
+  - numpy>=1.19
   - numba>=0.43.1
   - pandas
   - pip
   - scikit-learn
-  - scipy
-  - sqlite=3.33.0
+  - scipy>=1.6
+  - sqlite
   - statsmodels
-  - mkl_fft=1.0.10
-  - mkl=2019.3
   - pip:
-      - "--editable=git+https://github.com/GiocomoLab/TwoPUtils"
+      - "--editable=/home/mplitt/repos/TwoPUtils/"
+      - "--editable=/home/mplitt/repos/suite2p/"
       - -e .
