@@ -122,7 +122,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                 masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
                                                                            self.trial_start_inds[mask],
                                                                            self.teleport_inds[mask],
-                                                                           min_pos=min_pos, mas_pos=max_pos,
+                                                                           min_pos=min_pos, max_pos=max_pos,
                                                                            bin_size=bin_size, **pc_kwargs)
 
                 d[key] = {'masks': masks, 'SI': SI, 'p': p}
