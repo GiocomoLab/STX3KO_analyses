@@ -111,6 +111,9 @@ class YMazeSession(TwoPUtils.sess.Session):
             self.place_cell_info.update({out_key: {}})
             d = self.place_cell_info[out_key]
 
+        if trial_mask is None:
+            trial_mask = np.ones(self.trial_start_inds.shape)>0
+
         if lr_split:
 
             lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
