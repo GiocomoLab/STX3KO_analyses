@@ -90,7 +90,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         lr = LinearRegression()
         for block in np.unique(self.trial_info['block_number']).tolist():
 
-            start_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0],
+            start_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0]
             stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
             print(start_ind, stop_ind)
 
