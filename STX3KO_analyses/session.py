@@ -51,7 +51,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         """
         lr_trial = np.zeros(self.teleport_inds.shape)
         for i, (start, stop) in enumerate(zip(self.trial_start_inds.tolist(), self.teleport_inds.tolist())):
-            lr_trial[i] = self.vr_data['LR'].iloc[start + 1]
+            lr_trial[i] = self.vr_data['LR'].iloc[start + 10]
         return lr_trial
 
     def add_pos_binned_trial_matrix(self, ts_name, pos_key='t', min_pos=6, max_pos=43, bin_size=1, mat_only=True,
@@ -74,7 +74,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                               mat_only=mat_only,
                                                               **trial_matrix_kwargs)
 
-    def neuropil_corrected_dff(self, Fkey, Fneukey, key_out=None, **dff_kwargs):
+    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', key_out=None, **dff_kwargs):
         """
 
         :return:
