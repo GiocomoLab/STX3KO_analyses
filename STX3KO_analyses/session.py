@@ -24,7 +24,6 @@ class YMazeSession(TwoPUtils.sess.Session):
 
         :return:
         """
-
         self.trial_info = {'block_number':self._get_block_number, 'LR':self._get_LR_trial}
         
     
@@ -89,9 +88,9 @@ class YMazeSession(TwoPUtils.sess.Session):
         Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
         dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
         lr = LinearRegression()
-        for block in np.unique(self.trial_info['block_number']):
+        for block in np.unique(self.trial_info['block_number']).tolist():
 
-            start_ind, stop_ind = self.trial_start_inds[self.trial_info['block_number']== block][0], \
+            start_ind, stop_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0], \
                                   self.teleport_inds[self.trial_info['block_number'] == block][-1]
             print(start_ind, stop_ind)
 
