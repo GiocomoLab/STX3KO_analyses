@@ -113,7 +113,7 @@ class YMazeSession(TwoPUtils.sess.Session):
 
         if lr_split:
 
-            lr_masks = {'left': (self.trial_inf0['LR'] == -1) * trial_mask,
+            lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
                         'right': (self.trial_info['LR'] == 1) * trial_mask}
             for key, mask in lr_masks.items():
                 masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
