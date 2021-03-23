@@ -54,7 +54,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             lr_trial[i] = self.vr_data['LR'].iloc[start + 10]
         return lr_trial
 
-    def add_pos_binned_trial_matrix(self, ts_name, pos_key='t', min_pos=6, max_pos=43, bin_size=1, mat_only=True,
+    def add_pos_binned_trial_matrix(self, ts_name, pos_key='t', min_pos=13, max_pos=43, bin_size=1, mat_only=True,
                                     **trial_matrix_kwargs):
         """
 
@@ -96,12 +96,15 @@ class YMazeSession(TwoPUtils.sess.Session):
                        self.timeseries[Fkey][cell, start_ind:stop_ind])
                 Freg[cell, start_ind:stop_ind] = self.timeseries[Fkey][cell, start_ind:stop_ind] - lr.predict(
                     self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T)
+
+            print('pre dff inds')
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
+
 
         self.add_timeseries(**{key_out: dff})
         self.add_pos_binned_trial_matrix(key_out)
 
-    def place_cells_calc(self, Fkey='F_dff', trial_mask=None, lr_split=True, out_key=None, min_pos=6, max_pos=43,
+    def place_cells_calc(self, Fkey='F_dff', trial_mask=None, lr_split=True, out_key=None, min_pos=13, max_pos=43,
                          bin_size=1, **pc_kwargs):
 
         # choose appropriate target dictionary
