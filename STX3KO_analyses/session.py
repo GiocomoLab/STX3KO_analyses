@@ -3,6 +3,8 @@ import scipy as sp
 from sklearn.linear_model import LinearRegression
 import TwoPUtils
 
+from suite2p.exctraction import dcnv
+
 
 class YMazeSession(TwoPUtils.sess.Session):
 
@@ -85,6 +87,7 @@ class YMazeSession(TwoPUtils.sess.Session):
 
         Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
         dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
+        spks = np.zeros(self.timeseries[Fkey].shape) * np.nan
         lr = LinearRegression()
         for block in np.unique(self.trial_info['block_number']).tolist():
 
@@ -102,9 +105,11 @@ class YMazeSession(TwoPUtils.sess.Session):
             dff[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:,start_ind:stop_ind], size=(1,7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
 
+            spks[:,start_ind:stop_ind] =  dcnv.oasis(dff[:,start_ind:stop_ind], 2000, self.s2p_ops['tau'], self.scan_info['frame_rate'])
 
-        self.add_timeseries(**{key_out: dff})
+        self.add_timeseries(**{key_out: dff, 'spks': spks})
         self.add_pos_binned_trial_matrix(key_out)
+        self.add_pos_binned_trial_matrix('spks')
 
     def place_cells_calc(self, Fkey='F_dff', trial_mask=None, lr_split=True, out_key=None, min_pos=13, max_pos=43,
                          bin_size=1, **pc_kwargs):
