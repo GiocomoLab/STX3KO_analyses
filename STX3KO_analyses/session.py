@@ -225,7 +225,7 @@ class MorphSession(TwoPUtils.sess.Session):
             morph_masks = {m: (self.trial_info['morph_shared'] == m) for m in [0, .25, .5, .75, 1]}
 
             for key, mask in morph_masks.items():
-                masks, si, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+                masks, si, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['pos'],
                                                                            self.trial_start_inds[mask],
                                                                            self.teleport_inds[mask],
                                                                            bin_size=bin_size, **pc_kwargs)
@@ -233,7 +233,7 @@ class MorphSession(TwoPUtils.sess.Session):
                 d[key] = {'masks': masks, 'SI': si, 'p': p}
         else:
 
-            masks, si, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+            masks, si, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['pos'],
                                                                        self.trial_start_inds,
                                                                        self.teleport_inds,
                                                                        min_pos=min_pos, mas_pos=max_pos,
