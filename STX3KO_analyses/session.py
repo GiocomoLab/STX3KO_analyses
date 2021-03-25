@@ -101,7 +101,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                     self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T)
 
             print('pre dff inds')
-            dff[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:,start_ind:stop_ind], size=(1,7))
+            Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:,start_ind:stop_ind], size=(1,7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
 
             spks[:,start_ind:stop_ind] =  dcnv.oasis(dff[:,start_ind:stop_ind], 2000, self.s2p_ops['tau'], self.scan_info['frame_rate'])
@@ -122,6 +122,123 @@ class YMazeSession(TwoPUtils.sess.Session):
 
         if trial_mask is None:
             trial_mask = np.ones(self.trial_start_inds.shape)>0
+
+        if lr_split:
+
+            lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
+                        'right': (self.trial_info['LR'] == 1) * trial_mask}
+            for key, mask in lr_masks.items():
+                masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+                                                                           self.trial_start_inds[mask],
+                                                                           self.teleport_inds[mask],
+                                                                           min_pos=min_pos, max_pos=max_pos,
+                                                                           bin_size=bin_size, **pc_kwargs)
+
+                d[key] = {'masks': masks, 'SI': SI, 'p': p}
+        else:
+            mask = trial_mask
+            masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+                                                                       self.trial_start_inds[mask],
+                                                                       self.teleport_inds[mask],
+                                                                       min_pos=min_pos, mas_pos=max_pos,
+                                                                       bin_size=bin_size, **pc_kwargs)
+            d.update({'masks': masks, 'SI': SI, 'p': p})
+
+
+class MorphSession(TwoPUtils.sess.Session):
+
+    def __init__(self, **kwargs):
+
+        """
+
+        :param self:
+        :param kwargs:
+        :return:
+        """
+        self.trial_info = None
+        self.place_cell_info = {}
+
+        super(MorphSession, self).__init__(**kwargs)
+
+    def get_trial_info(self):
+        """
+
+        :return:
+        """
+        self.trial_info = {'morph': self._get_morph()}
+
+    def _get_morph(self):
+        """
+
+        :return:
+        """
+        morph_trial = np.zeros(self.teleport_inds.shape)
+        for i, (start, stop) in enumerate(zip(self.trial_start_inds.tolist(), self.teleport_inds.tolist())):
+            morph_trial[i] = self.vr_data['LR'].iloc[start + 10]
+        return morph_trial
+
+    def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True,
+                                    **trial_matrix_kwargs):
+        """
+
+        :param ts_name:
+        :param pos_key:
+        :param min_pos:
+        :param max_pos:
+        :param bin_size:
+        :param mat_only:
+        :param trial_matrix_kwargs:
+        :return:
+        """
+        super(YMazeSession, self).add_pos_binned_trial_matrix(ts_name, pos_key,
+                                                              min_pos=min_pos,
+                                                              max_pos=max_pos,
+                                                              bin_size=bin_size,
+                                                              mat_only=mat_only,
+                                                              **trial_matrix_kwargs)
+
+    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', key_out=None, **dff_kwargs):
+        """
+
+        :return:
+        """
+        if key_out is None:
+            key_out = Fkey + '_dff'
+
+        Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
+        dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
+
+        lr = LinearRegression()
+
+        for cell in range(self.timeseries[Fkey].shape[0]):
+            lr.fit(self.timeseries[Fneukey][cell:cell + 1, :].T,
+                   self.timeseries[Fkey][cell, :])
+            Freg[cell, :] = self.timeseries[Fkey][cell, :] - lr.predict(
+                self.timeseries[Fneukey][cell:cell + 1, :].T)
+
+        print('pre dff inds')
+        dff = sp.ndimage.median_filter(Freg[:, start_ind:stop_ind], size=(1, 7))
+        dff[:, :] = TwoPUtils.utilities.dff(dff[:, :], **dff_kwargs)
+
+        spks = dcnv.oasis(dff, 2000, self.s2p_ops['tau'],
+                                                 self.scan_info['frame_rate'])
+
+        self.add_timeseries(**{key_out: dff, 'spks': spks})
+        self.add_pos_binned_trial_matrix(key_out)
+        self.add_pos_binned_trial_matrix('spks')
+
+    def place_cells_calc(self, Fkey='F_dff', trial_mask=None, lr_split=True, out_key=None, min_pos=13, max_pos=43,
+                         bin_size=1, **pc_kwargs):
+
+        # choose appropriate target dictionary
+        if out_key is None:
+            d = self.place_cell_info
+        else:
+            self.place_cell_info.update({out_key: {}})
+            d = self.place_cell_info[out_key]
+
+        if trial_mask is None:
+            trial_mask = np.ones(self.trial_start_inds.shape) > 0
 
         if lr_split:
 
