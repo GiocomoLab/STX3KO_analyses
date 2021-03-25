@@ -99,7 +99,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                     self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T)
 
             print('pre dff inds')
-            dff[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:,start_ind:stop_ind], size=(0,7))
+            dff[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:,start_ind:stop_ind], size=(1,7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
 
 
