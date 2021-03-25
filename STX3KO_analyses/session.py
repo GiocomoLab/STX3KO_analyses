@@ -5,6 +5,7 @@ import TwoPUtils
 
 from suite2p.extraction import dcnv
 
+
 class YMazeSession(TwoPUtils.sess.Session):
 
     def __init__(self, **kwargs):
@@ -101,10 +102,11 @@ class YMazeSession(TwoPUtils.sess.Session):
                     self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T)
 
             print('pre dff inds')
-            Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:,start_ind:stop_ind], size=(1,7))
+            Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:, start_ind:stop_ind], size=(1, 7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
 
-            spks[:,start_ind:stop_ind] =  dcnv.oasis(dff[:,start_ind:stop_ind], 2000, self.s2p_ops['tau'], self.scan_info['frame_rate'])
+            spks[:, start_ind:stop_ind] = dcnv.oasis(dff[:, start_ind:stop_ind], 2000, self.s2p_ops['tau'],
+                                                     self.scan_info['frame_rate'])
 
         self.add_timeseries(**{key_out: dff, 'spks': spks})
         self.add_pos_binned_trial_matrix(key_out)
@@ -121,7 +123,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             d = self.place_cell_info[out_key]
 
         if trial_mask is None:
-            trial_mask = np.ones(self.trial_start_inds.shape)>0
+            trial_mask = np.ones(self.trial_start_inds.shape) > 0
 
         if lr_split:
 
@@ -167,7 +169,7 @@ class MorphSession(TwoPUtils.sess.Session):
         """
 
         morph_shared, wall_jitter = self._get_morph()
-        self.trial_info = {'morph_shared': morph_shared, 'morph': morph_shared+wall_jitter}
+        self.trial_info = {'morph_shared': morph_shared, 'morph': morph_shared + wall_jitter}
 
     def _get_morph(self):
         """
@@ -180,25 +182,6 @@ class MorphSession(TwoPUtils.sess.Session):
             wall_jitter[i] = self.vr_data['wallJitter'].iloc[start + 10]
         return morph_trial, wall_jitter
 
-    # def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True,
-    #                                 **trial_matrix_kwargs):
-    #     """
-    #
-    #     :param ts_name:
-    #     :param pos_key:
-    #     :param min_pos:
-    #     :param max_pos:
-    #     :param bin_size:
-    #     :param mat_only:
-    #     :param trial_matrix_kwargs:
-    #     :return:
-    #     """
-    #     super(YMazeSession, self).add_pos_binned_trial_matrix(ts_name, pos_key,
-    #                                                           min_pos=min_pos,
-    #                                                           max_pos=max_pos,
-    #                                                           bin_size=bin_size,
-    #                                                           mat_only=mat_only,
-    #                                                           **trial_matrix_kwargs)
 
     def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', key_out=None, **dff_kwargs):
         """
@@ -219,17 +202,16 @@ class MorphSession(TwoPUtils.sess.Session):
             Freg[cell, :] = self.timeseries[Fkey][cell, :] - lr.predict(
                 self.timeseries[Fneukey][cell:cell + 1, :].T)
 
-
         dff = sp.ndimage.median_filter(Freg, size=(1, 7))
-        dff= TwoPUtils.utilities.dff(dff, **dff_kwargs)
+        dff = TwoPUtils.utilities.dff(dff, **dff_kwargs)
 
         spks = dcnv.oasis(dff, 2000, self.s2p_ops['tau'], self.scan_info['frame_rate'])
 
-        self.add_timeseries( **{key_out: dff, 'spks': spks})
+        self.add_timeseries(**{key_out: dff, 'spks': spks})
         self.add_pos_binned_trial_matrix(key_out, 'pos')
         self.add_pos_binned_trial_matrix('spks', 'pos')
 
-    def place_cells_calc(self, Fkey='F_dff', morph_split = True, out_key=None, bin_size=10, **pc_kwargs):
+    def place_cells_calc(self, Fkey='F_dff', morph_split=True, out_key=None, bin_size=10, **pc_kwargs):
 
         # choose appropriate target dictionary
         if out_key is None:
@@ -237,7 +219,6 @@ class MorphSession(TwoPUtils.sess.Session):
         else:
             self.place_cell_info.update({out_key: {}})
             d = self.place_cell_info[out_key]
-
 
         if morph_split:
 
