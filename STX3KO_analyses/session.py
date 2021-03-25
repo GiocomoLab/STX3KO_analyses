@@ -180,25 +180,25 @@ class MorphSession(TwoPUtils.sess.Session):
             wall_jitter[i] = self.vr_data['wallJitter'].iloc[start + 10]
         return morph_trial, wall_jitter
 
-    def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True,
-                                    **trial_matrix_kwargs):
-        """
-
-        :param ts_name:
-        :param pos_key:
-        :param min_pos:
-        :param max_pos:
-        :param bin_size:
-        :param mat_only:
-        :param trial_matrix_kwargs:
-        :return:
-        """
-        super(YMazeSession, self).add_pos_binned_trial_matrix(ts_name, pos_key,
-                                                              min_pos=min_pos,
-                                                              max_pos=max_pos,
-                                                              bin_size=bin_size,
-                                                              mat_only=mat_only,
-                                                              **trial_matrix_kwargs)
+    # def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True,
+    #                                 **trial_matrix_kwargs):
+    #     """
+    #
+    #     :param ts_name:
+    #     :param pos_key:
+    #     :param min_pos:
+    #     :param max_pos:
+    #     :param bin_size:
+    #     :param mat_only:
+    #     :param trial_matrix_kwargs:
+    #     :return:
+    #     """
+    #     super(YMazeSession, self).add_pos_binned_trial_matrix(ts_name, pos_key,
+    #                                                           min_pos=min_pos,
+    #                                                           max_pos=max_pos,
+    #                                                           bin_size=bin_size,
+    #                                                           mat_only=mat_only,
+    #                                                           **trial_matrix_kwargs)
 
     def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', key_out=None, **dff_kwargs):
         """
@@ -219,7 +219,7 @@ class MorphSession(TwoPUtils.sess.Session):
             Freg[cell, :] = self.timeseries[Fkey][cell, :] - lr.predict(
                 self.timeseries[Fneukey][cell:cell + 1, :].T)
 
-        print('pre dff inds')
+
         dff = sp.ndimage.median_filter(Freg, size=(1, 7))
         dff= TwoPUtils.utilities.dff(dff, **dff_kwargs)
 
