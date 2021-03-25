@@ -225,9 +225,9 @@ class MorphSession(TwoPUtils.sess.Session):
 
         spks = dcnv.oasis(dff, 2000, self.s2p_ops['tau'], self.scan_info['frame_rate'])
 
-        self.add_timeseries(**{key_out: dff, 'spks': spks})
-        self.add_pos_binned_trial_matrix(key_out)
-        self.add_pos_binned_trial_matrix('spks')
+        self.add_timeseries( **{key_out: dff, 'spks': spks})
+        self.add_pos_binned_trial_matrix(key_out, 'pos')
+        self.add_pos_binned_trial_matrix('spks', 'pos')
 
     def place_cells_calc(self, Fkey='F_dff', morph_split = True, out_key=None, bin_size=10, **pc_kwargs):
 
