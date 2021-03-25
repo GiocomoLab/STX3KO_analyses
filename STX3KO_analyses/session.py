@@ -88,7 +88,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
         dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
         spks = np.zeros(self.timeseries[Fkey].shape) * np.nan
-        lr = LinearRegression()
+        lr = LinearRegression(fit_intercept=False)
         for block in np.unique(self.trial_info['block_number']).tolist():
 
             start_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0]
@@ -101,7 +101,6 @@ class YMazeSession(TwoPUtils.sess.Session):
                 Freg[cell, start_ind:stop_ind] = self.timeseries[Fkey][cell, start_ind:stop_ind] - lr.predict(
                     self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T)
 
-            print('pre dff inds')
             Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:, start_ind:stop_ind], size=(1, 7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
 
@@ -182,7 +181,6 @@ class MorphSession(TwoPUtils.sess.Session):
             wall_jitter[i] = self.vr_data['wallJitter'].iloc[start + 10]
         return morph_trial, wall_jitter
 
-
     def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', key_out=None, **dff_kwargs):
         """
 
@@ -211,7 +209,7 @@ class MorphSession(TwoPUtils.sess.Session):
         self.add_pos_binned_trial_matrix(key_out, 'pos')
         self.add_pos_binned_trial_matrix('spks', 'pos')
 
-    def place_cells_calc(self, Fkey='F_dff', morph_split=True, out_key=None, bin_size=10, **pc_kwargs):
+    def place_cells_calc(self, Fkey='spks', morph_split=True, out_key=None, bin_size=10, **pc_kwargs):
 
         # choose appropriate target dictionary
         if out_key is None:
