@@ -3,8 +3,7 @@ import scipy as sp
 from sklearn.linear_model import LinearRegression
 import TwoPUtils
 
-from suite2p.exctraction import dcnv
-
+from suite2p.extraction import dcnv
 
 class YMazeSession(TwoPUtils.sess.Session):
 
