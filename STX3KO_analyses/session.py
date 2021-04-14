@@ -39,7 +39,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         self._get_pos2t_spline()
 
     @classmethod
-    def from_file(cls, filename):
+    def from_file(cls, filename, kwargs):
         '''
         initialize class from previous instance
 
@@ -47,7 +47,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         :return:
         '''
         with open(filename, 'rb') as file:
-            return cls(prev_sess=dill.load(file))
+            return cls(prev_sess=dill.load(file), **kwargs)
 
     def get_trial_info(self):
         """
