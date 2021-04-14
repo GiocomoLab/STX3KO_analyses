@@ -4,6 +4,7 @@ from sklearn.linear_model import LinearRegression
 import TwoPUtils
 
 from suite2p.extraction import dcnv
+from scipy.interpolate import interp1d as spline
 
 
 class YMazeSession(TwoPUtils.sess.Session):
@@ -17,9 +18,16 @@ class YMazeSession(TwoPUtils.sess.Session):
         :return:
         """
         self.trial_info = None
+        self.z2t_spline = None
+        self.t2z_spline = None
+        self.t2x_spline = None
+        self.rzone_early = None
+        self.rzone_late = None
         self.place_cell_info = {}
 
         super(YMazeSession, self).__init__(**kwargs)
+
+        self._get_pos2t_spline()
 
     def get_trial_info(self):
         """
@@ -57,6 +65,102 @@ class YMazeSession(TwoPUtils.sess.Session):
             lr_trial[i] = self.vr_data['LR'].iloc[start + 10]
         return lr_trial
 
+    def _get_pos2t_spline(self):
+        '''
+
+        :return:
+        '''
+        control_points = np.array([[0., .5, -70],
+                                   [0, .5, -25.],
+                                   [0, .5, -5],
+                                   [0, .5, 0],
+                                   [0, .5, 110],
+                                   [24.14, .5, 174.14],
+                                   [110.6, .5, 259.6],
+                                   [194.14, .5, 344.14]])
+        tvec = np.zeros([8, ])
+        for ind in range(1, 8):
+            tvec[ind] = self._get_t(tvec[ind - 1], control_points[ind - 1], control_points[ind])
+
+        t = np.linspace(6.71, 43.2, num=100)
+        trajectory = np.array([self._catmulrom(_t, tvec, control_points) for _t in t])
+
+        self.z2t_spline = spline(trajectory[:, 2], t)
+        self.t2x_spline = spline(t, trajectory[:, 0])
+        self.t2z_spline = spline(t, trajectory[:, 2])
+
+        self.rzone_early = {'xcenter': 31.6, 'zcenter': 181.6, 'scale': 25}
+        self.rzone_late = {'xcenter': 88.2, 'zcenter': 238.2, 'scale': 25}
+
+        self.rzone_early['zfront'] = self.rzone_early['zcenter'] - self.rzone_early['zcenter'] / self.rzone_early[
+            'scale'] / 2
+        self.rzone_early['zback'] = self.rzone_early['zfront'] + 25 / 2 ** .5
+        self.rzone_early.update({'tfront': self.z2t_spline(self.rzone_early['zfront']),
+                                 'tback': self.z2t_spline(self.rzone_early['zback'])})
+        self.rzone_early['t_antic'] = self.rzone_early['tfront'] - 5
+        self.rzone_early['z_antic'] = self.t2z_spline(self.rzone_early['t_antic'])
+
+        self.rzone_late['zfront'] = self.rzone_late['zcenter'] - self.rzone_late['zcenter'] / self.rzone_late[
+            'scale'] / 2
+        self.rzone_late['zback'] = self.rzone_late['zfront'] + 25 / 2 ** .5
+        self.rzone_late.update(
+            {'tfront': self.z2t_spline(self.rzone_late['zfront']), 'tback': self.z2t_spline(self.rzone_late['zback'])})
+        self.rzone_late['t_antic'] = self.rzone_late['tfront'] - 5
+
+    @staticmethod
+    def _get_t(t, p0, p1, alpha=.5):
+        '''
+
+        :param t:
+        :param p0:
+        :param p1:
+        :param alpha:
+        :return:
+        '''
+        a = (p0 - p1) ** 2
+        b = a.sum() ** (alpha * .5)
+        return b + t
+
+    @staticmethod
+    def _catmulrom(_t, tvec, control_points):
+        '''
+
+        :param _t:
+        :param tvec:
+        :param control_points:
+        :return:
+        '''
+        if tvec[1] <= _t < tvec[2]:
+            ind = 0
+        elif tvec[2] <= _t < tvec[3]:
+            ind = 1
+        elif tvec[3] <= _t < tvec[4]:
+            ind = 2
+        elif tvec[4] <= _t < tvec[5]:
+            ind = 3
+        elif tvec[5] <= _t < tvec[6]:
+            ind = 4
+        else:
+            _t = tvec[2]
+            ind = 1
+        #     print(ind)
+        p0 = control_points[ind, :]
+        p1 = control_points[ind + 1, :]
+        p2 = control_points[ind + 2, :]
+        p3 = control_points[ind + 3, :]
+
+        t0, t1, t2, t3 = tvec[ind], tvec[ind + 1], tvec[ind + 2], tvec[ind + 3]
+
+        a1 = (t1 - _t) / (t1 - t0) * p0 + (_t - t0) / (t1 - t0) * p1
+        a2 = (t2 - _t) / (t2 - t1) * p1 + (_t - t1) / (t2 - t1) * p2
+        a3 = (t3 - _t) / (t3 - t2) * p2 + (_t - t2) / (t3 - t2) * p3
+
+        b1 = (t2 - _t) / (t2 - t0) * a1 + (_t - t0) / (t2 - t0) * a2
+        b2 = (t3 - _t) / (t3 - t1) * a2 + (_t - t1) / (t3 - t1) * a3
+
+        c = (t2 - _t) / (t2 - t1) * b1 + (_t - t1) / (t2 - t1) * b2
+        return c
+
     def add_pos_binned_trial_matrix(self, ts_name, pos_key='t', min_pos=13, max_pos=43, bin_size=1, mat_only=True,
                                     **trial_matrix_kwargs):
         """
@@ -77,7 +181,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                               mat_only=mat_only,
                                                               **trial_matrix_kwargs)
 
-    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', key_out=None, **dff_kwargs):
+    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', Fneu_coef=.7, key_out=None, **dff_kwargs):
         """
 
         :return:
@@ -88,18 +192,20 @@ class YMazeSession(TwoPUtils.sess.Session):
         Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
         dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
         spks = np.zeros(self.timeseries[Fkey].shape) * np.nan
-        lr = LinearRegression(fit_intercept=False)
+        # lr = LinearRegression(fit_intercept=False)
         for block in np.unique(self.trial_info['block_number']).tolist():
-
             start_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0]
             stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
             print(start_ind, stop_ind)
 
-            for cell in range(self.timeseries[Fkey].shape[0]):
-                lr.fit(self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T,
-                       self.timeseries[Fkey][cell, start_ind:stop_ind])
-                Freg[cell, start_ind:stop_ind] = self.timeseries[Fkey][cell, start_ind:stop_ind] - lr.predict(
-                    self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T)
+            Freg[:, start_ind:stop_ind] = self.timeseries[Fkey][:, start_ind:stop_ind] - Fneu_coef * self.timeseries[
+                                                                                                         Fneukey][:,
+                                                                                                     start_ind:stop_ind]
+            # for cell in range(self.timeseries[Fkey].shape[0]):
+            #     # lr.fit(self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T,
+            #     #        self.timeseries[Fkey][cell, start_ind:stop_ind])
+            #     Freg[cell, start_ind:stop_ind] = self.timeseries[Fkey][cell, start_ind:stop_ind] - lr.predict(
+            #         self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T)
 
             Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:, start_ind:stop_ind], size=(1, 7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
@@ -192,7 +298,7 @@ class MorphSession(TwoPUtils.sess.Session):
         Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
         dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
 
-        lr = LinearRegression()
+        lr = LinearRegression(fit_intercept=False)
 
         for cell in range(self.timeseries[Fkey].shape[0]):
             lr.fit(self.timeseries[Fneukey][cell:cell + 1, :].T,
