@@ -40,7 +40,8 @@ class YMazeSession(TwoPUtils.sess.Session):
 
     @classmethod
     def from_file(cls, filename):
-        return cls(prev_sess=dill.load(filename))
+        with open(filename, 'rb') as file:
+            return cls(prev_sess=dill.load(file))
 
     def get_trial_info(self):
         """
