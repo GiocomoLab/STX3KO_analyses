@@ -68,7 +68,7 @@ KO_sessions = {'4467975.1': (({'date': '28_09_2020', 'scene': 'YMaze_LNovel', 's
 
                }
 
-KO_sessions_ravel = KO_sessions = {'4467975.1': ({'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3},
+KO_sessions_ravel = {'4467975.1': ({'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3},
                               {'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 6, 'scan': 14},
                              {'date': '29_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3},
                              {'date': '30_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 4},
