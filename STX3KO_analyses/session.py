@@ -40,6 +40,12 @@ class YMazeSession(TwoPUtils.sess.Session):
 
     @classmethod
     def from_file(cls, filename):
+        '''
+        initialize class from previous instance
+
+        :param filename:
+        :return:
+        '''
         with open(filename, 'rb') as file:
             return cls(prev_sess=dill.load(file))
 
@@ -108,7 +114,7 @@ class YMazeSession(TwoPUtils.sess.Session):
 
         self.rzone_early['zfront'] = self.rzone_early['zcenter'] - self.rzone_early['zcenter'] / self.rzone_early[
             'scale'] / 2
-        self.rzone_early['zback'] = self.rzone_early['zfront'] + 25 / 2 ** .5
+        self.rzone_early['zback'] = self.rzone_early['zfront'] + 25
         self.rzone_early.update({'tfront': self.z2t_spline(self.rzone_early['zfront']),
                                  'tback': self.z2t_spline(self.rzone_early['zback'])})
         self.rzone_early['t_antic'] = self.rzone_early['tfront'] - 5
@@ -116,10 +122,11 @@ class YMazeSession(TwoPUtils.sess.Session):
 
         self.rzone_late['zfront'] = self.rzone_late['zcenter'] - self.rzone_late['zcenter'] / self.rzone_late[
             'scale'] / 2
-        self.rzone_late['zback'] = self.rzone_late['zfront'] + 25 / 2 ** .5
+        self.rzone_late['zback'] = self.rzone_late['zfront'] + 25
         self.rzone_late.update(
             {'tfront': self.z2t_spline(self.rzone_late['zfront']), 'tback': self.z2t_spline(self.rzone_late['zback'])})
         self.rzone_late['t_antic'] = self.rzone_late['tfront'] - 5
+        self.rzone_late['z_antic'] = self.t2z_spline(self.rzone_late['t_antic'])
 
     @staticmethod
     def _get_t(t, p0, p1, alpha=.5):
@@ -206,7 +213,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
         dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
         spks = np.zeros(self.timeseries[Fkey].shape) * np.nan
-        # lr = LinearRegression(fit_intercept=False)
+        # lr = LinearRegression(fit_intercept=True)
         for block in np.unique(self.trial_info['block_number']).tolist():
             start_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0]
             stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
@@ -216,10 +223,10 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                                                                          Fneukey][:,
                                                                                                      start_ind:stop_ind]
             # for cell in range(self.timeseries[Fkey].shape[0]):
-            #     # lr.fit(self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T,
-            #     #        self.timeseries[Fkey][cell, start_ind:stop_ind])
+            #     lr.fit(self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T,
+            #            self.timeseries[Fkey][cell, start_ind:stop_ind])
             #     Freg[cell, start_ind:stop_ind] = self.timeseries[Fkey][cell, start_ind:stop_ind] - lr.predict(
-            #         self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T)
+            #         self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T) + lr.intercept_
 
             Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:, start_ind:stop_ind], size=(1, 7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
