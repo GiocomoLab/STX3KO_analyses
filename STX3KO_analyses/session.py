@@ -202,6 +202,10 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                               mat_only=mat_only,
                                                               **trial_matrix_kwargs)
 
+        if 'bin_edges' not in self.trial_matrices.keys() or 'bin_centers' not in self.trial_matrices.keys():
+            self.trial_matrices['bin_edges'] = np.arange(min_pos, max_pos + bin_size, bin_size)
+            self.trial_matrices['bin_centers'] = self.trial_matrices['bin_edges'][:-1] + bin_size / 2
+
     def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', Fneu_coef=.7, key_out=None, **dff_kwargs):
         """
 
