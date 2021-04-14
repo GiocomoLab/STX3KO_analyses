@@ -39,7 +39,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         self._get_pos2t_spline()
 
     @classmethod
-    def from_file(cls, filename, kwargs):
+    def from_file(cls, filename, **kwargs):
         '''
         initialize class from previous instance
 
