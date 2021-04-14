@@ -1,3 +1,4 @@
+import dill
 import numpy as np
 import scipy as sp
 from sklearn.linear_model import LinearRegression
@@ -8,6 +9,8 @@ from scipy.interpolate import interp1d as spline
 
 
 class YMazeSession(TwoPUtils.sess.Session):
+
+
 
     def __init__(self, prev_sess=None, **kwargs):
 
@@ -34,6 +37,10 @@ class YMazeSession(TwoPUtils.sess.Session):
         super(YMazeSession, self).__init__(**kwargs)
 
         self._get_pos2t_spline()
+
+    @classmethod
+    def from_file(cls, filename):
+        return cls(prev_sess=dill.load(filename))
 
     def get_trial_info(self):
         """
