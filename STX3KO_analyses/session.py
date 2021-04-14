@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d as spline
 
 class YMazeSession(TwoPUtils.sess.Session):
 
-    def __init__(self, **kwargs):
+    def __init__(self, prev_sess=None, **kwargs):
 
         """
 
@@ -24,6 +24,12 @@ class YMazeSession(TwoPUtils.sess.Session):
         self.rzone_early = None
         self.rzone_late = None
         self.place_cell_info = {}
+
+        if prev_sess is not None:
+            for attr in dir(prev_sess):
+                if not attr.startswith('__') and not callable(getattr(prev_sess, attr)):
+                    kwargs[attr] = getattr(prev_sess, attr)
+                    # setattr(self, attr, getattr(prev_sess, attr))
 
         super(YMazeSession, self).__init__(**kwargs)
 
