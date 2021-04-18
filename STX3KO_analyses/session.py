@@ -117,7 +117,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         self.rzone_early['zback'] = self.rzone_early['zfront'] + 25
         self.rzone_early.update({'tfront': self.z2t_spline(self.rzone_early['zfront']),
                                  'tback': self.z2t_spline(self.rzone_early['zback'])})
-        self.rzone_early['t_antic'] = self.rzone_early['tfront'] - 3
+        self.rzone_early['t_antic'] = self.rzone_early['tfront'] - 5
         self.rzone_early['z_antic'] = self.t2z_spline(self.rzone_early['t_antic'])
 
         self.rzone_late['zfront'] = self.rzone_late['zcenter'] - self.rzone_late['zcenter'] / self.rzone_late[
@@ -125,7 +125,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         self.rzone_late['zback'] = self.rzone_late['zfront'] + 25
         self.rzone_late.update(
             {'tfront': self.z2t_spline(self.rzone_late['zfront']), 'tback': self.z2t_spline(self.rzone_late['zback'])})
-        self.rzone_late['t_antic'] = self.rzone_late['tfront'] - 3
+        self.rzone_late['t_antic'] = self.rzone_late['tfront'] - 5
         self.rzone_late['z_antic'] = self.t2z_spline(self.rzone_late['t_antic'])
 
     @staticmethod
