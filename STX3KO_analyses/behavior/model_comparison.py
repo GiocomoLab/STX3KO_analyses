@@ -4,28 +4,7 @@ from .. import ymaze_sess_deets, session
 from . import trial_metrics
 
 
-def _combine_sessions(trial_info_list):
-    '''
 
-    :param trial_info_list:
-    :return:
-    '''
-    combined_dict = {}
-    for k, v in trial_info_list[0].items():
-        combined_dict[k] = [v]
-
-    for i, _dicts in enumerate(trial_info_list[1:]):
-        for k, v in _dicts.items():
-            if k == 'block_number':
-                #                 print(trial_info_list[i]['block_number'][-1])
-                combined_dict[k].append(v + trial_info_list[i]['block_number'][-1] + 1)
-            else:
-                combined_dict[k].append(v)
-
-    for k, v in combined_dict.items():
-        combined_dict[k] = np.concatenate(combined_dict[k])
-
-    return combined_dict
 
 
 
@@ -36,6 +15,29 @@ def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
     :param pklbase:
     :return:
     '''
+
+    def combine_sessions(trial_info_list):
+        '''
+
+        :param trial_info_list:
+        :return:
+        '''
+        combined_dict = {}
+        for k, v in trial_info_list[0].items():
+            combined_dict[k] = [v]
+
+        for i, _dicts in enumerate(trial_info_list[1:]):
+            for k, v in _dicts.items():
+                if k == 'block_number':
+                    #                 print(trial_info_list[i]['block_number'][-1])
+                    combined_dict[k].append(v + trial_info_list[i]['block_number'][-1] + 1)
+                else:
+                    combined_dict[k].append(v)
+
+        for k, v in combined_dict.items():
+            combined_dict[k] = np.concatenate(combined_dict[k])
+
+        return combined_dict
 
     def build_dict(sessions_dict):
         out_dict = {}
@@ -58,7 +60,7 @@ def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
                         trial_matrices = {k: sess.trial_matrices[k] for k in keys}
 
                         sess_list.append({**_deets, **sess.trial_info, **trial_matrices})
-                    combined = _combine_sessions(sess_list)
+                    combined = combine_sessions(sess_list)
                     out_dict[mouse].append({**combined, 'trial_number': np.arange(combined['LR'].shape[0])})
                 else:
 
