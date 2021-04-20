@@ -1,7 +1,18 @@
 import os
 import numpy as np
+from itertools import combinations
 from .. import ymaze_sess_deets, session
 from . import trial_metrics
+
+
+def generate_perms(mouse_list0, mouse_list1):
+    allmice = mouse_list0 + mouse_list1
+    perms = []
+    for l0 in combinations(allmice, len(mouse_list0)):
+        if not (set(l0) == set(mouse_list0) or set(l0) == set(mouse_list1)):
+            l1 = [m for m in allmice if m not in l0]
+            perms.append((l0, l1))
+    return perms
 
 
 def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
@@ -104,7 +115,7 @@ def pick_best_model(ll_cv, pval, p_thresh=.01, llr_thresh=1):
     onep_pval = pval[onep_inds]
 
     best_onep_ind = np.argmax(onep_LLR)
-    if (onep_pval[best_onep_ind] < .01) and onep_LLR[best_onep_ind] > 5:
+    if (onep_pval[best_onep_ind] < p_thresh) and onep_LLR[best_onep_ind] > llr_thresh:
 
         if best_onep_ind == 0:
             twop_inds = [3, 5]
@@ -125,7 +136,7 @@ def pick_best_model(ll_cv, pval, p_thresh=.01, llr_thresh=1):
 
         assert isinstance(twop_LLR, object)
         best_twop_ind = np.argmax(twop_LLR)
-        if (twop_LLR[best_twop_ind] > 5) and (twop_pval[best_twop_ind] < .01):
+        if (twop_LLR[best_twop_ind] > llr_thresh) and (twop_pval[best_twop_ind] < p_thresh):
 
             threep_LLR = ll_cv[-1] - ll_cv[twop_inds[best_twop_ind]]
             if (threep_LLR > 5) and (pval[-1] < .01):

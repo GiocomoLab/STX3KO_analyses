@@ -190,7 +190,7 @@ def bic(y, yhat, k):
     :return: bic,
 
     '''
-    return k * np.log(y.shape[0]) - 2. * squared_error_log_likelihood(y, yhat, k) / np.log(np.e)
+    return k * np.log(y.shape[0]) - 2. * squared_error_log_likelihood(y, yhat, k) / np.log10(np.e)
 
 
 def fit_models(x, y, crossval=False, n_folds = 10):
