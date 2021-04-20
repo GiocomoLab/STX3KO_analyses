@@ -4,10 +4,6 @@ from .. import ymaze_sess_deets, session
 from . import trial_metrics
 
 
-
-
-
-
 def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
     '''
 
@@ -41,9 +37,9 @@ def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
 
     def build_dict(sessions_dict):
         out_dict = {}
-        keys = ['antic_licks', 'speed', 'antic_speed', 'bin_edges'] # keys to save
+        keys = ['antic_licks', 'speed', 'antic_speed']  # keys to save
         for mouse, sessions in sessions_dict.items():
-            print(sessions)
+            # print(sessions)
             pkldir = os.path.join(pklbase, mouse)
             out_dict[mouse] = []
             for deets in sessions:
@@ -72,14 +68,14 @@ def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
                     trial_metrics.single_trial_lick_metrics(sess)
                     trial_matrices = {k: sess.trial_matrices[k] for k in keys}
                     out_dict[mouse].append({**deets, **sess.trial_info, **trial_matrices,
-                                               'trial_number': np.arange(sess.trial_info['LR'].shape[0])})
+                                            'trial_number': np.arange(sess.trial_info['LR'].shape[0])})
 
         return out_dict
 
     return build_dict(ymaze_sess_deets.KO_sessions), build_dict(ymaze_sess_deets.CTRL_sessions)
 
 
-def pick_best_model(ll_cv, pval, p_thresh = .01, llr_thresh=1):
+def pick_best_model(ll_cv, pval, p_thresh=.01, llr_thresh=1):
     '''
 
 
@@ -90,7 +86,6 @@ def pick_best_model(ll_cv, pval, p_thresh = .01, llr_thresh=1):
     :return:
     '''
 
-
     # first stage
     # M0 baseline model
     # M1 groupwise intercept
@@ -100,8 +95,6 @@ def pick_best_model(ll_cv, pval, p_thresh = .01, llr_thresh=1):
     # M5 groupwise intercept and asymptote
     # M6 groupwise slope and asymptote
     # M7 groupwise intercept, slope, and asymptote
-
-
 
     onep_inds = [1, 2, 4]
     onep_LLR = ll_cv[onep_inds] - ll_cv[0]
