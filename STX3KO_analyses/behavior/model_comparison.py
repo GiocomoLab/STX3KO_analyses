@@ -31,6 +31,7 @@ def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
                     combined_dict[k].append(v)
 
         for k, v in combined_dict.items():
+            print(k,v)
             combined_dict[k] = np.concatenate(combined_dict[k])
 
         return combined_dict
