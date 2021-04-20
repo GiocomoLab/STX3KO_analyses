@@ -42,7 +42,7 @@ def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
     def build_dict(sessions_dict):
         out_dict = {}
         keys = ['antic_licks', 'speed', 'antic_speed', 'bin_edges'] # keys to save
-        for mouse, sessions in sessions_dict:
+        for mouse, sessions in sessions_dict.items():
             print(sessions)
             pkldir = os.path.join(pklbase, mouse)
             out_dict[mouse] = []
