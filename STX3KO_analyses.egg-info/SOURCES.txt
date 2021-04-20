@@ -1,9 +1,17 @@
 README.md
 setup.py
 STX3KO_analyses/__init__.py
+STX3KO_analyses/morph_sess_deets.py
 STX3KO_analyses/preprocessing.py
+STX3KO_analyses/session.py
 STX3KO_analyses/utilities.py
+STX3KO_analyses/ymaze_sess_deets.py
 STX3KO_analyses.egg-info/PKG-INFO
 STX3KO_analyses.egg-info/SOURCES.txt
 STX3KO_analyses.egg-info/dependency_links.txt
 STX3KO_analyses.egg-info/top_level.txt
+STX3KO_analyses/behavior/__init__.py
+STX3KO_analyses/behavior/model_comparison.py
+STX3KO_analyses/behavior/models.py
+STX3KO_analyses/behavior/run_model_comparisons.py
+STX3KO_analyses/behavior/trial_metrics.py
