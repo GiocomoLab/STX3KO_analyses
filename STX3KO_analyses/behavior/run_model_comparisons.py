@@ -87,7 +87,7 @@ def run_model_comparisons_familiar(ko_sessions, ctrl_sessions, metric):
         for p, (l0, l1) in enumerate(perms):
             if p % 50 == 0:
                 print('perm', p)
-            _, _, _, _, _ll_cv = fam_run_fit(all_sessions, ko_mice, ctrl_mice, metric, day, crossval=True)
+            _, _, _, _, _ll_cv = fam_run_fit(all_sessions, l0, l1, metric, day, crossval=True)
             perm_ll.append(_ll_cv)
 
         perm_ll = np.array(perm_ll)
