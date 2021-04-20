@@ -2,7 +2,7 @@ import os
 import numpy as np
 from itertools import combinations
 from .. import ymaze_sess_deets, session
-from . import trial_metrics
+from . import trial_metrics, models
 
 
 def generate_perms(mouse_list0, mouse_list1):
@@ -109,7 +109,7 @@ def pick_best_model(ll_cv, pval, p_thresh=.01, llr_thresh=1):
     # M5 groupwise intercept and asymptote
     # M6 groupwise slope and asymptote
     # M7 groupwise intercept, slope, and asymptote
-
+    m_list = [models.m0, models.m1, models.m2, models.m3, models.m4, models.m5, models.m6, models.m7]
     onep_inds = [1, 2, 4]
     onep_LLR = ll_cv[onep_inds] - ll_cv[0]
     onep_pval = pval[onep_inds]
@@ -150,4 +150,4 @@ def pick_best_model(ll_cv, pval, p_thresh=.01, llr_thresh=1):
     else:
         bestmodel = 0
 
-    return bestmodel
+    return bestmodel, m_list[bestmodel]
