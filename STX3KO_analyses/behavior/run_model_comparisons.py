@@ -2,8 +2,9 @@ from . import model_comparison, models
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 ## familiar sessions
-def fam_run_fit(all_sessions, l0, l1, metric, day, crossval=True):
+def fam_run_fit(all_sessions, l0, l1, metric, day, crossval=True, n_folds='mice'):
     '''
 
 
@@ -17,6 +18,7 @@ def fam_run_fit(all_sessions, l0, l1, metric, day, crossval=True):
     '''
     x = []
     y = []
+    mouse_counter = 0
     for mouse, d in {mouse: all_sessions[mouse][day] for mouse in l0}.items():
 
         if mouse == '4467975.4' and day == 0:
@@ -31,9 +33,11 @@ def fam_run_fit(all_sessions, l0, l1, metric, day, crossval=True):
         trials = trials[mask]
 
         y.append(_y)
-        _x = np.zeros([2, trials.shape[0]])
+        _x = np.zeros([3, trials.shape[0]])
         _x[0, :] = trials
+        _x[2, :] = mouse_counter
         x.append(_x)
+        mouse_counter += 1
 
     for mouse, d in {mouse: all_sessions[mouse][day] for mouse in l1}.items():
 
@@ -49,9 +53,12 @@ def fam_run_fit(all_sessions, l0, l1, metric, day, crossval=True):
         trials = trials[mask]
 
         y.append(_y)
-        _x = np.ones([2, trials.shape[0]])
+        _x = np.ones([3, trials.shape[0]])
         _x[0, :] = trials
+        _x[2, :] = mouse_counter
+
         x.append(_x)
+        mouse_counter += 1
 
     y = np.concatenate(y, axis=-1)
     x = np.concatenate(x, axis=-1)
@@ -59,11 +66,10 @@ def fam_run_fit(all_sessions, l0, l1, metric, day, crossval=True):
     random_order = np.random.permutation(int(y.shape[0]))
     x = x[:, random_order]
     y = y[random_order]
-    return models.fit_models(x, y, crossval=crossval)
-    # bic_vec, SSE, dof, popt_list, SSE_cv = fit_models(X, acc, crossval=True)
+    return models.fit_models(x, y, crossval=crossval, n_folds=n_folds)
 
 
-def run_model_comparisons_familiar(ko_sessions, ctrl_sessions, metric):
+def run_model_comparisons_familiar(ko_sessions, ctrl_sessions, metric, p_thresh=.05, llr_thresh=1):
     '''
 
 
@@ -92,16 +98,23 @@ def run_model_comparisons_familiar(ko_sessions, ctrl_sessions, metric):
 
         perm_ll = np.array(perm_ll)
         pvec = []
+        print("Day %d" % day)
         for col in range(perm_ll.shape[1]):
-            print("Day %d" % day)
             true_ll = ll_cv[col]
             _perm_ll = perm_ll[:, col]
-            p_val = np.float((true_ll + 1E-3 < _perm_ll).sum()) / _perm_ll.shape[0]
-            print("M%d, true log likelihood %f, lowest perm log likelihood %f, 'p' value %f" % (
-            col, true_ll, np.amax(_perm_ll), p_val))
+            p_val = np.float((true_ll  < _perm_ll).sum()) / _perm_ll.shape[0]
+            print("M%d, true log likelihood %f, highest perm log likelihood %f, 'p' value %f" % (
+                col, true_ll, np.amax(_perm_ll), p_val))
             pvec.append(p_val)
 
-        results.append({'bic_vec': bic_vec, 'popt_list': popt_list, 'LL_cv': ll_cv, 'p_val': pvec})
+        pvec = np.array(pvec)
+        bestmodel, m = model_comparison.pick_best_model(ll_cv, pvec, p_thresh=p_thresh, llr_thresh=llr_thresh)
+        results.append({'bic_vec': bic_vec,
+                        'popt_list': popt_list,
+                        'LL_cv': ll_cv,
+                        'p_val': pvec,
+                        'best_model_index': bestmodel,
+                        'best_model_func': m})
 
     return results
 
@@ -135,7 +148,7 @@ def plot_fam(ko_sessions, ctrl_sessions, results, metric):
 
         ll_cv = results[day]['LL_cv']
         pval = np.array(results[day]['p_val'])
-        bestmodel, m = model_comparison.pick_best_model(ll_cv, pval, p_thresh=.01, llr_thresh=1)
+        bestmodel, m = model_comparison.pick_best_model(ll_cv, pval, p_thresh=.05, llr_thresh=1)
 
         x = np.zeros([2, 80])
         x[0, :] = np.arange(80)
@@ -158,5 +171,4 @@ def plot_fam(ko_sessions, ctrl_sessions, results, metric):
 
 
 if __name__ == '__main__':
-
     ko_sessions, ctrl_sessions = model_comparison.get_session_dicts()

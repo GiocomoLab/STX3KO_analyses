@@ -89,7 +89,7 @@ def get_session_dicts(pklbase='/home/mplitt/YMazeSessPkls/'):
     return build_dict(ymaze_sess_deets.KO_sessions), build_dict(ymaze_sess_deets.CTRL_sessions)
 
 
-def pick_best_model(ll_cv, pval, p_thresh=.01, llr_thresh=1):
+def pick_best_model(ll_cv, pval, p_thresh=.05, llr_thresh=1):
     '''
 
 
@@ -113,6 +113,7 @@ def pick_best_model(ll_cv, pval, p_thresh=.01, llr_thresh=1):
     onep_inds = [1, 2, 4]
     onep_LLR = ll_cv[onep_inds] - ll_cv[0]
     onep_pval = pval[onep_inds]
+
 
     best_onep_ind = np.argmax(onep_LLR)
     if (onep_pval[best_onep_ind] < p_thresh) and onep_LLR[best_onep_ind] > llr_thresh:

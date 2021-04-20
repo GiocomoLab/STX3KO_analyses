@@ -193,11 +193,13 @@ def bic(y, yhat, k):
     return k * np.log(y.shape[0]) - 2. * squared_error_log_likelihood(y, yhat, k) / np.log10(np.e)
 
 
-def fit_models(x, y, crossval=False, n_folds = 10):
+def fit_models(x, y, crossval=False, n_folds='mice'):
     '''
     fit parameters of M0-M7
 
     :param x: np.array, [2 x m], first row is independent variable, second row is grouping variable for other models
+              OR
+              np.array, [3 x m], last row is mouse ID, used when n_folds == 'mice' for leave one mouse out
     :param y: np.array, [m,], dependent data
     :param crossval: estimate log-likelihood of model using K Fold cross validation (default False)
     :param n_folds: int, number of folds for cross validation (default 10)_
@@ -207,6 +209,8 @@ def fit_models(x, y, crossval=False, n_folds = 10):
             popt_list: optimal parameters for full model, output of sp.optimize.curve_fit
             ll_cv: returned if crossval is True, cross-validated log likelihood
     '''
+    if n_folds == 'LOO':
+        n_folds = y.shape[0]
 
     # initialize metrics
     bic_vec = []
@@ -215,7 +219,7 @@ def fit_models(x, y, crossval=False, n_folds = 10):
     dof = []
 
     # baseline
-    popt, pcov = curve_fit(m0, x, y, maxfev=int(1E5), p0=[2, .05, .75], bounds=(-20, 20)) # fit model
+    popt, pcov = curve_fit(m0, x, y, maxfev=int(1E5), p0=[2, .05, .75], bounds=(-20, 20))  # fit model
     bic_vec.append(bic(y, m0(x, *popt), 3))
     ll.append(squared_error_log_likelihood(y, m0(x, *popt), 1))
     dof.append(y.shape[0] - 3)
@@ -272,52 +276,68 @@ def fit_models(x, y, crossval=False, n_folds = 10):
 
     bic_vec = np.array(bic_vec) - bic_vec[0]
 
+    def cv_train_test(_x_train, _y_train, _x_test, _y_test):
+        _ll = np.zeros([8, ])
+        # baseline
+        popt, pcov = curve_fit(m0, _x_train, _y_train, maxfev=int(1E5), p0=[2, .05, .75],
+                               bounds=(-20, 20))
+        _ll[0] = squared_error_log_likelihood(_y_test, m0(_x_test, *popt), 1).sum()
+
+        # groupwise intercept
+        popt, pcov = curve_fit(m1, _x_train, _y_train, maxfev=int(1E5), p0=[2, 2, .05, .75],
+                               bounds=(-20, 20))
+        _ll[1] = squared_error_log_likelihood(_y_test, m1(_x_test, *popt), 1).sum()
+
+        # groupwise slope
+        popt, pcov = curve_fit(m2, _x_train, _y_train, maxfev=int(1E5), p0=[2, .05, .05, .75],
+                               bounds=(-20, 20))
+        _ll[2] = squared_error_log_likelihood(_y_test, m2(_x_test, *popt), 1).sum()
+
+        # groupwise slope and intercept
+        popt, pcov = curve_fit(m3, _x_train, _y_train, maxfev=int(1E5), p0=[2, 2, .05, .05, .75],
+                               bounds=(-20, 20))
+        _ll[3] = squared_error_log_likelihood(_y_test, m3(_x_test, *popt), 1).sum()
+
+        # groupwise asymptote
+        popt, pcov = curve_fit(m4, _x_train, _y_train, maxfev=int(1E5), p0=[2, .05, .75, .75],
+                               bounds=(-20, 20))
+        _ll[4] = squared_error_log_likelihood(_y_test, m4(_x_test, *popt), 1).sum()
+
+        # groupwise intercept and asymptote
+        popt, pcov = curve_fit(m5, _x_train, _y_train, maxfev=int(1E5), p0=[2, 2, .05, .75, .75],
+                               bounds=(-20, 20))
+        _ll[5] = squared_error_log_likelihood(_y_test, m5(_x_test, *popt), 1).sum()
+
+        # groupwise slope and asymptote
+        popt, pcov = curve_fit(m6, _x_train, _y_train, maxfev=int(1E5), p0=[2, .05, .05, .75, .75],
+                               bounds=(-20, 20))
+        _ll[6] = squared_error_log_likelihood(_y_test, m6(_x_test, *popt), 1).sum()
+
+        # groupwise intercept, slope, and asymptote
+        popt, pcov = curve_fit(m7, _x_train, _y_train, maxfev=int(1E5), p0=[2, 2, .05, .05, .75, .75],
+                               bounds=(-20, 20))
+        _ll[7] = squared_error_log_likelihood(_y_test, m7(_x_test, *popt), 1).sum()
+        return _ll
+
     if crossval:
-        kf = KFold(n_splits=10, shuffle=True)
-        ll_cv = np.zeros([10, bic_vec.shape[0]])
-        for fold, (train, test) in enumerate(kf.split(x.T)):
-            x_train, y_train = x[:, train], y[train]
-            x_test, y_test = x[:, test], y[test]
+        if n_folds == 'mice':
+            ll_cv = np.zeros([np.amax(x[2, :]), bic_vec.shape[0]])
+            for fold in np.unique(x[2, :]).tolist():
+                mask = np.ones([y.shape[0], ]) > 0
+                mask[x[2, :] == fold] = False
 
-            # baseline
-            popt, pcov = curve_fit(m0, x_train, y_train, maxfev=int(1E5), p0=[2, .05, .75],
-                                   bounds=(-20, 20))
-            ll_cv[fold, 0] = squared_error_log_likelihood(y_test, m0(x_test, *popt), 1).sum()
+                x_train, y_train = x[:, mask], y[mask]
+                x_test, y_test = x[:, ~mask], y[~mask]
+                ll_cv[fold, :] = cv_train_test(x_train, y_train, x_test, y_test)
 
-            # groupwise intercept
-            popt, pcov = curve_fit(m1, x_train, y_train, maxfev=int(1E5), p0=[2, 2, .05, .75],
-                                   bounds=(-20, 20))
-            ll_cv[fold, 1] = squared_error_log_likelihood(y_test, m1(x_test, *popt), 1).sum()
+        else:
+            kf = KFold(n_splits=n_folds, shuffle=True)
+            ll_cv = np.zeros([n_folds, bic_vec.shape[0]])
+            for fold, (train, test) in enumerate(kf.split(x.T)):
+                x_train, y_train = x[:, train], y[train]
+                x_test, y_test = x[:, test], y[test]
 
-            # groupwise slope
-            popt, pcov = curve_fit(m2, x_train, y_train, maxfev=int(1E5), p0=[2, .05, .05, .75],
-                                   bounds=(-20, 20))
-            ll_cv[fold, 2] = squared_error_log_likelihood(y_test, m2(x_test, *popt), 1).sum()
-
-            # groupwise slope and intercept
-            popt, pcov = curve_fit(m3, x_train, y_train, maxfev=int(1E5), p0=[2, 2, .05, .05, .75],
-                                   bounds=(-20, 20))
-            ll_cv[fold, 3] = squared_error_log_likelihood(y_test, m3(x_test, *popt), 1).sum()
-
-            # groupwise asymptote
-            popt, pcov = curve_fit(m4, x_train, y_train, maxfev=int(1E5), p0=[2, .05, .75, .75],
-                                   bounds=(-20, 20))
-            ll_cv[fold, 4] = squared_error_log_likelihood(y_test, m4(x_test, *popt), 1).sum()
-
-            # groupwise intercept and asymptote
-            popt, pcov = curve_fit(m5, x_train, y_train, maxfev=int(1E5), p0=[2, 2, .05, .75, .75],
-                                   bounds=(-20, 20))
-            ll_cv[fold, 5] = squared_error_log_likelihood(y_test, m5(x_test, *popt), 1).sum()
-
-            # groupwise slope and asymptote
-            popt, pcov = curve_fit(m6, x_train, y_train, maxfev=int(1E5), p0=[2, .05, .05, .75, .75],
-                                   bounds=(-20, 20))
-            ll_cv[fold, 6] = squared_error_log_likelihood(y_test, m6(x_test, *popt), 1).sum()
-
-            # groupwise intercept, slope, and asymptote
-            popt, pcov = curve_fit(m7, x_train, y_train, maxfev=int(1E5), p0=[2, 2, .05, .05, .75, .75],
-                                   bounds=(-20, 20))
-            ll_cv[fold, 7] = squared_error_log_likelihood(y_test, m7(x_test, *popt), 1).sum()
+                ll_cv[fold, :] = cv_train_test(x_train, y_train, x_test, y_test)
 
         return bic_vec, np.array(ll), np.array(dof), popt_list, ll_cv.sum(axis=0)
 
