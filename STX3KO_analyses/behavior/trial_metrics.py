@@ -8,7 +8,7 @@ def antic_consum_licks(sess):
     :return:
     '''
     reward_mask = sess.vr_data['reward']._values > 0
-    reward_start = np.argwhere(reward_mask).ravel()
+    reward_start = np.argwhere(reward_mask).ravel() - 1
     reward_end = (reward_start + int(2 * sess.scan_info['frame_rate'])).astype(np.int)
 
     consum_mask = np.zeros(reward_mask.shape) > 0
@@ -41,6 +41,7 @@ def get_probes_and_omissions(sess):
     '''
     probes = np.zeros([sess.trial_start_inds.shape[0], ])
     omissions = np.zeros([sess.trial_start_inds.shape[0], ])
+
     for trial, (start, stop, lr) in enumerate(zip(sess.trial_start_inds, sess.teleport_inds, sess.trial_info['LR'])):
         if sess.scene in ("YMaze_RewardReversal"):
             lr = np.copy(lr) * -1
@@ -48,10 +49,16 @@ def get_probes_and_omissions(sess):
         pos = sess.vr_data['t'].iloc[start:stop]
         licks = sess.vr_data['lick'].iloc[start:stop]
         reward = sess.vr_data['reward'].iloc[start:stop]
-        if lr == 1:
-            rzone = (sess.rzone_late['tfront'], sess.rzone_late['tback'])
+        reward_ind = np.argwhere(reward._values > 0).ravel()
+        if reward_ind.shape[0] > 0:
+            reward_pos = pos.iloc[reward_ind[0]]
         else:
-            rzone = (sess.rzone_early['tfront'], sess.rzone_early['tback'])
+            reward_pos = None
+
+        if lr == 1:
+            rzone = (sess.rzone_late['tfront'] - .1, sess.rzone_late['tback'])
+        else:
+            rzone = (sess.rzone_early['tfront'] - .1, sess.rzone_early['tback'])
         rzone_mask = (pos >= rzone[0]) & (pos <= rzone[1])
 
         r = reward.sum()
@@ -59,6 +66,8 @@ def get_probes_and_omissions(sess):
         if r == 0 and rzone_licks > 0:
             probes[trial] = 1
         elif r == 0 and rzone_licks == 0:
+            omissions[trial] = 1
+        elif reward_pos >= rzone[-1] - .1 or reward_pos is None:
             omissions[trial] = 1
         else:
             pass
@@ -75,10 +84,10 @@ def single_trial_lick_metrics(sess):
     bin_lower_edges = sess.trial_matrices['bin_edges'][:-1]
 
     lr_early = np.nanmean(sess.trial_matrices['antic_licks'][:, (bin_lower_edges >= sess.rzone_early['t_antic']) & (
-                bin_lower_edges < sess.rzone_early['tfront'] + 2)], axis=-1)
+            bin_lower_edges < sess.rzone_early['tfront'] + 2)], axis=-1)
     lr_early /= np.nanmean(sess.trial_matrices['antic_licks'].ravel())
     lr_late = np.nanmean(sess.trial_matrices['antic_licks'][:, (bin_lower_edges >= sess.rzone_late['t_antic']) & (
-                bin_lower_edges < sess.rzone_late['tfront'] + 2)], axis=-1)
+            bin_lower_edges < sess.rzone_late['tfront'] + 2)], axis=-1)
     lr_late /= np.nanmean(sess.trial_matrices['antic_licks'].ravel())
     #     print(lr_early,lr_late)
     lr_d = (lr_early - lr_late) / (lr_early + lr_late + 1E-3)
@@ -108,11 +117,11 @@ def single_trial_lick_metrics(sess):
             if lr == 1:
                 rzone = (sess.rzone_late['t_antic'], sess.rzone_late['tfront'] + 2)
                 tfront = sess.rzone_late['tfront']
-                otfront = sess.rzone_early['tfront']
+
             else:
                 rzone = (sess.rzone_early['t_antic'], sess.rzone_early['tfront'] + 2)
                 tfront = sess.rzone_late['tfront']
-                otfront = sess.rzone_early['tfront']
+
             rzone_mask = (pos >= rzone[0]) & (pos <= rzone[1])
 
             # lick accuracy - fraction of licks in correct reward zone plust 50 cm prior
@@ -138,10 +147,3 @@ def single_trial_lick_metrics(sess):
                             'arm_speed_norm': arm_speed_norm
 
                             })
-
-
-
-
-
-
-

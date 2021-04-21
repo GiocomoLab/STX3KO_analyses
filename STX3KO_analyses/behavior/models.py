@@ -321,14 +321,14 @@ def fit_models(x, y, crossval=False, n_folds='mice'):
 
     if crossval:
         if n_folds == 'mice':
-            ll_cv = np.zeros([np.amax(x[2, :]), bic_vec.shape[0]])
+            ll_cv = np.zeros([int(np.unique(x[2, :]).shape[0]), bic_vec.shape[0]])
             for fold in np.unique(x[2, :]).tolist():
                 mask = np.ones([y.shape[0], ]) > 0
                 mask[x[2, :] == fold] = False
 
                 x_train, y_train = x[:, mask], y[mask]
                 x_test, y_test = x[:, ~mask], y[~mask]
-                ll_cv[fold, :] = cv_train_test(x_train, y_train, x_test, y_test)
+                ll_cv[int(fold), :] = cv_train_test(x_train, y_train, x_test, y_test)
 
         else:
             kf = KFold(n_splits=n_folds, shuffle=True)
