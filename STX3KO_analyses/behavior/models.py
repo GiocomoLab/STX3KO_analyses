@@ -220,56 +220,80 @@ def fit_models(x, y, crossval=False, n_folds='mice'):
     dof = []
 
     # baseline
-    popt, pcov = curve_fit(m0, x, y, maxfev=int(1E6), p0=[2, .05, .75], bounds=(-10, 10))  # fit model
+    try:
+        popt, pcov = curve_fit(m0, x, y, maxfev=int(1E6), p0=[2, .05, .75], bounds=(-10, 10))  # fit model
+    except:
+        popt = [0,0,0]
     bic_vec.append(bic(y, m0(x, *popt), 3))
     ll.append(squared_error_log_likelihood(y, m0(x, *popt), 1))
     dof.append(y.shape[0] - 3)
     popt_list.append(popt)
 
     # groupwise intercept
-    popt, pcov = curve_fit(m1, x, y, maxfev=int(1E6), p0=[2, 2, .05, .75], bounds=(-10, 10))
+    try:
+        popt, pcov = curve_fit(m1, x, y, maxfev=int(1E6), p0=[2, 2, .05, .75], bounds=(-10, 10))
+    except:
+        popt = [0, 0, 0, 0]
     bic_vec.append(bic(y, m1(x, *popt), 5))
     ll.append(squared_error_log_likelihood(y, m1(x, *popt), 1))
     dof.append(y.shape[0] - 5)
     popt_list.append(popt)
 
     # groupwise slope
-    popt, pcov = curve_fit(m2, x, y, maxfev=int(1E6), p0=[2, .05, .05, .75], bounds=(-10, 10))
+    try:
+        popt, pcov = curve_fit(m2, x, y, maxfev=int(1E6), p0=[2, .05, .05, .75], bounds=(-10, 10))
+    except:
+        popt = [0,0,0,0]
     bic_vec.append(bic(y, m2(x, *popt), 5))
     ll.append(squared_error_log_likelihood(y, m2(x, *popt), 1))
     dof.append(y.shape[0] - 5)
     popt_list.append(popt)
 
     # groupwise slope and intercept
-    popt, pcov = curve_fit(m3, x, y, maxfev=int(1E6), p0=[2, 2, .05, .05, .75], bounds=(-10, 10))
+    try:
+        popt, pcov = curve_fit(m3, x, y, maxfev=int(1E6), p0=[2, 2, .05, .05, .75], bounds=(-10, 10))
+    except:
+        popt = [0,0,0,0,0]
     bic_vec.append(bic(y, m3(x, *popt), 6))
     ll.append(squared_error_log_likelihood(y, m3(x, *popt), 1))
     dof.append(y.shape[0] - 6)
     popt_list.append(popt)
 
     # groupwise asymptote
-    popt, pcov = curve_fit(m4, x, y, maxfev=int(1E6), p0=[2, .05, .75, .75], bounds=(-10, 10))
+    try:
+        popt, pcov = curve_fit(m4, x, y, maxfev=int(1E6), p0=[2, .05, .75, .75], bounds=(-10, 10))
+    except:
+        popt = [0,0,0,0]
     bic_vec.append(bic(y, m4(x, *popt), 5))
     ll.append(squared_error_log_likelihood(y, m4(x, *popt), 1))
     dof.append(y.shape[0] - 5)
     popt_list.append(popt)
 
     # groupwise intercept and asymptote
-    popt, pcov = curve_fit(m5, x, y, maxfev=int(1E6), p0=[2, 2, .05, .75, .75], bounds=(-10, 10))
+    try:
+        popt, pcov = curve_fit(m5, x, y, maxfev=int(1E6), p0=[2, 2, .05, .75, .75], bounds=(-10, 10))
+    except:
+        popt = [0,0,0,0,0]
     bic_vec.append(bic(y, m5(x, *popt), 6))
     ll.append(squared_error_log_likelihood(y, m5(x, *popt), 1))
     dof.append(y.shape[0] - 6)
     popt_list.append(popt)
 
     # groupwise slope and asymptote
-    popt, pcov = curve_fit(m6, x, y, maxfev=int(1E6), p0=[2, 2, .05, .75, .75], bounds=(-10, 10))
+    try:
+        popt, pcov = curve_fit(m6, x, y, maxfev=int(1E6), p0=[2, 2, .05, .75, .75], bounds=(-10, 10))
+    except:
+        popt = [0,0,0,0,0]
     bic_vec.append(bic(y, m6(x, *popt), 6))
     ll.append(squared_error_log_likelihood(y, m6(x, *popt), 1))
     dof.append(y.shape[0] - 6)
     popt_list.append(popt)
 
     # groupwise intercept, slope, and asymptote
-    popt, pcov = curve_fit(m7, x, y, maxfev=int(1E6), p0=[2, 2, .05, .05, .75, .75], bounds=(-10, 10))
+    try:
+        popt, pcov = curve_fit(m7, x, y, maxfev=int(1E6), p0=[2, 2, .05, .05, .75, .75], bounds=(-10, 10))
+    except:
+        popt = [0,0,0,0,0,0]
     bic_vec.append(bic(y, m7(x, *popt), 7))
     ll.append(squared_error_log_likelihood(y, m7(x, *popt), 1))
     dof.append(y.shape[0] - 7)
