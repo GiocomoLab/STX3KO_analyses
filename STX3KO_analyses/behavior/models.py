@@ -280,42 +280,42 @@ def fit_models(x, y, crossval=False, n_folds='mice'):
         _ll = np.zeros([8, ])
         # baseline
         popt, pcov = curve_fit(m0, _x_train, _y_train, maxfev=int(1E5), p0=[2, .05, .75],
-                               bounds=(-20, 20))
+                               bounds=(-10, 10))
         _ll[0] = squared_error_log_likelihood(_y_test, m0(_x_test, *popt), 1).sum()
 
         # groupwise intercept
         popt, pcov = curve_fit(m1, _x_train, _y_train, maxfev=int(1E5), p0=[2, 2, .05, .75],
-                               bounds=(-20, 20))
+                               bounds=(-10, 10))
         _ll[1] = squared_error_log_likelihood(_y_test, m1(_x_test, *popt), 1).sum()
 
         # groupwise slope
         popt, pcov = curve_fit(m2, _x_train, _y_train, maxfev=int(1E5), p0=[2, .05, .05, .75],
-                               bounds=(-20, 20))
+                               bounds=(-10, 10))
         _ll[2] = squared_error_log_likelihood(_y_test, m2(_x_test, *popt), 1).sum()
 
         # groupwise slope and intercept
         popt, pcov = curve_fit(m3, _x_train, _y_train, maxfev=int(1E5), p0=[2, 2, .05, .05, .75],
-                               bounds=(-20, 20))
+                               bounds=(-10, 10))
         _ll[3] = squared_error_log_likelihood(_y_test, m3(_x_test, *popt), 1).sum()
 
         # groupwise asymptote
         popt, pcov = curve_fit(m4, _x_train, _y_train, maxfev=int(1E5), p0=[2, .05, .75, .75],
-                               bounds=(-20, 20))
+                               bounds=(-10, 10))
         _ll[4] = squared_error_log_likelihood(_y_test, m4(_x_test, *popt), 1).sum()
 
         # groupwise intercept and asymptote
         popt, pcov = curve_fit(m5, _x_train, _y_train, maxfev=int(1E5), p0=[2, 2, .05, .75, .75],
-                               bounds=(-20, 20))
+                               bounds=(-10, 10))
         _ll[5] = squared_error_log_likelihood(_y_test, m5(_x_test, *popt), 1).sum()
 
         # groupwise slope and asymptote
         popt, pcov = curve_fit(m6, _x_train, _y_train, maxfev=int(1E5), p0=[2, .05, .05, .75, .75],
-                               bounds=(-20, 20))
+                               bounds=(-10, 10))
         _ll[6] = squared_error_log_likelihood(_y_test, m6(_x_test, *popt), 1).sum()
 
         # groupwise intercept, slope, and asymptote
         popt, pcov = curve_fit(m7, _x_train, _y_train, maxfev=int(1E5), p0=[2, 2, .05, .05, .75, .75],
-                               bounds=(-20, 20))
+                               bounds=(-10, 10))
         _ll[7] = squared_error_log_likelihood(_y_test, m7(_x_test, *popt), 1).sum()
         return _ll
 
