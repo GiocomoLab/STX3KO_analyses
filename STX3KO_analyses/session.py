@@ -10,8 +10,6 @@ from scipy.interpolate import interp1d as spline
 
 class YMazeSession(TwoPUtils.sess.Session):
 
-
-
     def __init__(self, prev_sess=None, **kwargs):
 
         """
@@ -223,9 +221,12 @@ class YMazeSession(TwoPUtils.sess.Session):
             stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
             print(start_ind, stop_ind)
 
+
             Freg[:, start_ind:stop_ind] = self.timeseries[Fkey][:, start_ind:stop_ind] - Fneu_coef * self.timeseries[
                                                                                                          Fneukey][:,
-                                                                                                     start_ind:stop_ind]
+                                                                                                     start_ind:stop_ind] + np.amin(
+                self.timeseries[Fneukey][:, start_ind:stop_ind], axis=1)
+
             # for cell in range(self.timeseries[Fkey].shape[0]):
             #     lr.fit(self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T,
             #            self.timeseries[Fkey][cell, start_ind:stop_ind])
