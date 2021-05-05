@@ -225,7 +225,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             Freg[:, start_ind:stop_ind] = self.timeseries[Fkey][:, start_ind:stop_ind] - Fneu_coef * self.timeseries[
                                                                                                          Fneukey][:,
                                                                                                      start_ind:stop_ind] + Fneu_coef * np.amin(
-                self.timeseries[Fneukey][:, start_ind:stop_ind], axis=1)
+                self.timeseries[Fneukey][:, start_ind:stop_ind], axis=1,keepdims = True)
 
             # for cell in range(self.timeseries[Fkey].shape[0]):
             #     lr.fit(self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T,
