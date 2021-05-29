@@ -1,3 +1,6 @@
+ko_mice = ('4467975.1', '4467975.2', '4467975.3', '4467975.4', '4467975.5', )
+ctrl_mice = ('4467331.1', '4467331.2', '4467332.1', '4467332.2', '4467333.1', )
+
 exclude_list = {
     '4467975.1': ({'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3, 'novel': -1, 'ravel_ind': 0},
                   {'date': '04_10_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3, 'novel': -1, 'ravel_ind': 7},

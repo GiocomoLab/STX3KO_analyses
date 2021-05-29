@@ -2,7 +2,8 @@ import os
 import numpy as np
 from itertools import combinations
 from STX3KO_analyses import ymaze_sess_deets, session
-from STX3KO_analyses.behavior import trial_metrics, models
+from STX3KO_analyses.behavior import trial_metrics
+from STX3KO_analyses.behavior.exponential_models import models
 
 
 def generate_perms(mouse_list0, mouse_list1):
