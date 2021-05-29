@@ -66,7 +66,7 @@ def load_single_day(mouse, day=0):
             sess_list.append(_sess)
 
         sess = Concat_Session(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                              trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'))
+                              trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'), run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
             sess.trial_info['block_number'][mask] -= 1
@@ -77,12 +77,18 @@ def load_single_day(mouse, day=0):
         sess.add_timeseries(licks=sess.vr_data['lick']._values)
         sess.add_pos_binned_trial_matrix('licks')
         sess.novel_arm = deets['novel']
+
+        if mouse == '4467975.1' and day == 0:
+            sess.trial_info['block_number'] += 1
+        if mouse == '4467332.2' and day == 0:
+            sess.trial_info['block_number'] += 2
+
     return sess
 
 
 class Concat_Session():
 
-    def __init__(self, sess_list, common_roi_mapping, trial_info_keys=('LR', 'block_number'), trial_mat_keys=('F_dff',),
+    def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'], trial_mat_keys=['F_dff',],
                  timeseries_keys=(), run_place_cells=True, day_inds=None):
         attrs = self.concat(sess_list, common_roi_mapping, trial_info_keys, trial_mat_keys,
                             timeseries_keys, run_place_cells, day_inds)
@@ -180,10 +186,10 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
     with open(os.path.join(pkldir, "roi_aligner_results.pkl"), 'rb') as file:
         match_inds = dill.load(file)
 
-    if mouse in stx.ymaze_sess_deets.KO_sessions.keys():
-        sessions_deets = stx.ymaze_sess_deets.KO_sessions[mouse]
-    elif mouse in stx.ymaze_sess_deets.CTRL_sessions.keys():
-        sessions_deets = stx.ymaze_sess_deets.CTRL_sessions[mouse]
+    if mouse in ymaze_sess_deets.KO_sessions.keys():
+        sessions_deets = ymaze_sess_deets.KO_sessions[mouse]
+    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
+        sessions_deets = ymaze_sess_deets.CTRL_sessions[mouse]
     else:
         print("mouse ID typo")
 
@@ -191,13 +197,14 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
         date_inds = np.arange(len(sessions_deets)).tolist()
 
     date_inds_ravel = []
+    roi_inds = []
     sess_list = []
     for date_ind in date_inds:
         deets = sessions_deets[date_ind]
         if isinstance(deets, tuple):
             _sess_list = []
             for _deets in deets:
-                sess = stx.session.YMazeSession.from_file(
+                sess = session.YMazeSession.from_file(
                     os.path.join(pkldir, _deets['date'], "%s_%d.pkl" % (_deets['scene'], _deets['session'])),
                     verbose=False)
                 sess.add_timeseries(licks=sess.vr_data['lick']._values)
@@ -207,8 +214,9 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
                 print(_deets['date'], _deets['scene'])
                 sess_list.append(sess)
                 date_inds_ravel.append(date_ind)
+                roi_inds.append(_deets['ravel_ind'])
         else:
-            sess = stx.session.YMazeSession.from_file(
+            sess = session.YMazeSession.from_file(
                 os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
                 verbose=False)
             sess.add_timeseries(licks=sess.vr_data['lick']._values)
@@ -216,9 +224,10 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
             sess.novel_arm = deets['novel']
             sess_list.append(sess)
             date_inds_ravel.append(date_ind)
+            roi_inds.append(deets['ravel_ind'])
             print(deets['date'], deets['scene'])
 
-    common_roi_mapping = common_rois(match_inds, [i for i in range(len(sess_list))])
+    common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = Concat_Session(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
                                  trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm'])
     return concat_sess
