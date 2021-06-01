@@ -4,7 +4,7 @@ import dill
 import numpy as np
 
 
-from . import session, ymaze_sess_deets
+from . import session, ymaze_sess_deets, behavior
 
 
 def common_rois(roi_matches, inds):
@@ -151,10 +151,16 @@ class Concat_Session():
                     trial_info[k].append(_sess.trial_info[k])
 
             for k in t_mat_keys:
-                trial_mat[k].append(_sess.trial_matrices[k][:, :, common_roi_mapping[ind, :]])
+                if len(_sess.trial_matrices[k].shape) == 3:
+                    trial_mat[k].append(_sess.trial_matrices[k][:, :, common_roi_mapping[ind, :]])
+                else:
+                    trial_mat[k].append(_sess.trial_matrices[k])
 
             for k in timeseries_keys:
-                timeseries[k].append(_sess.timeseries[k][:, :, common_roi_mapping[ind, :]])
+                if len(_sess.timeseries[k].shape) == 3:
+                    timeseries[k].append(_sess.timeseries[k][:, :, common_roi_mapping[ind, :]])
+                else:
+                    timeseries[k].append(_sess.timeseries[k])
 
             if run_place_cells:
                 for lr, _lr in [[-1, 'left'], [1, 'right']]:
@@ -215,6 +221,9 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
                 sess_list.append(sess)
                 date_inds_ravel.append(date_ind)
                 roi_inds.append(_deets['ravel_ind'])
+                if mouse in ['4467332.2'] and date_ind == 0:
+                    mask = sess.trial_info['sess_num_ravel'] > 0
+                    sess.trial_info['block_number'][mask] -= 1
         else:
             sess = session.YMazeSession.from_file(
                 os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
@@ -227,7 +236,12 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
             roi_inds.append(deets['ravel_ind'])
             print(deets['date'], deets['scene'])
 
+            if mouse == '4467975.1' and date_ind == 0:
+                sess.trial_info['block_number'] += 1
+            if mouse == '4467332.2' and date_ind == 0:
+                sess.trial_info['block_number'] += 2
+
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = Concat_Session(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
-                                 trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm'])
+                                 trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks'])
     return concat_sess
