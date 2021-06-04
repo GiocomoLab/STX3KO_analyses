@@ -66,7 +66,8 @@ def load_single_day(mouse, day=0):
             sess_list.append(_sess)
 
         sess = Concat_Session(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                              trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'), run_place_cells=True)
+                              trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'),
+                              timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'),run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
             sess.trial_info['block_number'][mask] -= 1
@@ -130,10 +131,14 @@ class Concat_Session():
             place_cells = {-1: {'masks': [], 'SI': [], 'p': []}, 1: {'masks': [], 'SI': [], 'p': []}}
 
         last_block = 0
+        cum_frames = 0
         for ind, _sess in enumerate(_sess_list):
 
             for k in basic_info_attrs:
-                attrs[k].append(getattr(_sess, k))
+                if k in ('teleport_inds', 'trial_start_inds'):
+                    attrs[k].append(getattr(_sess, k)+cum_frames)
+                else:
+                    attrs[k].append(getattr(_sess, k))
 
             for k in t_info_keys:
 
@@ -157,8 +162,8 @@ class Concat_Session():
                     trial_mat[k].append(_sess.trial_matrices[k])
 
             for k in timeseries_keys:
-                if len(_sess.timeseries[k].shape) == 3:
-                    timeseries[k].append(_sess.timeseries[k][:, :, common_roi_mapping[ind, :]])
+                if len(_sess.timeseries[k].shape) == 2:
+                    timeseries[k].append(_sess.timeseries[k][common_roi_mapping[ind, :], :])
                 else:
                     timeseries[k].append(_sess.timeseries[k])
 
@@ -167,15 +172,23 @@ class Concat_Session():
                     for k in ['masks', 'SI', 'p']:
                         place_cells[lr][k].append(_sess.place_cell_info[_lr][k][common_roi_mapping[ind, :]])
 
+            cum_frames+= _sess.timeseries['spks'].shape[1]
         print(t_info_keys)
+        for k in ['trial_start_inds','teleport_inds']:
+            attrs[k] = np.concatenate(attrs[k])
+
         for k in t_info_keys:
-            print(k)
+            # print(k)
             trial_info[k] = np.concatenate(trial_info[k])
         attrs['trial_info'] = trial_info
 
         for k in t_mat_keys:
             trial_mat[k] = np.concatenate(trial_mat[k], axis=0)
         attrs['trial_matrices'] = trial_mat
+
+        for k in timeseries_keys:
+            timeseries[k] = np.concatenate(timeseries[k],axis=-1)
+        attrs['timeseries'] = timeseries
 
         if run_place_cells:
             for lr in [-1, 1]:
@@ -243,5 +256,6 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
 
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = Concat_Session(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
-                                 trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks'])
+                                 trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks'],
+                                 timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm'])
     return concat_sess
