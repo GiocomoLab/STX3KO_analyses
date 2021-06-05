@@ -101,6 +101,7 @@ class Concat_Session():
     def concat(_sess_list, common_roi_mapping, t_info_keys, t_mat_keys,
                timeseries_keys, run_place_cells, day_inds):
         attrs = {}
+        attrs['day_inds']=day_inds
         # same info
         #         same_attrs = ['mouse', 'novel_arm','rzone_early', 'rzone_late']
         attrs.update({'mouse': _sess_list[0].mouse,
