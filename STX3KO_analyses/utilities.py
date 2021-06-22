@@ -66,7 +66,7 @@ def load_single_day(mouse, day=0):
             sess_list.append(_sess)
 
         sess = Concat_Session(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                              trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'),
+                              trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'licks'),
                               timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'),run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
