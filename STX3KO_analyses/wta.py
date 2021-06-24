@@ -177,4 +177,12 @@ def plot_pop_activity(ca1, trials_to_plot=None):
         for col in trials_to_plot:
             ax[row, col].imshow(ca1_z[col, :, sort_vec], vmin=0, vmax=1, aspect='auto',
                                 cmap='viridis')
+            if col == 0:
+                ax[row,col].set_xlabel('Pos.')
+                ax[row,col].set_ylabel('Cells')
+            else:
+                ax[row,col].set_yticks([])
+
+    fig.subplots_adjust(hspace = .5)
+
     return fig

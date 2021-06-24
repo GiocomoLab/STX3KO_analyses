@@ -227,11 +227,6 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                                                                      start_ind:stop_ind] + Fneu_coef * np.amin(
                 self.timeseries[Fneukey][:, start_ind:stop_ind], axis=1,keepdims = True)
 
-            # for cell in range(self.timeseries[Fkey].shape[0]):
-            #     lr.fit(self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T,
-            #            self.timeseries[Fkey][cell, start_ind:stop_ind])
-            #     Freg[cell, start_ind:stop_ind] = self.timeseries[Fkey][cell, start_ind:stop_ind] - lr.predict(
-            #         self.timeseries[Fneukey][cell:cell + 1, start_ind:stop_ind].T) + lr.intercept_
 
             Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:, start_ind:stop_ind], size=(1, 7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
@@ -276,6 +271,159 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                                        min_pos=min_pos, mas_pos=max_pos,
                                                                        bin_size=bin_size, **pc_kwargs)
             d.update({'masks': masks, 'SI': SI, 'p': p})
+
+    @property
+    def fam_place_cell_mask(self):
+        '''
+
+        :return:
+        '''
+        if self.novel_arm == -1:
+            return self.place_cell_info['right']['masks']
+        elif self.novel_arm == 1:
+            return self.place_cell_info['left']['masks']
+        else:
+            return None
+
+    @property
+    def nov_place_cell_mask(self):
+        '''
+
+        :return:
+        '''
+        if self.novel_arm == 1:
+            return self.place_cell_info['right']['masks']
+        elif self.novel_arm == -1:
+            return self.place_cell_info['left']['masks']
+        else:
+            return None
+
+
+class ConcatYMazeSession:
+
+    def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'], trial_mat_keys=['F_dff',],
+                 timeseries_keys=(), run_place_cells=True, day_inds=None):
+        attrs = self.concat(sess_list, common_roi_mapping, trial_info_keys, trial_mat_keys,
+                            timeseries_keys, run_place_cells, day_inds)
+
+        self.__dict__.update(attrs)
+        trial_info_keys = []
+
+    @staticmethod
+    def concat(_sess_list, common_roi_mapping, t_info_keys, t_mat_keys,
+               timeseries_keys, run_place_cells, day_inds):
+        attrs = {}
+        attrs['day_inds']=day_inds
+        # same info
+        #         same_attrs = ['mouse', 'novel_arm','rzone_early', 'rzone_late']
+        attrs.update({'mouse': _sess_list[0].mouse,
+                      'novel_arm': _sess_list[0].novel_arm,
+                      'rzone_early': _sess_list[0].rzone_early,
+                      'rzone_late': _sess_list[0].rzone_late
+                      })
+        print(t_info_keys)
+
+        # concat basic info
+        basic_info_attrs = ['date', 'scan', 'scan_info', 'scene', 'session', 'teleport_inds', 'trial_start_inds']
+        attrs.update({k: [] for k in basic_info_attrs})
+
+        if 'sess_num_ravel' not in t_info_keys:
+            t_info_keys.append('sess_num_ravel')
+        if 'sess_num' not in t_info_keys and day_inds is not None:
+            t_info_keys.append('sess_num')
+
+        trial_info = {k: [] for k in t_info_keys}
+
+        trial_mat = {k: [] for k in t_mat_keys}
+        trial_mat['bin_edges'] = _sess_list[0].trial_matrices['bin_edges']
+        trial_mat['bin_centers'] = _sess_list[0].trial_matrices['bin_centers']
+
+        timeseries = {k: [] for k in timeseries_keys}
+
+        if run_place_cells:
+            place_cells = {-1: {'masks': [], 'SI': [], 'p': []}, 1: {'masks': [], 'SI': [], 'p': []}}
+
+        last_block = 0
+        cum_frames = 0
+        for ind, _sess in enumerate(_sess_list):
+
+            for k in basic_info_attrs:
+                if k in ('teleport_inds', 'trial_start_inds'):
+                    attrs[k].append(getattr(_sess, k)+cum_frames)
+                else:
+                    attrs[k].append(getattr(_sess, k))
+
+            for k in t_info_keys:
+
+                if k == 'sess_num_ravel':
+                    trial_info[k].append(np.zeros([_sess.trial_info['LR'].shape[0], ]) + ind)
+                elif k == 'sess_num' and day_inds is not None:
+                    trial_info[k].append(np.zeros([_sess.trial_info['LR'].shape[0], ]) + day_inds[ind])
+
+                elif k == 'block_number' and day_inds is not None and ind > 0:
+                    if _sess.trial_info[k][0] == 0 and day_inds[ind - 1] == day_inds[ind]:
+                        trial_info[k].append(_sess.trial_info[k] + _sess_list[ind - 1].trial_info[k][-1] + 1)
+                    else:
+                        trial_info[k].append(_sess.trial_info[k])
+                else:
+                    trial_info[k].append(_sess.trial_info[k])
+
+            for k in t_mat_keys:
+                if len(_sess.trial_matrices[k].shape) == 3:
+                    trial_mat[k].append(_sess.trial_matrices[k][:, :, common_roi_mapping[ind, :]])
+                else:
+                    trial_mat[k].append(_sess.trial_matrices[k])
+
+            for k in timeseries_keys:
+                if len(_sess.timeseries[k].shape) == 2:
+                    timeseries[k].append(_sess.timeseries[k][common_roi_mapping[ind, :], :])
+                else:
+                    timeseries[k].append(_sess.timeseries[k])
+
+            if run_place_cells:
+                for lr, _lr in [[-1, 'left'], [1, 'right']]:
+                    for k in ['masks', 'SI', 'p']:
+                        place_cells[lr][k].append(_sess.place_cell_info[_lr][k][common_roi_mapping[ind, :]])
+
+            cum_frames+= _sess.timeseries['spks'].shape[1]
+        print(t_info_keys)
+        for k in ['trial_start_inds','teleport_inds']:
+            attrs[k] = np.concatenate(attrs[k])
+
+        for k in t_info_keys:
+            # print(k)
+            trial_info[k] = np.concatenate(trial_info[k])
+        attrs['trial_info'] = trial_info
+
+        for k in t_mat_keys:
+            trial_mat[k] = np.concatenate(trial_mat[k], axis=0)
+        attrs['trial_matrices'] = trial_mat
+
+        for k in timeseries_keys:
+            timeseries[k] = np.concatenate(timeseries[k],axis=-1)
+        attrs['timeseries'] = timeseries
+
+        if run_place_cells:
+            for lr in [-1, 1]:
+                for k in ['masks', 'SI', 'p']:
+                    place_cells[lr][k] = np.array(place_cells[lr][k])
+        attrs['place_cell_info'] = place_cells
+
+        return attrs
+
+    @property
+    def fam_place_cell_mask(self):
+        if self.novel_arm==-1:
+            if 'right' in self.place_cell_info.keys():
+                return self.place_cell_info['right']['masks']
+            else:
+                return self.place_cell_info[1]['masks'].sum(axis=0)>0
+        else:
+            if 'left' in self.place_cell_info.keys():
+                return self.place_cell_info['left']['masks']
+            else:
+                return self.place_cell_info[-1]['masks'].sum(axis=0)>0
+
 
 
 class MorphSession(TwoPUtils.sess.Session):
@@ -366,6 +514,5 @@ class MorphSession(TwoPUtils.sess.Session):
             masks, si, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['pos'],
                                                                        self.trial_start_inds,
                                                                        self.teleport_inds,
-                                                                       min_pos=min_pos, mas_pos=max_pos,
-                                                                       bin_size=bin_size, **pc_kwargs)
+                                                                       **pc_kwargs)
             d.update({'masks': masks, 'SI': si, 'p': p})
