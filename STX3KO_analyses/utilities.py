@@ -9,7 +9,7 @@ def loop_func_over_mice(func, mice):
     return {mouse: func(mouse) for mouse in mice}
 
 def loop_func_over_days(func, days, **kwargs):
-    return lambda mouse: [func(load_single_day(mouse, day)) for day in days]
+    return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days]
 
 
 def common_rois(roi_matches, inds):
