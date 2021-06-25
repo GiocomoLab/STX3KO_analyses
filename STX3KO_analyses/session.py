@@ -24,6 +24,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         self.t2x_spline = None
         self.rzone_early = None
         self.rzone_late = None
+        self.novel_arm = None
         self.place_cell_info = {}
 
         if prev_sess is not None:
@@ -35,6 +36,13 @@ class YMazeSession(TwoPUtils.sess.Session):
         super(YMazeSession, self).__init__(**kwargs)
 
         self._get_pos2t_spline()
+        if self.novel_arm is not None:
+            if self.novel_arm==-1:
+                self.rzone_nov = self.rzone_early
+                self.rzone_fam = self.rzone_late
+            elif self.novel_arm == 1:
+                self.rzone_fam = self.rzone_early
+                self.rzone_nov = self.rzone_late
 
     @classmethod
     def from_file(cls, filename, **kwargs):
@@ -125,6 +133,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             {'tfront': self.z2t_spline(self.rzone_late['zfront']), 'tback': self.z2t_spline(self.rzone_late['zback'])})
         self.rzone_late['t_antic'] = self.rzone_late['tfront'] - 7
         self.rzone_late['z_antic'] = self.t2z_spline(self.rzone_late['t_antic'])
+
 
     @staticmethod
     def _get_t(t, p0, p1, alpha=.5):
@@ -272,7 +281,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                                        bin_size=bin_size, **pc_kwargs)
             d.update({'masks': masks, 'SI': SI, 'p': p})
 
-    @property
+
     def fam_place_cell_mask(self):
         '''
 
@@ -285,7 +294,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         else:
             return None
 
-    @property
+
     def nov_place_cell_mask(self):
         '''
 
@@ -321,6 +330,13 @@ class ConcatYMazeSession:
                       'rzone_early': _sess_list[0].rzone_early,
                       'rzone_late': _sess_list[0].rzone_late
                       })
+        if attrs['novel_arm']==-1:
+            attrs.update({'rzone_nov': attrs['rzone_early'],
+                          'rzone_fam': attrs['rzone_late']})
+        elif attrs['novel_arm']==1:
+            attrs.update({'rzone_fam': attrs['rzone_early'],
+                          'rzone_nov': attrs['rzone_late']})
+
         print(t_info_keys)
 
         # concat basic info
@@ -411,9 +427,29 @@ class ConcatYMazeSession:
 
         return attrs
 
-    @property
+
     def fam_place_cell_mask(self):
+        '''
+
+        :return:
+        '''
         if self.novel_arm==-1:
+            if 'right' in self.place_cell_info.keys():
+                return self.place_cell_info['right']['masks']
+            else:
+                return self.place_cell_info[1]['masks'].sum(axis=0)>0
+        else:
+            if 'left' in self.place_cell_info.keys():
+                return self.place_cell_info['left']['masks']
+            else:
+                return self.place_cell_info[-1]['masks'].sum(axis=0)>0
+
+    def nov_place_cell_mask(self):
+        '''
+
+        :return:
+        '''
+        if self.novel_arm==1:
             if 'right' in self.place_cell_info.keys():
                 return self.place_cell_info['right']['masks']
             else:
