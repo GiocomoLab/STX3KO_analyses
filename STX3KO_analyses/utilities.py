@@ -3,9 +3,13 @@ import os
 import dill
 import numpy as np
 
+from . import session, ymaze_sess_deets
 
-from . import session, ymaze_sess_deets, behavior
-from . import utilities as u
+def loop_func_over_mice(func, mice):
+    return {mouse: func(mouse) for mouse in mice}
+
+def loop_func_over_days(func, days, **kwargs):
+    return lambda mouse: [func(load_single_day(mouse, day)) for day in days]
 
 
 def common_rois(roi_matches, inds):
@@ -37,7 +41,7 @@ def common_rois(roi_matches, inds):
     return common_roi_mapping.astype(np.int)
 
 
-def load_single_day(mouse, day=0):
+def load_single_day(mouse, day):
     #     mouse = '4467331.2'
     pkldir = os.path.join('/home/mplitt/YMazeSessPkls/', mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
@@ -58,27 +62,30 @@ def load_single_day(mouse, day=0):
         for _deets in deets:
             _sess = session.YMazeSession.from_file(
                 os.path.join(pkldir, _deets['date'], "%s_%d.pkl" % (_deets['scene'], _deets['session'])),
-                verbose=False)
+                verbose=False, novel_arm=_deets['novel'])
             _sess.add_timeseries(licks=_sess.vr_data['lick']._values)
             _sess.add_pos_binned_trial_matrix('licks')
-            _sess.novel_arm = _deets['novel']
+            # setattr(_sess,'novel_arm', _deets['novel'])
+            # _sess.novel_arm = _deets['novel']
             #             _sess_list.append(sess)
             print(_deets['date'], _deets['scene'])
             sess_list.append(_sess)
 
-        sess = u.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                              trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'licks'),
-                              timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'),run_place_cells=True)
+        sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
+                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'licks'),
+                                          timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'),
+                                          run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
             sess.trial_info['block_number'][mask] -= 1
     else:
         sess = session.YMazeSession.from_file(
             os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
-            verbose=False)
+            verbose=False, novel_arm=deets['novel'])
         sess.add_timeseries(licks=sess.vr_data['lick']._values)
         sess.add_pos_binned_trial_matrix('licks')
-        sess.novel_arm = deets['novel']
+        # sess.novel_arm = deets['novel']
+        # setattr(sess, 'novel_arm', deets['novel'])
 
         if mouse == '4467975.1' and day == 0:
             sess.trial_info['block_number'] += 1
@@ -257,7 +264,7 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
                 sess.trial_info['block_number'] += 2
 
     common_roi_mapping = common_rois(match_inds, roi_inds)
-    concat_sess = u.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
-                                 trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks'],
-                                 timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm'])
+    concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
+                                             trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks'],
+                                             timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm'])
     return concat_sess

@@ -57,9 +57,15 @@ def spatial_std(avg_trial_mat):
     :param avg_trial_mat:
     :return:
     '''
+
+    # normalize rate map to be a distribution
     avg_trial_mat_norm = avg_trial_mat / (np.nansum(avg_trial_mat, axis=0, keepdims=True) + 1E-5)
     inds = np.arange(0, avg_trial_mat.shape[0])[:, np.newaxis]
 
+    # center of mass / expected value
     com = (avg_trial_mat_norm * inds).sum(axis=0, keepdims=True)
+    # spatial standard deviation
     std = np.power((np.power(inds - com, 2) * avg_trial_mat_norm).sum(axis=0), .5)
     return std.ravel()
+
+
