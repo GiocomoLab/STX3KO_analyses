@@ -281,9 +281,9 @@ class CellStats:
                     mu_arr[m, d, :stat.shape[0]], sem_arr[m, d, :stat.shape[0]] = stat.mean(axis=-1), sp.stats.sem(stat, axis=-1)
             return mu_arr, sem_arr
 
-        fig, ax = plt.subplots(1, 6, figsize=[5*self.n_days, 10], sharey=True)
+        fig, ax = plt.subplots(2, 6, figsize=[5*self.n_days, 10], sharey=True)
         ko_mu_arr, ko_sem_arr = make_plot_array(self.ko_stats)
-        print(ko_mu_arr.shape)
+
         ctrl_mu_arr, ctrl_sem_arr = make_plot_array(self.ctrl_stats)
 
         for m in range(ctrl_mu_arr.shape[0]):
