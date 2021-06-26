@@ -87,8 +87,8 @@ class CellStats:
                 'avg_std': avg_std.ravel(),
                 'avg_skewness': avg_skewness.ravel(),
                 'avg_kurtosis': avg_kurtosis.ravel(),
-                'max_counts': spatial_analyses.max_counts(avg_trial_mat),
-                'field_width': spatial_analyses.field_width(avg_trial_mat),
+                'max_counts': spatial_analyses.max_counts(avg_trial_mat[0, :, :]),
+                'field_width': spatial_analyses.field_width(avg_trial_mat[0, :, :]),
                 }
         pass
 
