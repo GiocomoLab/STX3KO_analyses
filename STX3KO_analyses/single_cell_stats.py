@@ -190,8 +190,8 @@ class CellStats:
                                                  bins[np.newaxis,:] ).mean(axis=0)
                 ko_hist /= ko_hist.sum()
                 if cumulative:
-                    ax[d].plot(bins, np.cumsum(ctrl_hist), color='black')
-                    ax[d].plot(bins, np.cumsum(ko_hist), color='red')
+                    ax[d].fill_between(bins, np.cumsum(ctrl_hist), color='black')
+                    ax[d].fill_between(bins, np.cumsum(ko_hist), color='red')
                 else:
                     ax[d].fill_between(bins, ctrl_hist, color='black', alpha=.3)
                     ax[d].fill_between(bins,ko_hist, color = 'red', alpha = .3)
