@@ -7,7 +7,7 @@ from . import ymaze_sess_deets
 from . import utilities as u
 
 class CellStats:
-
+    # TODO: continue modularizing InfieldVsOutOfField.ipynb here
     def __init__(self, ts_key = 'spks', fam=True, days = np.arange(0, 6)):
         '''
 
