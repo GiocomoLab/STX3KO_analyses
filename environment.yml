@@ -18,6 +18,7 @@ dependencies:
   - scipy>=1.6
   - sqlite
   - statsmodels
+  - pingouin
   - pip:
       - "--editable=/home/mplitt/repos/TwoPUtils/"
       - "--editable=/home/mplitt/repos/suite2p/"
