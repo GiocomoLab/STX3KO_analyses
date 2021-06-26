@@ -274,7 +274,7 @@ class CellStats:
             :return:
             '''
             mice = stat_dict.keys()
-            mu_arr, sem_arr = np.zeros([len(mice), self.n_days, x.shape[0]])*np.nan
+            mu_arr, sem_arr = np.zeros([len(mice), self.n_days, x.shape[0]])*np.nan, np.zeros([len(mice), self.n_days, x.shape[0]])*np.nan
             for m, mouse in enumerate(mice):
                 for d, day in enumerate(self.days):
                     stat = np.squeeze(stat_dict[mouse][day][stat_key])
