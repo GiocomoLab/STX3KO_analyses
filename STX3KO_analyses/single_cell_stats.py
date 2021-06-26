@@ -137,7 +137,7 @@ class CellStats:
                     parts = ax.violinplot(data, positions=[2 * day + .1 * k], showextrema=False, showmeans=False,
                                           widths=.1, points=10)
                     for pc in parts['bodies']:
-                        pc.set_facecolor('red')
+                        pc.set_facecolor('black')
                         pc.set_edgecolor('black')
                         pc.set_alpha(.5)
                 _ = ax.scatter(2 * day + .1 * k, data.mean(), color='black')
