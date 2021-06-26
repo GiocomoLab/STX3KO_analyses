@@ -87,8 +87,8 @@ class CellStats:
                 'avg_std': avg_std.ravel(),
                 'avg_skewness': avg_skewness.ravel(),
                 'avg_kurtosis': avg_kurtosis.ravel(),
-                'max_counts': spatial_analyses.max_counts(avg_trial_mat),
-                'field_width': spatial_analyses.field_width(avg_trial_mat),
+                'max_counts': spatial_analyses.max_counts(avg_trial_mat[0, :, :]),
+                'field_width': spatial_analyses.field_width(avg_trial_mat[0, :, :]),
                 }
         pass
 
@@ -121,6 +121,7 @@ class CellStats:
         for k, (mouse, data_list) in enumerate(self.ko_stats.items()):
             for day, data_dict in enumerate(data_list):
                 data = data_dict[stat_key]
+                data = data[~np.isnan(data)]
                 if not scatter_only:
                     parts = ax.violinplot(data, positions=[2 * day + .6 + .1 * k], showextrema=False, showmeans=False,
                                           widths=.1, points=10)
@@ -133,6 +134,7 @@ class CellStats:
         for k, (mouse, data_list) in enumerate(self.ctrl_stats.items()):
             for day, data_dict in enumerate(data_list):
                 data = data_dict[stat_key]
+                data = data[~np.isnan(data)]
                 if not scatter_only:
                     parts = ax.violinplot(data, positions=[2 * day + .1 * k], showextrema=False, showmeans=False,
                                           widths=.1, points=10)
