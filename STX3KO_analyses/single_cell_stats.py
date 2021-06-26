@@ -122,13 +122,13 @@ class CellStats:
             for day, data_dict in enumerate(data_list):
                 data = data_dict[stat_key]
                 if not scatter_only:
-                    parts = ax.violinplot(data, positions=[2 * day + .6 * k], showextrema=False, showmeans=False,
+                    parts = ax.violinplot(data, positions=[2 * day + .6 + .1 * k], showextrema=False, showmeans=False,
                                           widths=.1, points=10)
                     for pc in parts['bodies']:
                         pc.set_facecolor('red')
                         pc.set_edgecolor('black')
                         pc.set_alpha(.5)
-                _ = ax.scatter(2 * day + .6 * k, data.mean(), color='red')
+                _ = ax.scatter(2 * day + .6 +.1 * k, data.mean(), color='red')
 
         for k, (mouse, data_list) in enumerate(self.ctrl_stats.items()):
             for day, data_dict in enumerate(data_list):
@@ -137,7 +137,7 @@ class CellStats:
                     parts = ax.violinplot(data, positions=[2 * day + .1 * k], showextrema=False, showmeans=False,
                                           widths=.1, points=10)
                     for pc in parts['bodies']:
-                        pc.set_facecolor('red')
+                        pc.set_facecolor('black')
                         pc.set_edgecolor('black')
                         pc.set_alpha(.5)
                 _ = ax.scatter(2 * day + .1 * k, data.mean(), color='black')
