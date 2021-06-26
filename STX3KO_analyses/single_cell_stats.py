@@ -102,7 +102,7 @@ class CellStats:
             means = np.zeros([len(data_dict.keys()), self.n_days])
             for k, (mouse, data_list) in enumerate(data_dict.items()):
                 for day, stat_dict in enumerate(data_list):
-                    means[day, k] = np.nanmean(stat_dict[key])
+                    means[k, day] = np.nanmean(stat_dict[key])
             return means
 
         return make_mean_mat(self.ko_stats), make_mean_mat(self.ctrl_stats)
