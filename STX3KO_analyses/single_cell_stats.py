@@ -80,7 +80,7 @@ class CellStats:
         return {
                 'std': std,
                 'skewness': skewness,
-                'trial_avg_skewness': skewness.mean(),
+                'trial_avg_skewness': skewness.mean(axis=0),
                 'kurtosis': kurtosis,
                 'avg_std': avg_std.ravel(),
                 'avg_skewness': avg_skewness.ravel(),
