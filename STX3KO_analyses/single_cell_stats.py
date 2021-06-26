@@ -48,26 +48,23 @@ class CellStats:
             cell_mask = sess.fam_place_cell_mask()
             trial_mask = sess.trial_info['LR'] == -1 * sess.novel_arm
         else:
-            cell_mask = sess.mpv_place_cell_mask()
+            cell_mask = sess.nov_place_cell_mask()
             trial_mask = sess.trial_info['LR'] == sess.novel_arm
 
         trial_mat = sess.trial_matrices[ts_key][:, :, cell_mask]
         trial_mat = trial_mat[trial_mask, :, :]
+        trial_mat[np.isnan(trial_mat)] = 1E-5
 
-        avg_trial_mat = np.nanmean(trial_mat, axis=0, keepdims = True)
-        avg_trial_mat[np.isnan(avg_trial_mat)] = 1E-5
+        avg_trial_mat = trial_mat.mean(axis=0, keepdims = True)
+
 
         inds = np.arange(0, trial_mat.shape[1])[np.newaxis, :, np.newaxis]
 
         avg_trial_mat_norm = avg_trial_mat / (np.nansum(avg_trial_mat, axis=1, keepdims=True) + 1E-5)
-        # center of mass / expected value
         avg_com = (avg_trial_mat_norm * inds).sum(axis=1, keepdims=True)
-        # spatial standard deviation
         avg_std = np.power((np.power(inds - avg_com, 2) * avg_trial_mat_norm).sum(axis=1, keepdims=True), .5)
         avg_skewness = (np.power((inds - avg_com) / (avg_std + 1E-5), 3) * avg_trial_mat_norm).sum(axis=1)
         avg_kurtosis = (np.power((inds - avg_com) / (avg_std + 1E-5), 4) * avg_trial_mat_norm).sum(axis=1)
-
-        trial_mat[np.isnan(trial_mat)] = 1E-5
 
         trial_mat_sm = sp.ndimage.filters.gaussian_filter1d(trial_mat, 3, axis=0)
         trial_mat_sm_norm = trial_mat_sm / (np.nansum(trial_mat_sm, axis=1, keepdims=True) + 1E-5)
