@@ -1,13 +1,18 @@
 import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
+import pandas as pd
+
+from pingouin import mixed_anova, pairwise_tukey
+
+import TwoPUtils as tpu
 
 from . import spatial_analyses
 from . import ymaze_sess_deets
 from . import utilities as u
 
 class CellStats:
-    # TODO: continue modularizing InfieldVsOutOfField.ipynb here
+
     def __init__(self, ts_key = 'spks', fam=True, days = np.arange(0, 6)):
         '''
 
@@ -58,7 +63,7 @@ class CellStats:
         # center of mass / expected value
         avg_com = (avg_trial_mat_norm * inds).sum(axis=0, keepdims=True)
         # spatial standard deviation
-        avg_std = np.power((np.power(inds - com, 2) * avg_trial_mat_norm).sum(axis=0, keepdims=True), .5)
+        avg_std = np.power((np.power(inds - avg_com, 2) * avg_trial_mat_norm).sum(axis=0, keepdims=True), .5)
         avg_skewness = (np.power((inds - avg_com) / (avg_std + 1E-5), 3) * avg_trial_mat_norm).sum(axis=1)
         avg_kurtosis = (np.power((inds - avg_com) / (avg_std + 1E-5), 4) * avg_trial_mat_norm).sum(axis=1)
 
@@ -141,13 +146,163 @@ class CellStats:
 
 
 
-    def combined_hist(self, smooth=True, cumulative=False, bins= None):
-        pass
+    def combined_hist(self, stat_key, smooth=True, cumulative=False, bins= None, sigma = .1):
+        '''
+
+        :param stat_key:
+        :param smooth:
+        :param cumulative:
+        :param bins:
+        :param sigma:
+        :return:
+        '''
+
+        fig, ax = plt.subplots(1, 6, figsize=[30, 5], sharey=True)
+
+        def concat_stats(stat_dict):
+            stat = {day: [] for day in self.days}
+            mice = list(stat_dict.keys())
+            for mouse in stat_dict.keys():
+                for day in self.days:
+                    stat[day].append(stat_dict[mouse][day][stat_key])
+
+            for k in stat.keys():
+                stat[k] = np.concatenate(stat[k]).ravel()
+
+            return stat
+
+        ko_ravel_stat = concat_stats(self.ko_stats)
+        ctrl_ravel_stat = concat_stats(self.ctrl_stats)
+
+        if bins is None:
+            _min = np.minimum(np.amin(ko_ravel_stat[self.days[0]]), np.amin(ctrl_ravel_stat[self.days[0]]))
+            _max = np.maximum(np.amax(ko_ravel_stat[self.days[0]]), np.amax(ctrl_ravel_stat[self.days[0]]))
+            bins = np.linspace(_min, _max)
+
+        for d, day in enumerate(self.days):
+            if smooth:
+                ctrl_hist = tpu.utilities.gaussian(ctrl_ravel_stat[day][:, np.newaxis], sigma,
+                                                 bins[np.newaxis, :]).mean(axis=0)
+                ctrl_hist /= ctrl_hist.sum()
+
+                ko_hist = tpu.utilities.gaussian(ko_ravel_stat[day][:,np.newaxis], sigma,
+                                                 bins[np.newaxis,:] ).mean(axis=0)
+                ko_hist /= ko_hist.sum()
+
+                ax[d].fill_between(bins, ctrl_hist, color='black', alpha=.3)
+                ax[d].fill_between(bins,ko_hist, color = 'red', alpha = .3)
+            else:
+                ax[d].hist(ctrl_ravel_stat[day], bins=bins, color='black', alpha=.3, cumulative=cumulative)
+                ax[d].hist(ko_ravel_stat[day], bins=bins, color='red', alpha=.3, cumulative=cumulative)
+
+        return fig, ax
 
 
-    def mixed_anova(self, key):
-        pass
+    def mixed_anova(self, stat_key, verbose = True, group_tukey = True, day_tukey = True):
+        '''
 
+        :param stat_key:
+        :return:
+        '''
 
-    def across_trial_plot(self):
-        pass
+        ko_sum_stat, ctrl_sum_stat = self.summary_stat_matrices(stat_key)
+
+        df = {'ko_ctrl': [],
+              'day': [],
+              stat_key: [],
+              'mouse': []}
+
+        for mouse in range(len(self.ko_mice)):
+            for day in self.days:
+                df['ko_ctrl'].append(0)
+                df['day'].append(day)
+                df[stat_key].append(ko_sum_stat[mouse, day])
+                df['mouse'].append(mouse)
+
+        for mouse in range(len(self.ctrl_mice)):
+            for day in self.days:
+                df['ko_ctrl'].append(1)
+                df['day'].append(day)
+                df[stat_key].append(ctrl_sum_stat[mouse, day])
+                df['mouse'].append(mouse + 5)
+
+        df = pd.DataFrame(df)
+        results = {}
+        aov = mixed_anova(data=df, dv=stat_key, between='ko_ctrl', within='day', subject='mouse')
+        results['anova'] = aov
+        if verbose:
+            print('Mixed design ANOVA results')
+            print(aov)
+
+        if group_tukey:
+            ko_ctrl_tukey = pairwise_tukey(data=df, dv=stat_key, between='ko_ctrl')
+            results['ko_ctrl_tukey'] = ko_ctrl_tukey
+            if verbose:
+                print('PostHoc Tukey: KO vs Ctrl')
+                print(ko_ctrl_tukey)
+
+        if day_tukey:
+            day_stats = []
+            print('PostHov Tukey on each day')
+            for day in self.days:
+                print('Day %d' % day)
+                stats = pairwise_tukey(data=df[df['day'] == day], dv=stat_key, between='ko_ctrl')
+                day_stats.append(stats)
+                if verbose:
+                    print(stats)
+            results['day_tukey'] = day_stats
+
+        return results
+
+    def across_trial_plot(self, stat_key, max_trial = 120):
+        '''
+
+        :return:
+        '''
+
+        x = np.arange(0, max_trial)
+
+        def make_plot_array(stat_dict):
+            '''
+
+            :param stat_dict:
+            :return:
+            '''
+            mice = stat_dict.keys()
+            mu_arr, sem_arr = np.zeros([len(mice), self.n_days, x.shape[0]])*np.nan
+            for m, mouse in enumerate(mice):
+                for d, day in enumerate(self.days):
+                    stat = np.squeeze(stat_dict[mouse][day][stat_key])
+                    mu_arr[m, d, :stat.shape[0]], sem_arr[m, d, :stat.shape[0]] = stat.mean(axis=-1), sp.stats.sem(stat, axis=-1)
+            return mu_arr, sem_arr
+
+        fig, ax = plt.subplots(1, 6, figsize=[5*self.n_days, 10], sharey=True)
+        ko_mu_arr, ko_sem_arr = make_plot_array(self.ko_stats)
+        ctrl_mu_arr, ctrl_sem_arr = make_plot_array(self.ctrl_stats)
+
+        for m in range(ctrl_mu_arr.shape[0]):
+            for d in range(ctrl_mu_arr.shape[1]):
+                ax[0,d].fill_between(x, ctrl_mu_arr[m, d,:]-ctrl_sem_arr[m, d, :], ctrl_mu_arr[m, d, :] + ctrl_sem_arr[m, d, :],
+                                     color = 'black', alpha = .3)
+
+        for m in range(ko_mu_arr.shape[0]):
+            for d in range(ko_mu_arr.shape[1]):
+                ax[0,d].fill_between(x, ko_mu_arr[m, d,:]-ko_sem_arr[m, d, :], ko_mu_arr[m, d, :] + ko_sem_arr[m, d, :],
+                                     color = 'red', alpha = .3)
+
+        ko_mu, ko_sem = np.nanmean(ko_mu_arr, axis=0), sp.stats.sem(ko_mu_arr, axis=0, nan_policy='omit')
+        ctrl_mu, ctrl_sem = np.nanmean(ctrl_mu_arr, axis=0), sp.stats.sem(ctrl_mu_arr, axis=0, nan_policy='omit')
+        for d in range(self.n_days):
+            ax[1, d].fill_between(x, ctrl_mu[d, :] - ctrl_sem[d, :], ctrl_mu[d, :] + ctrl_sem[d, :], color='black',
+                                  alpha=.3)
+            ax[1,d].fill_between(x, ko_mu[d,:] - ko_sem[d,:], ko_mu[d,:] + ko_sem[d,:], color = 'red', alpha = .3)
+
+        for row in range(2):
+            for col in range(self.n_days):
+                ax[row,col].spines['top'].set_visible(False)
+                ax[row,col].spines['right'].set_visible(False)
+
+                ax[row, col].set_xlabel('Trial #')
+                ax[row, col].set_ylabel(stat_key)
+        fig.subplots_adjust(wspace = .2, hspace = .2)
+        return fig, ax
