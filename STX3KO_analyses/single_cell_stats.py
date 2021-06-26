@@ -201,6 +201,10 @@ class CellStats:
                 ax[d].hist(ctrl_ravel_stat[day], bins=bins, color='black', alpha=.3, cumulative=cumulative, density=True)
                 ax[d].hist(ko_ravel_stat[day], bins=bins, color='red', alpha=.3, cumulative=cumulative, density=True)
 
+            ax[d].spines['top'].set_visible(False)
+            ax[d].spines['right'].set_visible(False)
+            fig.suptitle(stat_key)
+
         return fig, ax
 
 
