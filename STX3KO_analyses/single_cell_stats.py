@@ -259,7 +259,7 @@ class CellStats:
 
         return results
 
-    def across_trial_plot(self, stat_key, max_trial = 120):
+    def across_trial_plot(self, stat_key, max_trial = 140):
         '''
 
         :return:
