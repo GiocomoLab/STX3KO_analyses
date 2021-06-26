@@ -165,7 +165,8 @@ class CellStats:
             mice = list(stat_dict.keys())
             for mouse in stat_dict.keys():
                 for day in self.days:
-                    stat[day].append(stat_dict[mouse][day][stat_key])
+                    _data = stat_dict[mouse][day][stat_key]
+                    stat[day].append(_data[~np.isnan(_data)])
 
             for k in stat.keys():
                 stat[k] = np.concatenate(stat[k]).ravel()
