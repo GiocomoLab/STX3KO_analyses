@@ -72,7 +72,7 @@ def load_single_day(mouse, day):
             sess_list.append(_sess)
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'licks'),
+                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'licks', 'speed'),
                                           timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'),
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
@@ -265,6 +265,6 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
 
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
-                                             trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks'],
+                                             trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks', 'speed'],
                                              timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm'])
     return concat_sess
