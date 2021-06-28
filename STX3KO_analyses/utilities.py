@@ -41,7 +41,7 @@ def common_rois(roi_matches, inds):
     return common_roi_mapping.astype(np.int)
 
 
-def load_single_day(mouse, day):
+def load_single_day(mouse, day, verbose = True):
     #     mouse = '4467331.2'
     pkldir = os.path.join('/home/mplitt/YMazeSessPkls/', mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
@@ -52,7 +52,8 @@ def load_single_day(mouse, day):
     else:
         raise Exception("invalid mouse name")
 
-    print(deets)
+    if verbose:
+        print(deets)
     if isinstance(deets, tuple):
         with open(os.path.join(pkldir, "roi_aligner_results.pkl"), 'rb') as file:
             match_inds = dill.load(file)
@@ -73,7 +74,7 @@ def load_single_day(mouse, day):
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
                                           trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'licks', 'speed'),
-                                          timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm'),
+                                          timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'licks', 'speed'),
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
@@ -266,5 +267,5 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
                                              trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks', 'speed'],
-                                             timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm'])
+                                             timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks', 'speed'])
     return concat_sess

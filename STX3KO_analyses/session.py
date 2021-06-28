@@ -391,10 +391,13 @@ class ConcatYMazeSession:
                     trial_mat[k].append(_sess.trial_matrices[k])
 
             for k in timeseries_keys:
-                if len(_sess.timeseries[k].shape) == 2:
+                if len(_sess.timeseries[k].shape) == 2 and _sess.timeseries[k].shape[0]>1:
+                # if _sess.timeseries[k].shape[0] > 1:
                     timeseries[k].append(_sess.timeseries[k][common_roi_mapping[ind, :], :])
-                else:
+                elif len(_sess.timeseries[k].shape) == 2 and _sess.timeseries[k].shape[0] == 1:
                     timeseries[k].append(_sess.timeseries[k])
+                else:
+                    timeseries[k].append(_sess.timeseries[k][np.newaxis,:])
 
             if run_place_cells:
                 for lr, _lr in [[-1, 'left'], [1, 'right']]:
