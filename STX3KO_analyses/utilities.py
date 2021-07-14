@@ -63,7 +63,7 @@ def load_single_day(mouse, day, verbose = True):
         for _deets in deets:
             _sess = session.YMazeSession.from_file(
                 os.path.join(pkldir, _deets['date'], "%s_%d.pkl" % (_deets['scene'], _deets['session'])),
-                verbose=False, novel_arm=_deets['novel'])
+                verbose=False, novel_arm=_deets['novel_arm'])
             _sess.add_timeseries(licks=_sess.vr_data['lick']._values)
             _sess.add_pos_binned_trial_matrix('licks')
             # setattr(_sess,'novel_arm', _deets['novel'])
@@ -82,7 +82,7 @@ def load_single_day(mouse, day, verbose = True):
     else:
         sess = session.YMazeSession.from_file(
             os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
-            verbose=False, novel_arm=deets['novel'])
+            verbose=False, novel_arm=deets['novel_arm'])
         sess.add_timeseries(licks=sess.vr_data['lick']._values)
         sess.add_pos_binned_trial_matrix('licks')
         # sess.novel_arm = deets['novel']

@@ -37,7 +37,7 @@ class YMazeSession(TwoPUtils.sess.Session):
 
         self._get_pos2t_spline()
         if self.novel_arm is not None:
-            if self.novel_arm==-1:
+            if self.novel_arm == -1:
                 self.rzone_nov = self.rzone_early
                 self.rzone_fam = self.rzone_late
             elif self.novel_arm == 1:
@@ -134,7 +134,6 @@ class YMazeSession(TwoPUtils.sess.Session):
         self.rzone_late['t_antic'] = self.rzone_late['tfront'] - 7
         self.rzone_late['z_antic'] = self.t2z_spline(self.rzone_late['t_antic'])
 
-
     @staticmethod
     def _get_t(t, p0, p1, alpha=.5):
         '''
@@ -230,12 +229,10 @@ class YMazeSession(TwoPUtils.sess.Session):
             stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
             print(start_ind, stop_ind)
 
-
             Freg[:, start_ind:stop_ind] = self.timeseries[Fkey][:, start_ind:stop_ind] - Fneu_coef * self.timeseries[
                                                                                                          Fneukey][:,
                                                                                                      start_ind:stop_ind] + Fneu_coef * np.amin(
-                self.timeseries[Fneukey][:, start_ind:stop_ind], axis=1,keepdims = True)
-
+                self.timeseries[Fneukey][:, start_ind:stop_ind], axis=1, keepdims=True)
 
             Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:, start_ind:stop_ind], size=(1, 7))
             dff[:, start_ind:stop_ind] = TwoPUtils.utilities.dff(Freg[:, start_ind:stop_ind], **dff_kwargs)
@@ -281,7 +278,6 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                                        bin_size=bin_size, **pc_kwargs)
             d.update({'masks': masks, 'SI': SI, 'p': p})
 
-
     def fam_place_cell_mask(self):
         '''
 
@@ -293,7 +289,6 @@ class YMazeSession(TwoPUtils.sess.Session):
             return self.place_cell_info['left']['masks']
         else:
             return None
-
 
     def nov_place_cell_mask(self):
         '''
@@ -310,7 +305,8 @@ class YMazeSession(TwoPUtils.sess.Session):
 
 class ConcatYMazeSession:
 
-    def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'], trial_mat_keys=['F_dff',],
+    def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'],
+                 trial_mat_keys=['F_dff', ],
                  timeseries_keys=(), run_place_cells=True, day_inds=None):
         attrs = self.concat(sess_list, common_roi_mapping, trial_info_keys, trial_mat_keys,
                             timeseries_keys, run_place_cells, day_inds)
@@ -322,7 +318,7 @@ class ConcatYMazeSession:
     def concat(_sess_list, common_roi_mapping, t_info_keys, t_mat_keys,
                timeseries_keys, run_place_cells, day_inds):
         attrs = {}
-        attrs['day_inds']=day_inds
+        attrs['day_inds'] = day_inds
         # same info
         #         same_attrs = ['mouse', 'novel_arm','rzone_early', 'rzone_late']
         attrs.update({'mouse': _sess_list[0].mouse,
@@ -330,10 +326,10 @@ class ConcatYMazeSession:
                       'rzone_early': _sess_list[0].rzone_early,
                       'rzone_late': _sess_list[0].rzone_late
                       })
-        if attrs['novel_arm']==-1:
+        if attrs['novel_arm'] == -1:
             attrs.update({'rzone_nov': attrs['rzone_early'],
                           'rzone_fam': attrs['rzone_late']})
-        elif attrs['novel_arm']==1:
+        elif attrs['novel_arm'] == 1:
             attrs.update({'rzone_fam': attrs['rzone_early'],
                           'rzone_nov': attrs['rzone_late']})
 
@@ -365,7 +361,7 @@ class ConcatYMazeSession:
 
             for k in basic_info_attrs:
                 if k in ('teleport_inds', 'trial_start_inds'):
-                    attrs[k].append(getattr(_sess, k)+cum_frames)
+                    attrs[k].append(getattr(_sess, k) + cum_frames)
                 else:
                     attrs[k].append(getattr(_sess, k))
 
@@ -391,22 +387,22 @@ class ConcatYMazeSession:
                     trial_mat[k].append(_sess.trial_matrices[k])
 
             for k in timeseries_keys:
-                if len(_sess.timeseries[k].shape) == 2 and _sess.timeseries[k].shape[0]>1:
-                # if _sess.timeseries[k].shape[0] > 1:
+                if len(_sess.timeseries[k].shape) == 2 and _sess.timeseries[k].shape[0] > 1:
+                    # if _sess.timeseries[k].shape[0] > 1:
                     timeseries[k].append(_sess.timeseries[k][common_roi_mapping[ind, :], :])
                 elif len(_sess.timeseries[k].shape) == 2 and _sess.timeseries[k].shape[0] == 1:
                     timeseries[k].append(_sess.timeseries[k])
                 else:
-                    timeseries[k].append(_sess.timeseries[k][np.newaxis,:])
+                    timeseries[k].append(_sess.timeseries[k][np.newaxis, :])
 
             if run_place_cells:
                 for lr, _lr in [[-1, 'left'], [1, 'right']]:
                     for k in ['masks', 'SI', 'p']:
                         place_cells[lr][k].append(_sess.place_cell_info[_lr][k][common_roi_mapping[ind, :]])
 
-            cum_frames+= _sess.timeseries['spks'].shape[1]
+            cum_frames += _sess.timeseries['spks'].shape[1]
         print(t_info_keys)
-        for k in ['trial_start_inds','teleport_inds']:
+        for k in ['trial_start_inds', 'teleport_inds']:
             attrs[k] = np.concatenate(attrs[k])
 
         for k in t_info_keys:
@@ -419,7 +415,7 @@ class ConcatYMazeSession:
         attrs['trial_matrices'] = trial_mat
 
         for k in timeseries_keys:
-            timeseries[k] = np.concatenate(timeseries[k],axis=-1)
+            timeseries[k] = np.concatenate(timeseries[k], axis=-1)
         attrs['timeseries'] = timeseries
 
         if run_place_cells:
@@ -430,39 +426,37 @@ class ConcatYMazeSession:
 
         return attrs
 
-
     def fam_place_cell_mask(self):
         '''
 
         :return:
         '''
-        if self.novel_arm==-1:
+        if self.novel_arm == -1:
             if 'right' in self.place_cell_info.keys():
                 return self.place_cell_info['right']['masks']
             else:
-                return self.place_cell_info[1]['masks'].sum(axis=0)>0
+                return self.place_cell_info[1]['masks'].sum(axis=0) > 0
         else:
             if 'left' in self.place_cell_info.keys():
                 return self.place_cell_info['left']['masks']
             else:
-                return self.place_cell_info[-1]['masks'].sum(axis=0)>0
+                return self.place_cell_info[-1]['masks'].sum(axis=0) > 0
 
     def nov_place_cell_mask(self):
         '''
 
         :return:
         '''
-        if self.novel_arm==1:
+        if self.novel_arm == 1:
             if 'right' in self.place_cell_info.keys():
                 return self.place_cell_info['right']['masks']
             else:
-                return self.place_cell_info[1]['masks'].sum(axis=0)>0
+                return self.place_cell_info[1]['masks'].sum(axis=0) > 0
         else:
             if 'left' in self.place_cell_info.keys():
                 return self.place_cell_info['left']['masks']
             else:
-                return self.place_cell_info[-1]['masks'].sum(axis=0)>0
-
+                return self.place_cell_info[-1]['masks'].sum(axis=0) > 0
 
 
 class MorphSession(TwoPUtils.sess.Session):
