@@ -221,7 +221,7 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
         sessions_deets = ymaze_sess_deets.CTRL_sessions[mouse]
     else:
         print("mouse ID typo")
-
+        print("shenanigans")
     if date_inds is None:
         date_inds = np.arange(len(sessions_deets)).tolist()
 
@@ -238,7 +238,7 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
                     verbose=False)
                 sess.add_timeseries(licks=sess.vr_data['lick']._values)
                 sess.add_pos_binned_trial_matrix('licks')
-                sess.novel_arm = _deets['novel']
+                sess.novel_arm = _deets['novel_arm']
                 #             _sess_list.append(sess)
                 print(_deets['date'], _deets['scene'])
                 sess_list.append(sess)
@@ -253,7 +253,7 @@ def single_mouse_concat_sessions(mouse, date_inds=None):
                 verbose=False)
             sess.add_timeseries(licks=sess.vr_data['lick']._values)
             sess.add_pos_binned_trial_matrix('licks')
-            sess.novel_arm = deets['novel']
+            sess.novel_arm = deets['novel_arm']
             sess_list.append(sess)
             date_inds_ravel.append(date_ind)
             roi_inds.append(deets['ravel_ind'])
