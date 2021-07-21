@@ -85,7 +85,7 @@ class CellStats:
                 'avg_std': avg_std.ravel(),
                 'avg_skewness': avg_skewness.ravel(),
                 'avg_kurtosis': avg_kurtosis.ravel(),
-                'max_counts': spatial_analyses.max_counts(sp.ndimage.filter.gaussian_filter1d(avg_trial_mat[0, :, :],1,axis=0)),
+                'max_counts': spatial_analyses.max_counts(sp.ndimage.filters.gaussian_filter1d(avg_trial_mat[0, :, :],1,axis=0)),
                 'field_width': spatial_analyses.field_width(avg_trial_mat[0, :, :]),
                 }
         pass
