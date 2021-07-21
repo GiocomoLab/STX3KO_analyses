@@ -11,6 +11,92 @@ import pandas as pd
 
 from pingouin import mixed_anova, pairwise_tukey
 
+class LMM_PeriRewardPlaceCellFrac:
+
+    def __init__(self, days = np.arange(5), ts_key = 'spks'):
+
+        '''
+
+
+        :param days:
+        :param ts_key:
+        '''
+
+        self.ko_mice = ymaze_sess_deets.ko_mice
+        self.ctrl_mice = ymaze_sess_deets.ctrl_mice
+        self.__dict__.update({'days': days, 'days_z': sp.stats.zscore(days), 'ts_key': ts_key, 'fam': fam})
+        self.n_days = days.shape[0]
+
+        self.df = pd.DataFrame({'mouse':[],'ko':[],'day':[],'lr':[], 'novfam':[], 'frac': []})
+        self.fill_df()
+
+
+    def fill_df(self):
+        for mouse in self.ko_mice:
+            for day, dz in zip(self.days,self.days_z):
+                self.argmax_perireward(u.load_single_day(mouse, day), 1, dz)
+
+
+
+
+    def argmax_perireward(self, sess: session.YMazeSession, ko, dz, ts_key: str = 'spks'):
+        '''
+
+        :param sess:
+        :param ts_key:
+        :param fam:
+        :return:
+        '''
+
+
+        trials_mat = sess.trial_matrices[ts_key]
+        bin_edges = sess.trial_matrices['bin_edges']
+
+
+        for arm in [-1, 1]:
+            trial_mask = sess.trial_info['lr']==arm
+            if sess.novel_arm == arm:
+                cell_mask = sess.nov_place_cell_mask()
+                rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
+                                          (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
+                nov = 1
+            else:
+                cell_mask = sess.fam_place_cell_mask()
+                rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
+                                          (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
+                nov = 0
+
+
+
+            # smooth ratemap by 1 bin
+            ratemap = sp.ndimage.filters.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
+            max_inds = np.argmax(ratemap[:,cell_mask], axis = 0) - rzone_front
+            reward_frac = self.get_frac(max_inds)
+
+            self.df.append({'mouse': sess.mouse,
+                            'ko': ko,
+                            'day': dz,
+                            'lr': arm,
+                            'novfam': nov,
+                            'frac': reward_frac}, ignore_index=True)
+
+
+
+    @staticmethod
+    def get_frac(data):
+        '''
+
+        :param frac:
+        :return:
+        '''
+        x = np.arange(-30, 15)
+        anova_mask = (x > -5) * (x <= -1)
+
+        hist = np.array([np.count_nonzero(data.ravel() == _bin) for _bin in x.tolist()])
+        hist = hist / hist.sum()
+        return hist[anova_mask].sum() / hist[~anova_mask].sum()
+
+
 
 class PeriRewardPlaceCellFrac:
 
