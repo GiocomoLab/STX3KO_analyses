@@ -66,7 +66,7 @@ class CellStats:
         avg_skewness = (np.power((inds - avg_com) / (avg_std + 1E-5), 3) * avg_trial_mat_norm).sum(axis=1)
         avg_kurtosis = (np.power((inds - avg_com) / (avg_std + 1E-5), 4) * avg_trial_mat_norm).sum(axis=1)
 
-        trial_mat_sm = sp.ndimage.filters.gaussian_filter1d(trial_mat, 3, axis=0)
+        trial_mat_sm = trial_mat #sp.ndimage.filters.gaussian_filter1d(trial_mat, 3, axis=0)
         trial_mat_sm_norm = trial_mat_sm / (np.nansum(trial_mat_sm, axis=1, keepdims=True) + 1E-5)
 
         com = (trial_mat_sm_norm * inds).sum(axis=1, keepdims=True)
