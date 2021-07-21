@@ -45,7 +45,7 @@ def max_counts(avg_trial_mat, mean_norm_thresh = 1):
     # find number of maxima
     max_counts = []
     for cell in range(avg_trial_mat.shape[-1]):
-        extm, _ = sp.signal.find_peaks(avg_trial_mat[:, cell], prominences=.1) #height=mean_norm_thresh)
+        extm, _ = sp.signal.find_peaks(avg_trial_mat[:, cell], prominence=.1) #height=mean_norm_thresh)
         max_counts.append(extm.shape[0])
 
     return np.array(max_counts)
