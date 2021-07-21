@@ -89,7 +89,7 @@ class CellStats:
 
 
         _rm = 0 * avg_trial_mat[0,:,:]
-        cellts_mu = np.percentile(sess.timeseries['spks'][:,time_mask],75, axis=1)[cell_mask]
+        cellts_mu = np.nanpercentile(sess.timeseries['spks'][:,time_mask],75, axis=1)[cell_mask]
         _rm[avg_trial_mat[0,:,:]> cellts_mu[np.newaxis,:]*np.ones([avg_trial_mat.shape[1],1])] = 1
         rm = np.zeros((avg_trial_mat.shape[1]+1, avg_trial_mat.shape[2]))
         rm[1:, :] = _rm
