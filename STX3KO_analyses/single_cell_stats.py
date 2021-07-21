@@ -47,10 +47,21 @@ class CellStats:
         if fam:
             cell_mask = sess.fam_place_cell_mask()
             trial_mask = sess.trial_info['LR'] == -1 * sess.novel_arm
+
+            time_mask = 0*sess.vr_data['t']._values
+            for (start,stop, lr) in zip(sess.trial_start_inds, sess.teleport_inds, sess.trial_info['LR']):
+                if lr == -1*sess.novel_arm:
+                    time_mask[start:stop]=1
+
         else:
             cell_mask = sess.nov_place_cell_mask()
             trial_mask = sess.trial_info['LR'] == sess.novel_arm
 
+            time_mask = 0 * sess.vr_data['t']._values
+            for (start, stop, lr) in zip(sess.trial_start_inds, sess.teleport_inds, sess.trial_info['LR']):
+                if lr == sess.novel_arm:
+                    time_mask[start:stop] = 1
+        time_mask = time_mask>0
         trial_mat = sess.trial_matrices[ts_key][:, :, cell_mask]
         trial_mat = trial_mat[trial_mask, :, :]
         trial_mat[np.isnan(trial_mat)] = 1E-5
@@ -66,7 +77,7 @@ class CellStats:
         avg_skewness = (np.power((inds - avg_com) / (avg_std + 1E-5), 3) * avg_trial_mat_norm).sum(axis=1)
         avg_kurtosis = (np.power((inds - avg_com) / (avg_std + 1E-5), 4) * avg_trial_mat_norm).sum(axis=1)
 
-        trial_mat_sm = trial_mat #sp.ndimage.filters.gaussian_filter1d(trial_mat, 3, axis=0)
+        trial_mat_sm = sp.ndimage.filters.gaussian_filter1d(trial_mat, 3, axis=0)
         trial_mat_sm_norm = trial_mat_sm / (np.nansum(trial_mat_sm, axis=1, keepdims=True) + 1E-5)
 
         com = (trial_mat_sm_norm * inds).sum(axis=1, keepdims=True)
@@ -77,6 +88,12 @@ class CellStats:
 
 
 
+        _rm = 0 * avg_trial_mat
+        _rm[avg_trial_mat > np.nanmean(sess.timeseries['spks'][:,time_mask],axis=1)[np.newaxis,:]] = 1
+        rm = np.zeros((avg_trial_mat.shape[0]+1, avg_trial_mat.shape[1]))
+        rm[1:, :] = _rm
+        numfields = np.count_nonzero(rm[1:,:] > rm[:-1,:], axis = 0)
+
         return {
                 'std': std,
                 'skewness': skewness,
@@ -86,6 +103,7 @@ class CellStats:
                 'avg_skewness': avg_skewness.ravel(),
                 'avg_kurtosis': avg_kurtosis.ravel(),
                 'max_counts': spatial_analyses.max_counts(avg_trial_mat[0, :, :]),
+                'num_fields': numfields,
                 'field_width': spatial_analyses.field_width(avg_trial_mat[0, :, :]),
                 }
         pass
