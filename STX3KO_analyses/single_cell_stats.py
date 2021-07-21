@@ -57,7 +57,7 @@ class CellStats:
             cell_mask = sess.nov_place_cell_mask()
             trial_mask = sess.trial_info['LR'] == sess.novel_arm
 
-            time_mask = 0 * sess.vr_data['t']._values
+            time_mask = 0 * sess.timeseries['spks'][0,:]
             for (start, stop, lr) in zip(sess.trial_start_inds, sess.teleport_inds, sess.trial_info['LR']):
                 if lr == sess.novel_arm:
                     time_mask[start:stop] = 1
