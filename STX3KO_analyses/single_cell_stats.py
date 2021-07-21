@@ -89,8 +89,9 @@ class CellStats:
 
 
         _rm = 0 * avg_trial_mat
-        _rm[avg_trial_mat > np.nanmean(sess.timeseries['spks'][:,time_mask],axis=1)[np.newaxis,:]] = 1
-        rm = np.zeros((avg_trial_mat.shape[0]+1, avg_trial_mat.shape[1]))
+        cellts_mu = np.nanmean(sess.timeseries['spks'][:,time_mask],axis=1)[cell_mask]
+        _rm[avg_trial_mat[0,:,:]> cellts_mu[np.newaxis,:]] = 1
+        rm = np.zeros((avg_trial_mat.shape[1]+1, avg_trial_mat.shape[2]))
         rm[1:, :] = _rm
         numfields = np.count_nonzero(rm[1:,:] > rm[:-1,:], axis = 0)
 
