@@ -31,7 +31,7 @@ def field_width(avg_trial_mat):
     return fw
 
 
-def max_counts(avg_trial_mat, mean_norm_thresh = 1.5):
+def max_counts(avg_trial_mat, mean_norm_thresh = .5):
     '''
     get number of local maxima in avg rate map
 
