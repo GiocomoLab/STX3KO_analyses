@@ -35,3 +35,15 @@ KO_sessions = {'4467975.1': ({'date': '09_10_2020', 'scene': 'TwoTower_foraging'
                              {'date': '17_10_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 4},)
 
                }
+
+CT_sessions = {'4467331.1': ({'date': '09_10_2020', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 11},
+                             # {'date': '11_10_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 4},
+                             # {'date': '11_10_2020', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 10},
+                             # {'date': '13_10_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 5},
+                             # {'date': '14_10_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 3},
+                             # {'date': '15_10_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 6},
+                             # {'date': '16_10_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 7},
+                             # {'date': '17_10_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
+                             # ),
+
+               # '4467975.2': ({'date': '09_10_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
