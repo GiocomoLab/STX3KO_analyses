@@ -307,16 +307,17 @@ class ConcatYMazeSession:
 
     def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'],
                  trial_mat_keys=['F_dff', ],
-                 timeseries_keys=(), run_place_cells=True, day_inds=None, load_ops = False, load_stats = False):
+                 timeseries_keys=(), run_place_cells=True, day_inds=None,
+                 load_ops=False, load_stats = False):
         attrs = self.concat(sess_list, common_roi_mapping, trial_info_keys, trial_mat_keys,
-                            timeseries_keys, run_place_cells, day_inds)
+                            timeseries_keys, run_place_cells, day_inds, load_ops, load_stats)
 
         self.__dict__.update(attrs)
         trial_info_keys = []
 
     @staticmethod
     def concat(_sess_list, common_roi_mapping, t_info_keys, t_mat_keys,
-               timeseries_keys, run_place_cells, day_inds):
+               timeseries_keys, run_place_cells, day_inds, load_ops, load_stats):
         attrs = {}
         attrs['day_inds'] = day_inds
         # same info
@@ -361,9 +362,10 @@ class ConcatYMazeSession:
         last_block = 0
         cum_frames = 0
         for ind, _sess in enumerate(_sess_list):
-
-            attrs['s2p_ops'].append(_sess.s2p_ops)
-            attrs['s2p_stats'].append(_sess.s2p_stats[common_roi_mapping[ind,:]])
+            if load_ops:
+                attrs['s2p_ops'].append(_sess.s2p_ops)
+            if load_stats:
+                attrs['s2p_stats'].append(_sess.s2p_stats[common_roi_mapping[ind,:]])
             for k in basic_info_attrs:
                 if k in ('teleport_inds', 'trial_start_inds'):
                     attrs[k].append(getattr(_sess, k) + cum_frames)
