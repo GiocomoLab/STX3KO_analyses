@@ -1,3 +1,6 @@
+ko_mice = ('4467975.1', '4467975.2', '4467975.3', '4467975.4', '4467975.5',)
+ctrl_mice = ('4467331.1', '4467331.2', '4467332.1', '4467332.2', '4467333.1',)
+
 KO_sessions = {'4467975.1': ({'date': '09_10_2020', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 11},
                              ({'date': '11_10_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 4},
                              {'date': '11_10_2020', 'scene': 'TwoTower_foraging', 'session': 4, 'scan': 10},),
