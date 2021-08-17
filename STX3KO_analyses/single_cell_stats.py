@@ -167,7 +167,7 @@ class CellStats:
 
 
 
-    def combined_hist(self, stat_key, smooth=True, cumulative=False, bins= None, sigma = .1):
+    def combined_hist(self, stat_key, smooth=True, cumulative=False, bins= None, sigma = .1, fill = True):
         '''
 
         :param stat_key:
@@ -211,14 +211,25 @@ class CellStats:
                                                  bins[np.newaxis,:] ).mean(axis=0)
                 ko_hist /= ko_hist.sum()
                 if cumulative:
-                    ax[d].fill_between(bins, np.cumsum(ctrl_hist), color='black', alpha =.3)
-                    ax[d].fill_between(bins, np.cumsum(ko_hist), color='red', alpha = .3)
+                    if fill:
+                        ax[d].fill_between(bins, np.cumsum(ctrl_hist), color='black', alpha =.3)
+                        ax[d].fill_between(bins, np.cumsum(ko_hist), color='red', alpha = .3)
+                    else:
+                        ax[d].plot(bins, np.cumsum(ctrl_hist), color='black', alpha=.3)
+                        ax[d].plot(bins, np.cumsum(ko_hist), color='red', alpha=.3)
                 else:
-                    ax[d].fill_between(bins, ctrl_hist, color='black', alpha=.3)
-                    ax[d].fill_between(bins,ko_hist, color = 'red', alpha = .3)
+                    if fill:
+                        ax[d].fill_between(bins, ctrl_hist, color='black', alpha=.3)
+                        ax[d].fill_between(bins,ko_hist, color = 'red', alpha = .3)
+                    else:
+                        ax[d].plot(bins, ctrl_hist, color='black', alpha=.3)
+                        ax[d].plot(bins, ko_hist, color='red', alpha=.3)
+
             else:
-                ax[d].hist(ctrl_ravel_stat[day], bins=bins, color='black', alpha=.3, cumulative=cumulative, density=True)
-                ax[d].hist(ko_ravel_stat[day], bins=bins, color='red', alpha=.3, cumulative=cumulative, density=True)
+                ax[d].hist(ctrl_ravel_stat[day], bins=bins, color='black', alpha=.3,
+                           cumulative=cumulative, density=True, fill = fill)
+                ax[d].hist(ko_ravel_stat[day], bins=bins, color='red', alpha=.3,
+                           cumulative=cumulative, density=True, fill = fill)
 
             ax[d].spines['top'].set_visible(False)
             ax[d].spines['right'].set_visible(False)

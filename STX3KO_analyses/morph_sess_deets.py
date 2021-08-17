@@ -47,7 +47,6 @@ CTRL_sessions = {'4467331.1': ({'date': '10_12_2020', 'scene': 'TwoTower_foragin
                              {'date': '19_12_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
                              ),
 
-
                '4467331.2': ({'date': '10_12_2020', 'scene': 'TwoTower_foraging', 'session': 2, 'scan': 2},
                              {'date': '14_12_2020', 'scene': 'TwoTower_foraging', 'session': 1, 'scan': 3},
                              {'date': '15_12_2020', 'scene': 'TwoTower_foraging', 'session': 3, 'scan': 5},
