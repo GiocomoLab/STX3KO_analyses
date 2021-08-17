@@ -215,15 +215,15 @@ class CellStats:
                         ax[d].fill_between(bins, np.cumsum(ctrl_hist), color='black', alpha =.3)
                         ax[d].fill_between(bins, np.cumsum(ko_hist), color='red', alpha = .3)
                     else:
-                        ax[d].plot(bins, np.cumsum(ctrl_hist), color='black', alpha=.3)
-                        ax[d].plot(bins, np.cumsum(ko_hist), color='red', alpha=.3)
+                        ax[d].plot(bins, np.cumsum(ctrl_hist), color='black')
+                        ax[d].plot(bins, np.cumsum(ko_hist), color='red')
                 else:
                     if fill:
                         ax[d].fill_between(bins, ctrl_hist, color='black', alpha=.3)
                         ax[d].fill_between(bins,ko_hist, color = 'red', alpha = .3)
                     else:
-                        ax[d].plot(bins, ctrl_hist, color='black', alpha=.3)
-                        ax[d].plot(bins, ko_hist, color='red', alpha=.3)
+                        ax[d].plot(bins, ctrl_hist, color='black')
+                        ax[d].plot(bins, ko_hist, color='red')
 
             else:
                 ax[d].hist(ctrl_ravel_stat[day], bins=bins, color='black', alpha=.3,
