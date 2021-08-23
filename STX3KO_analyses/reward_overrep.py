@@ -298,6 +298,8 @@ class PeriRewardPlaceCellActivity:
         self.ko_plot_sem = None
         self.ctrl_plot_sem = None
 
+
+
     @staticmethod
     def ratemap_perireward(sess: session.YMazeSession, ts_key: str = 'spks', fam: bool = True, xbounds=(-10, 3)):
 
@@ -316,6 +318,7 @@ class PeriRewardPlaceCellActivity:
         ratemap_z = sp.stats.zscore(np.nanmean(sess.trial_matrices[ts_key][trial_mask, :, :], axis=0)[:, cell_mask], axis=0)
 
         return ratemap_z[rzone_front + xbounds[0]:rzone_front + xbounds[1], :]
+
 
     def perireward_activity(self):
 
@@ -370,6 +373,168 @@ class PeriRewardPlaceCellActivity:
                 ax[row, day].set_xlabel("Distance from reward")
         ax[0, 0].set_ylabel('Norm. Activity Rate')
         ax[1, 0].set_ylabel('Norm. Activity Rate')
+
+        fig.subplots_adjust(hspace=.5)
+
+        return fig, ax
+
+    def mixed_anova(self, verbose=True, group_tukey=True, day_tukey=True):
+        '''
+
+        :param verbose:
+        :param group_tukey:
+        :param day_tukey:
+        :return:
+        '''
+
+        df = {'ko_ctrl': [],
+              'day': [],
+              'sum': [],
+              'mouse': []}
+
+        for mouse in range(len(self.ko_mice)):
+            for day in self.days:
+                df['ko_ctrl'].append(0)
+                df['day'].append(day)
+                df['sum'].append(self.ko_sums[mouse, day])
+                df['mouse'].append(mouse)
+
+        for mouse in range(len(self.ctrl_mice)):
+            for day in self.days:
+                df['ko_ctrl'].append(1)
+                df['day'].append(day)
+                df['sum'].append(self.ctrl_sums[mouse, day])
+                df['mouse'].append(mouse + 5)
+
+        df = pd.DataFrame(df)
+        results = {}
+        aov = mixed_anova(data=df, dv='sum', between='ko_ctrl', within='day', subject='mouse')
+        results['anova'] = aov
+        if verbose:
+            print('Mixed design ANOVA results')
+            print(aov)
+
+        if group_tukey:
+            ko_ctrl_tukey = pairwise_tukey(data=df, dv='sum', between='ko_ctrl')
+            results['ko_ctrl_tukey'] = ko_ctrl_tukey
+            if verbose:
+                print('PostHoc Tukey: KO vs Ctrl')
+                print(ko_ctrl_tukey)
+
+        if day_tukey:
+            day_stats = []
+            print('PostHov Tukey on each day')
+            for day in self.days:
+                print('Day %d' % day)
+                stats = pairwise_tukey(data=df[df['day'] == day], dv='sum', between='ko_ctrl')
+                day_stats.append(stats)
+                if verbose:
+                    print(stats)
+            results['day_tukey'] = day_stats
+
+        return results
+
+
+class PeriRewardSpeed:
+
+    def __init__(self, days=np.arange(6), ts_key='speed', fam=True):
+        '''
+
+
+        '''
+        self.ko_mice = ymaze_sess_deets.ko_mice
+        self.ctrl_mice = ymaze_sess_deets.ctrl_mice
+        self.__dict__.update({'days': days, 'ts_key': ts_key, 'fam': fam})
+        self.n_days = days.shape[0]
+
+        get_speed = u.loop_func_over_days(self.speed_perireward, days, ts_key='speed', fam=fam)
+
+        self.ko_speed = {mouse: get_speed(mouse) for mouse in self.ko_mice}
+        self.ctrl_speed = {mouse: get_speed(mouse) for mouse in self.ctrl_mice}
+
+        self.ko_sums = None
+        self.ctrl_sums = None
+
+        self.ko_plot_mu = None
+        self.ctrl_plot_mu = None
+
+        self.ko_plot_sem = None
+        self.ctrl_plot_sem = None
+
+
+    @staticmethod
+    def speed_perireward(sess: session.YMazeSession, ts_key: str = 'speed', fam: bool = True, xbounds=(-10, 3)):
+
+        bin_edges = sess.trial_matrices['bin_edges']
+        if fam:
+            trial_mask = sess.trial_info['LR'] == -1 * sess.novel_arm
+            rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
+                                      (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
+        else:
+            trial_mask = sess.trial_info['LR'] == sess.novel_arm
+            rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
+                                      (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
+
+        speedmat = sp.stats.zscore(sess.trial_matrices[ts_key][trial_mask, :], axis = -1)
+
+        return speedmat[:, rzone_front + xbounds[0]:rzone_front + xbounds[1]]
+
+
+
+    def perireward_plot(self):
+
+        fig, ax = plt.subplots(2, self.n_days, figsize=[self.n_days * 5, 10], sharey=True)
+
+        x = np.arange(-10, 3)
+        anova_mask = (x > -5) * (x <= -1)
+
+        # plot_mask = (x >= -10) * (x <= 1)
+
+        def get_ratemap_sum(ratemap):
+            '''
+
+            :param frac:
+            :return:
+            '''
+            plot_mu = np.zeros([len(ratemap.keys()), self.n_days, x.shape[0]])
+            plot_sem = np.zeros([len(ratemap.keys()), self.n_days, x.shape[0]])
+            sums = np.zeros([len(ratemap.keys()), self.n_days])
+            for m, (mouse, data_list) in enumerate(ratemap.items()):
+                for col, data in enumerate(data_list):
+                    mu, sem = data.mean(axis=0), sp.stats.sem(data, axis=0)
+
+                    sums[m, col] = mu[anova_mask].mean()
+                    plot_mu[m, col, :] = mu
+                    plot_sem[m, col, :] = sem
+            return sums, plot_mu, plot_sem
+
+        self.ko_sums, self.ko_plot_mu, self.ko_plot_sem = get_ratemap_sum(self.ko_speed)
+        self.ctrl_sums, self.ctrl_plot_mu, self.ctrl_plot_sem = get_ratemap_sum(self.ctrl_speed)
+
+        for day in range(self.n_days):
+            for m in range(len(self.ko_mice)):
+                ax[0, day].fill_between(x, self.ko_plot_mu[m, day, :] - self.ko_plot_sem[m, day, :],
+                                        self.ko_plot_mu[m, day, :] + self.ko_plot_sem[m, day, :], color='red', alpha=.3)
+            for m in range(len(self.ctrl_mice)):
+                ax[0, day].fill_between(x, self.ctrl_plot_mu[m, day, :] - self.ctrl_plot_sem[m, day, :],
+                                        self.ctrl_plot_mu[m, day, :] + self.ctrl_plot_sem[m, day, :], color='black',
+                                        alpha=.3)
+
+            ko_mu, ko_sem = self.ko_plot_mu[:, day, :].mean(axis=0), sp.stats.sem(self.ko_plot_mu[:, day, :])
+            ax[1, day].fill_between(x, ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
+
+            ctrl_mu, ctrl_sem = self.ctrl_plot_mu[:, day, :].mean(axis=0), sp.stats.sem(
+                self.ctrl_plot_mu[:, day, :])
+            ax[1, day].fill_between(x, ctrl_mu - ctrl_sem, ctrl_mu + ctrl_sem, color='black', alpha=.3)
+
+            for row in range(2):
+                ax[row, day].spines['top'].set_visible(False)
+                ax[row, day].spines['right'].set_visible(False)
+
+                ax[row, day].set_title("Day %d" % (day + 1))
+                ax[row, day].set_xlabel("Distance from reward")
+        ax[0, 0].set_ylabel('Norm. Speed')
+        ax[1, 0].set_ylabel('Norm. Speed')
 
         fig.subplots_adjust(hspace=.5)
 
