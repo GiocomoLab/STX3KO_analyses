@@ -475,7 +475,9 @@ class PeriRewardSpeed:
             rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
                                       (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
 
-        speedmat = sp.stats.zscore(sess.trial_matrices[ts_key][trial_mask, :], axis = -1)
+        speedmat = sess.trial_matrices[ts_key][trial_mask, :]
+        speedmat[np.isnan(speedmat)]=1E-3
+        speedmat = sp.stats.zscore(speedmat, axis = -1)
 
         return speedmat[:, rzone_front + xbounds[0]:rzone_front + xbounds[1]]
 
