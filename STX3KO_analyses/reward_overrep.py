@@ -662,8 +662,8 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
     ax[0, 0].plot([-.5, ctrl_l_train.shape[0]- .5], [-.5, ctrl_l_train.shape[1]-.5], color='blue')
     ax[0, 1].plot([-.5, ctrl_r_train.shape[0] - .5], [-.5, ctrl_r_train.shape[1] - .5], color='blue')
 
-    ax[0, 0].set_title('mCherry: Left')
-    ax[0, 1].set_title('mCherry: Right')
+    ax[0, 0].set_title("mCherry: Left, N cells %d" % ctrl_l_test.shape[1])
+    ax[0, 1].set_title("mCherry: Right, N cells %d" % ctrl_r_test.shape[1])
 
     ax[1, 0].imshow(sort_norm(ko_l_train, ko_l_test).T, cmap = 'pink', aspect = 'auto', vmin=vmin, vmax=vmax)
     ax[1, 1].imshow(sort_norm(ko_r_train, ko_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
@@ -671,8 +671,8 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
     ax[1, 0].plot([-.5, ko_l_train.shape[0] - .5], [-.5, ko_l_train.shape[1] - .5], color='blue')
     ax[1, 1].plot([-.5, ko_r_train.shape[0] - .5], [-.5, ko_r_train.shape[1] - .5], color='blue')
 
-    ax[1, 0].set_title('Cre: Left')
-    ax[1, 1].set_title('Cre: Right')
+    ax[1, 0].set_title("Cre: Left, N cells %d" % ko_l_train.shape[1])
+    ax[1, 1].set_title("Cre: Right, N cells %d" % ko_r_train.shape[1])
 
     for row in [0,1]:
         for col in [0,1]:
