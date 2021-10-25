@@ -294,8 +294,8 @@ CTRL_sessions = {
                 ({'date': '22_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': 1, 'ravel_ind': 6},
                  {'date': '22_10_2021', 'scene': 'YMaze_RewardReversal', 'session': 1, 'scan': 4, 'novel_arm': 1, 'ravel_ind': 7}),
                  {'date': '22_10_2021', 'scene': 'YMaze_RewardReversal', 'session': 2, 'scan': 4, 'novel_arm': 1, 'ravel_ind': 8},
-                ({'date': '23_10_2021', 'scene': 'YMaze_RewardReversal', 'session': np.nan, 'scan': np.nan, 'novel_arm': 1, 'ravel_ind': 9},
-                 {'date': '23_10_2021', 'scene': 'YMaze_LNovel', 'session': np.nan, 'scan': np.nan, 'novel_arm': 1, 'ravel_ind': 10}),
+                ({'date': '23_10_2021', 'scene': 'YMaze_RewardReversal', 'session': 1, 'scan': 2, 'novel_arm': 1, 'ravel_ind': 9},
+                 {'date': '23_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 4, 'novel_arm': 1, 'ravel_ind': 10}),
                 ),
 
 
