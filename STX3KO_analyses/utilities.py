@@ -193,7 +193,7 @@ def single_mouse_concat_vr_sessions(mouse, date_inds=None):
     concat_sess = session.ConcatYMazeSession(sess_list, None, day_inds=date_inds_ravel,
                                              trial_mat_keys=['licks','speed'],
                                              timeseries_keys=[ 'licks', 'speed'],
-                                             load_ops=False)
+                                             load_ops=False, run_place_cells=False)
     return concat_sess
 
 def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False):
