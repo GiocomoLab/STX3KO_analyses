@@ -408,7 +408,7 @@ class ConcatYMazeSession:
                     for k in ['masks', 'SI', 'p']:
                         place_cells[lr][k].append(_sess.place_cell_info[_lr][k][common_roi_mapping[ind, :]])
 
-            cum_frames += _sess.timeseries['spks'].shape[1]
+            cum_frames += _sess.timeseries['licks'].shape[1]
         print(t_info_keys)
         for k in ['trial_start_inds', 'teleport_inds']:
             attrs[k] = np.concatenate(attrs[k])
