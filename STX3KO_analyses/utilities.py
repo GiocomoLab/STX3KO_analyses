@@ -144,7 +144,57 @@ def load_single_day(mouse, day, verbose = True):
 
 
 
+def single_mouse_concat_vr_sessions(mouse, date_inds=None):
+    pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
 
+    if mouse in ymaze_sess_deets.KO_sessions.keys():
+        sessions_deets = ymaze_sess_deets.KO_sessions[mouse]
+    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
+        sessions_deets = ymaze_sess_deets.CTRL_sessions[mouse]
+    else:
+        print("mouse ID typo")
+        print("shenanigans")
+    if date_inds is None:
+        date_inds = np.arange(len(sessions_deets)).tolist()
+
+    date_inds_ravel = []
+    sess_list = []
+    for date_ind in date_inds:
+        deets = sessions_deets[date_ind]
+        if isinstance(deets, tuple):
+            _sess_list = []
+            for _deets in deets:
+                sess = session.YMazeSession.from_file(
+                    os.path.join(pkldir, _deets['date'], "%s_%d.pkl" % (_deets['scene'], _deets['session'])),
+                    verbose=False)
+
+                sess_list.append(sess)
+                date_inds_ravel.append(date_ind)
+
+                if mouse in ['4467332.2'] and date_ind == 0:
+                    mask = sess.trial_info['sess_num_ravel'] > 0
+                    sess.trial_info['block_number'][mask] -= 1
+        else:
+            sess = session.YMazeSession.from_file(
+                os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
+                verbose=False)
+
+            sess_list.append(sess)
+            date_inds_ravel.append(date_ind)
+
+            print(deets['date'], deets['scene'])
+
+            if mouse == '4467975.1' and date_ind == 0:
+                sess.trial_info['block_number'] += 1
+            if mouse == '4467332.2' and date_ind == 0:
+                sess.trial_info['block_number'] += 2
+
+
+    concat_sess = session.ConcatYMazeSession(sess_list, None, day_inds=date_inds_ravel,
+                                             trial_mat_keys=['licks','speed'],
+                                             timeseries_keys=[ 'licks', 'speed'],
+                                             load_ops=False)
+    return concat_sess
 
 def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False):
     pkldir = os.path.join('/home/mplitt/YMazeSessPkls/', mouse)
