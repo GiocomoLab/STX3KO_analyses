@@ -40,6 +40,53 @@ def common_rois(roi_matches, inds):
 
     return common_roi_mapping.astype(np.int)
 
+def load_vr_day(mouse,day, verbose = True):
+    pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
+    if mouse in ymaze_sess_deets.KO_sessions.keys():
+
+        deets = ymaze_sess_deets.KO_sessions[mouse][day]
+    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
+        deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
+    else:
+        raise Exception("invalid mouse name")
+
+    if verbose:
+        print(deets)
+    if isinstance(deets, tuple):
+
+        sess_list = []
+        for _deets in deets:
+            _sess = session.YMazeSession.from_file(
+                os.path.join(pkldir, _deets['date'], "%s_%d.pkl" % (_deets['scene'], _deets['session'])),
+                verbose=False, novel_arm=_deets['novel_arm'])
+
+            print(_deets['date'], _deets['scene'])
+            sess_list.append(_sess)
+
+        sess = session.ConcatYMazeSession(sess_list, None, day_inds=[0 for i in range(len(deets))],
+                                          trial_mat_keys=('licks', 'speed'),
+                                          timeseries_keys=('licks', 'speed'),
+                                          run_place_cells=False)
+        if mouse in ['4467332.2'] and day == 0:
+            mask = sess.trial_info['sess_num_ravel'] > 0
+            sess.trial_info['block_number'][mask] -= 1
+    else:
+        sess = session.YMazeSession.from_file(
+            os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
+            verbose=False, novel_arm=deets['novel_arm'])
+        sess.add_timeseries(licks=sess.vr_data['lick']._values)
+        sess.add_pos_binned_trial_matrix('licks')
+        # sess.novel_arm = deets['novel']
+        # setattr(sess, 'novel_arm', deets['novel'])
+
+        if mouse == '4467975.1' and day == 0:
+            sess.trial_info['block_number'] += 1
+        if mouse == '4467332.2' and day == 0:
+            sess.trial_info['block_number'] += 2
+
+    return sess
+
+
 
 def load_single_day(mouse, day, verbose = True):
     #     mouse = '4467331.2'
@@ -96,117 +143,7 @@ def load_single_day(mouse, day, verbose = True):
     return sess
 
 
-# class Concat_Session():
-#
-#     def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'], trial_mat_keys=['F_dff',],
-#                  timeseries_keys=(), run_place_cells=True, day_inds=None):
-#         attrs = self.concat(sess_list, common_roi_mapping, trial_info_keys, trial_mat_keys,
-#                             timeseries_keys, run_place_cells, day_inds)
-#
-#         self.__dict__.update(attrs)
-#         trial_info_keys = []
-#
-#     @staticmethod
-#     def concat(_sess_list, common_roi_mapping, t_info_keys, t_mat_keys,
-#                timeseries_keys, run_place_cells, day_inds):
-#         attrs = {}
-#         attrs['day_inds']=day_inds
-#         # same info
-#         #         same_attrs = ['mouse', 'novel_arm','rzone_early', 'rzone_late']
-#         attrs.update({'mouse': _sess_list[0].mouse,
-#                       'novel_arm': _sess_list[0].novel_arm,
-#                       'rzone_early': _sess_list[0].rzone_early,
-#                       'rzone_late': _sess_list[0].rzone_late
-#                       })
-#         print(t_info_keys)
-#
-#         # concat basic info
-#         basic_info_attrs = ['date', 'scan', 'scan_info', 'scene', 'session', 'teleport_inds', 'trial_start_inds']
-#         attrs.update({k: [] for k in basic_info_attrs})
-#
-#         if 'sess_num_ravel' not in t_info_keys:
-#             t_info_keys.append('sess_num_ravel')
-#         if 'sess_num' not in t_info_keys and day_inds is not None:
-#             t_info_keys.append('sess_num')
-#
-#         trial_info = {k: [] for k in t_info_keys}
-#
-#         trial_mat = {k: [] for k in t_mat_keys}
-#         trial_mat['bin_edges'] = _sess_list[0].trial_matrices['bin_edges']
-#         trial_mat['bin_centers'] = _sess_list[0].trial_matrices['bin_centers']
-#
-#         timeseries = {k: [] for k in timeseries_keys}
-#
-#         if run_place_cells:
-#             place_cells = {-1: {'masks': [], 'SI': [], 'p': []}, 1: {'masks': [], 'SI': [], 'p': []}}
-#
-#         last_block = 0
-#         cum_frames = 0
-#         for ind, _sess in enumerate(_sess_list):
-#
-#             for k in basic_info_attrs:
-#                 if k in ('teleport_inds', 'trial_start_inds'):
-#                     attrs[k].append(getattr(_sess, k)+cum_frames)
-#                 else:
-#                     attrs[k].append(getattr(_sess, k))
-#
-#             for k in t_info_keys:
-#
-#                 if k == 'sess_num_ravel':
-#                     trial_info[k].append(np.zeros([_sess.trial_info['LR'].shape[0], ]) + ind)
-#                 elif k == 'sess_num' and day_inds is not None:
-#                     trial_info[k].append(np.zeros([_sess.trial_info['LR'].shape[0], ]) + day_inds[ind])
-#
-#                 elif k == 'block_number' and day_inds is not None and ind > 0:
-#                     if _sess.trial_info[k][0] == 0 and day_inds[ind - 1] == day_inds[ind]:
-#                         trial_info[k].append(_sess.trial_info[k] + _sess_list[ind - 1].trial_info[k][-1] + 1)
-#                     else:
-#                         trial_info[k].append(_sess.trial_info[k])
-#                 else:
-#                     trial_info[k].append(_sess.trial_info[k])
-#
-#             for k in t_mat_keys:
-#                 if len(_sess.trial_matrices[k].shape) == 3:
-#                     trial_mat[k].append(_sess.trial_matrices[k][:, :, common_roi_mapping[ind, :]])
-#                 else:
-#                     trial_mat[k].append(_sess.trial_matrices[k])
-#
-#             for k in timeseries_keys:
-#                 if len(_sess.timeseries[k].shape) == 2:
-#                     timeseries[k].append(_sess.timeseries[k][common_roi_mapping[ind, :], :])
-#                 else:
-#                     timeseries[k].append(_sess.timeseries[k])
-#
-#             if run_place_cells:
-#                 for lr, _lr in [[-1, 'left'], [1, 'right']]:
-#                     for k in ['masks', 'SI', 'p']:
-#                         place_cells[lr][k].append(_sess.place_cell_info[_lr][k][common_roi_mapping[ind, :]])
-#
-#             cum_frames+= _sess.timeseries['spks'].shape[1]
-#         print(t_info_keys)
-#         for k in ['trial_start_inds','teleport_inds']:
-#             attrs[k] = np.concatenate(attrs[k])
-#
-#         for k in t_info_keys:
-#             # print(k)
-#             trial_info[k] = np.concatenate(trial_info[k])
-#         attrs['trial_info'] = trial_info
-#
-#         for k in t_mat_keys:
-#             trial_mat[k] = np.concatenate(trial_mat[k], axis=0)
-#         attrs['trial_matrices'] = trial_mat
-#
-#         for k in timeseries_keys:
-#             timeseries[k] = np.concatenate(timeseries[k],axis=-1)
-#         attrs['timeseries'] = timeseries
-#
-#         if run_place_cells:
-#             for lr in [-1, 1]:
-#                 for k in ['masks', 'SI', 'p']:
-#                     place_cells[lr][k] = np.array(place_cells[lr][k])
-#         attrs['place_cell_info'] = place_cells
-#
-#         return attrs
+
 
 
 def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False):
