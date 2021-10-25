@@ -430,7 +430,7 @@ class ConcatYMazeSession:
             for lr in [-1, 1]:
                 for k in ['masks', 'SI', 'p']:
                     place_cells[lr][k] = np.array(place_cells[lr][k])
-        attrs['place_cell_info'] = place_cells
+            attrs['place_cell_info'] = place_cells
 
         return attrs
 
