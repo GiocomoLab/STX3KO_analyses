@@ -334,7 +334,7 @@ class ConcatYMazeSession:
             attrs.update({'rzone_fam': attrs['rzone_early'],
                           'rzone_nov': attrs['rzone_late']})
 
-        print(t_info_keys)
+        # print(t_info_keys)
 
         # concat basic info
         basic_info_attrs = ['date', 'scan', 'scan_info', 'scene', 'session', 'teleport_inds', 'trial_start_inds']
@@ -409,7 +409,7 @@ class ConcatYMazeSession:
                         place_cells[lr][k].append(_sess.place_cell_info[_lr][k][common_roi_mapping[ind, :]])
 
             cum_frames += _sess.timeseries['licks'].shape[1]
-        print(t_info_keys)
+        # print(t_info_keys)
         for k in ['trial_start_inds', 'teleport_inds']:
             attrs[k] = np.concatenate(attrs[k])
 

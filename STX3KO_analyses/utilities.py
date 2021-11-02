@@ -40,13 +40,13 @@ def common_rois(roi_matches, inds):
 
     return common_roi_mapping.astype(np.int)
 
-def load_vr_day(mouse,day, verbose = True):
+def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), timeseries_keys = ('licks', 'speed')):
     pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
-    if mouse in ymaze_sess_deets.KO_sessions.keys():
+    if mouse in ymaze_sess_deets.KO_behavior_sessions.keys():
 
-        deets = ymaze_sess_deets.KO_sessions[mouse][day]
-    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
-        deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
+        deets = ymaze_sess_deets.KO_behavior_sessions[mouse][day]
+    elif mouse in ymaze_sess_deets.CTRL_behavior_sessions.keys():
+        deets = ymaze_sess_deets.CTRL_behavior_sessions[mouse][day]
     else:
         raise Exception("invalid mouse name")
 
@@ -60,12 +60,12 @@ def load_vr_day(mouse,day, verbose = True):
                 os.path.join(pkldir, _deets['date'], "%s_%d.pkl" % (_deets['scene'], _deets['session'])),
                 verbose=False, novel_arm=_deets['novel_arm'])
 
-            print(_deets['date'], _deets['scene'])
+            # print(_deets['date'], _deets['scene'])
             sess_list.append(_sess)
 
         sess = session.ConcatYMazeSession(sess_list, None, day_inds=[0 for i in range(len(deets))],
-                                          trial_mat_keys=('licks', 'speed'),
-                                          timeseries_keys=('licks', 'speed'),
+                                          trial_mat_keys=trial_mat_keys,
+                                          timeseries_keys=timeseries_keys,
                                           run_place_cells=False)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
