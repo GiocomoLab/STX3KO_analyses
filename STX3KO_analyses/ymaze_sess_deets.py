@@ -2,7 +2,7 @@ import numpy as np
 
 
 ko_mice = ('4467975.1', '4467975.2', '4467975.3', '4467975.4', '4467975.5',
-           'Cre7',  'Cre9', 'CA3-1')
+           'Cre7',  'Cre9') #, 'CA3-1')
 ctrl_mice = ('4467331.1', '4467331.2', '4467332.1', '4467332.2', '4467333.1',
              'mCherry6', 'mCherry7', 'mCherry8', 'mCherry9')
 
@@ -145,13 +145,13 @@ KO_sessions = {
              {'date': '26_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 4, 'novel_arm': -1, 'ravel_ind': 10},),
              ),
 
-    'CA3-1' : ({'date': '23_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': -1, 'novel_arm': -1, 'ravel_ind': 0},
-               {'date': '24_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': -1, 'novel_arm': -1, 'ravel_ind': 1},
-               {'date': '25_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'ravel_ind': 2},
-               {'date': '26_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'ravel_ind': 3},
-               {'date': '27_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'ravel_ind': 4},
-               {'date': '28_10_2021', 'scene': 'YMaze_LNovel', 'session': 2, 'scan': 5, 'novel_arm': -1, 'ravel_ind': 5},
-               ),
+    # 'CA3-1' : ({'date': '23_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': -1, 'novel_arm': -1, 'ravel_ind': -1},
+    #            {'date': '24_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': -1, 'novel_arm': -1, 'ravel_ind': -1},
+    #            {'date': '25_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'ravel_ind': 0},
+    #            {'date': '26_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'ravel_ind': 1},
+    #            {'date': '27_10_2021', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'ravel_ind': 2},
+    #            {'date': '28_10_2021', 'scene': 'YMaze_LNovel', 'session': 2, 'scan': 5, 'novel_arm': -1, 'ravel_ind': 3},
+    #            ),
 
 
 }
