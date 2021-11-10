@@ -90,7 +90,7 @@ class LMM_PeriRewardPlaceCellFrac:
         :return:
         '''
         x = np.arange(-30, 15)
-        anova_mask = (x > -5) * (x <= -1)
+        anova_mask = (x > -5) * (x <= 0)
 
         hist = np.array([np.count_nonzero(data.ravel() == _bin) for _bin in x.tolist()])
         hist = hist / hist.sum()

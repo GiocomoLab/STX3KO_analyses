@@ -144,7 +144,7 @@ def load_single_day(mouse, day, verbose = True):
 
 
 
-def single_mouse_concat_vr_sessions(mouse, date_inds=None):
+def single_mouse_concat_vr_sessions(mouse, date_inds=None, load_stats=True):
     pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
 
     if mouse in ymaze_sess_deets.KO_sessions.keys():
@@ -193,7 +193,7 @@ def single_mouse_concat_vr_sessions(mouse, date_inds=None):
     concat_sess = session.ConcatYMazeSession(sess_list, None, day_inds=date_inds_ravel,
                                              trial_mat_keys=['licks','speed'],
                                              timeseries_keys=[ 'licks', 'speed'],
-                                             load_ops=False, run_place_cells=False)
+                                             load_ops=False, run_place_cells=False, load_stats = load_stats)
     return concat_sess
 
 def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False):
