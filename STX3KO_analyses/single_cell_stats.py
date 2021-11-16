@@ -252,19 +252,19 @@ class CellStats:
               stat_key: [],
               'mouse': []}
 
-        for mouse in range(len(self.ko_mice)):
+        for m, mouse in enumerate(self.ko_mice):
             for day in self.days:
                 df['ko_ctrl'].append(0)
                 df['day'].append(day)
-                df[stat_key].append(ko_sum_stat[mouse, day])
+                df[stat_key].append(ko_sum_stat[m, day])
                 df['mouse'].append(mouse)
 
-        for mouse in range(len(self.ctrl_mice)):
+        for m, mouse in enumerate(self.ctrl_mice):
             for day in self.days:
                 df['ko_ctrl'].append(1)
                 df['day'].append(day)
-                df[stat_key].append(ctrl_sum_stat[mouse, day])
-                df['mouse'].append(mouse + 5)
+                df[stat_key].append(ctrl_sum_stat[m, day])
+                df['mouse'].append(mouse)
 
         df = pd.DataFrame(df)
         results = {}
