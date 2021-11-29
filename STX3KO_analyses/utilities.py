@@ -120,8 +120,8 @@ def load_single_day(mouse, day, verbose = True):
             sess_list.append(_sess)
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'spks_norm_filt','licks', 'speed'),
-                                          timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm', 'spks_norm_filt','licks', 'speed'),
+                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','spks_norm_fast','licks', 'speed'),
+                                          timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','spks_norm_fast','licks', 'speed'),
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
@@ -191,8 +191,8 @@ def single_mouse_concat_vr_sessions(mouse, date_inds=None):
 
 
     concat_sess = session.ConcatYMazeSession(sess_list, None, day_inds=date_inds_ravel,
-                                             trial_mat_keys=['licks','speed'],
-                                             timeseries_keys=[ 'licks', 'speed'],
+                                             trial_mat_keys=['licks','nonconsum_licks','licks_sum','speed'],
+                                             timeseries_keys=[ 'licks', 'nonconsum_licks','licks_sum','speed'],
                                              load_ops=False, run_place_cells=False)
     return concat_sess
 
