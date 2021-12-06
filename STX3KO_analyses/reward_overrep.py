@@ -350,13 +350,13 @@ class PeriRewardPlaceCellActivity:
         self.ctrl_sums, self.ctrl_plot_mu, self.ctrl_plot_sem = get_ratemap_sum(self.ctrl_ratemap)
 
         for day in range(self.n_days):
-            for m in range(len(self.ko_mice)):
-                ax[0, day].fill_between(x, self.ko_plot_mu[m, day, :] - self.ko_plot_sem[m, day, :],
-                                        self.ko_plot_mu[m, day, :] + self.ko_plot_sem[m, day, :], color='red', alpha=.3)
-            for m in range(len(self.ctrl_mice)):
-                ax[0, day].fill_between(x, self.ctrl_plot_mu[m, day, :] - self.ctrl_plot_sem[m, day, :],
-                                        self.ctrl_plot_mu[m, day, :] + self.ctrl_plot_sem[m, day, :], color='black',
-                                        alpha=.3)
+            # for m in range(len(self.ko_mice)):
+            #     # ax[0, day].fill_between(x, self.ko_plot_mu[m, day, :] - self.ko_plot_sem[m, day, :],
+            #                             self.ko_plot_mu[m, day, :] + self.ko_plot_sem[m, day, :], color='red', alpha=.3)
+            # for m in range(len(self.ctrl_mice)):
+            #     ax[0, day].fill_between(x, self.ctrl_plot_mu[m, day, :] - self.ctrl_plot_sem[m, day, :],
+            #                             self.ctrl_plot_mu[m, day, :] + self.ctrl_plot_sem[m, day, :], color='black',
+            #                             alpha=.3)
 
             ko_mu, ko_sem = self.ko_plot_mu[:, day, :].mean(axis=0), sp.stats.sem(self.ko_plot_mu[:, day, :])
             ax[1, day].fill_between(x, ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
