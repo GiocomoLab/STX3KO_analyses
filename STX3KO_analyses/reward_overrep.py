@@ -200,7 +200,7 @@ class PeriRewardPlaceCellFrac:
             ax[1, day].fill_between(x[plot_mask], ctrl_mu - ctrl_sem, ctrl_mu + ctrl_sem, color='black', alpha=.3)
 
             for row in range(2):
-                ax[row, day].set_ylim([.0, .075])
+                # ax[row, day].set_ylim([.0, .075])
                 ax[row, day].set_xlim([-10, 1])
 
                 ax[row, day].spines['top'].set_visible(False)
