@@ -190,11 +190,11 @@ class PeriRewardPlaceCellFrac:
         self.ctrl_sums, self.ctrl_plot_array = get_hist(self.ctrl_frac)
 
         for day in range(self.n_days):
-            ax[0, day].plot(x[plot_mask], self.ko_plot_array[:, day, :].T, color='red')
+            # ax[0, day].plot(x[plot_mask], self.ko_plot_array[:, day, :].T, color='red')
             ko_mu, ko_sem = self.ko_plot_array[:, day, :].mean(axis=0), sp.stats.sem(self.ko_plot_array[:, day, :])
             ax[1, day].fill_between(x[plot_mask], ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
 
-            ax[0, day].plot(x[plot_mask], self.ctrl_plot_array[:, day, :].T, color='black')
+            # ax[0, day].plot(x[plot_mask], self.ctrl_plot_array[:, day, :].T, color='black')
             ctrl_mu, ctrl_sem = self.ctrl_plot_array[:, day, :].mean(axis=0), sp.stats.sem(
                 self.ctrl_plot_array[:, day, :])
             ax[1, day].fill_between(x[plot_mask], ctrl_mu - ctrl_sem, ctrl_mu + ctrl_sem, color='black', alpha=.3)
