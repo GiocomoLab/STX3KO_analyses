@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 
-from pingouin import mixed_anova, pairwise_ttest
+from pingouin import mixed_anova, pairwise_ttests
 
 class LMM_PeriRewardPlaceCellFrac:
 
@@ -410,7 +410,7 @@ class PeriRewardPlaceCellActivity:
         results = {}
         aov = mixed_anova(data=df, dv='sum', between='ko_ctrl', within='day', subject='mouse')
         results['anova'] = aov
-        posthoc = pairwise_ttest(data=df, dv='sum', between='ko_ctrl', within='day', subject='mouse', padjust ='holm')
+        posthoc = pairwise_ttests(data=df, dv='sum', between='ko_ctrl', within='day', subject='mouse', padjust ='holm')
         results['posthoc']=posthoc
         if verbose:
             print('Mixed design ANOVA results')
