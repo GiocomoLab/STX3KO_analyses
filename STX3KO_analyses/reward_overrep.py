@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 
-from pingouin import mixed_anova, pairwise_tukey
+from pingouin import mixed_anova, pairwise_ttest
 
 class LMM_PeriRewardPlaceCellFrac:
 
@@ -251,23 +251,23 @@ class PeriRewardPlaceCellFrac:
             print('Mixed design ANOVA results')
             print(aov)
 
-        if group_tukey:
-            ko_ctrl_tukey = pairwise_tukey(data=df, dv='frac', between='ko_ctrl')
-            results['ko_ctrl_tukey'] = ko_ctrl_tukey
-            if verbose:
-                print('PostHoc Tukey: KO vs Ctrl')
-                print(ko_ctrl_tukey)
-
-        if day_tukey:
-            day_stats = []
-            print('PostHov Tukey on each day')
-            for day in self.days:
-                print('Day %d' % day)
-                stats = pairwise_tukey(data=df[df['day'] == day], dv='frac', between='ko_ctrl')
-                day_stats.append(stats)
-                if verbose:
-                    print(stats)
-            results['day_tukey'] = day_stats
+        # if group_tukey:
+        #     ko_ctrl_tukey = pairwise_tukey(data=df, dv='frac', between='ko_ctrl')
+        #     results['ko_ctrl_tukey'] = ko_ctrl_tukey
+        #     if verbose:
+        #         print('PostHoc Tukey: KO vs Ctrl')
+        #         print(ko_ctrl_tukey)
+        #
+        # if day_tukey:
+        #     day_stats = []
+        #     print('PostHov Tukey on each day')
+        #     for day in self.days:
+        #         print('Day %d' % day)
+        #         stats = pairwise_tukey(data=df[df['day'] == day], dv='frac', between='ko_ctrl')
+        #         day_stats.append(stats)
+        #         if verbose:
+        #             print(stats)
+        #     results['day_tukey'] = day_stats
 
         return results
 
@@ -404,15 +404,18 @@ class PeriRewardPlaceCellActivity:
                 df['ko_ctrl'].append(1)
                 df['day'].append(day)
                 df['sum'].append(self.ctrl_sums[mouse, day])
-                df['mouse'].append(mouse + 5)
+                df['mouse'].append(mouse + len(self.ko_mice))
 
         df = pd.DataFrame(df)
         results = {}
         aov = mixed_anova(data=df, dv='sum', between='ko_ctrl', within='day', subject='mouse')
         results['anova'] = aov
+        posthoc = pairwise_ttest(data=df, dv='sum', between='ko_ctrl', within='day', subject='mouse', padjust ='holm')
+        results['posthoc']=posthoc
         if verbose:
             print('Mixed design ANOVA results')
             print(aov)
+            print(posthoc)
 
         if group_tukey:
             ko_ctrl_tukey = pairwise_tukey(data=df, dv='sum', between='ko_ctrl')
