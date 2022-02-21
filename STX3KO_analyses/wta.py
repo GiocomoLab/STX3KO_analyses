@@ -177,11 +177,13 @@ def plot_pop_activity(ca1, trials_to_plot=None):
     for row, sort_vec in zip(trials_to_plot, sort_vecs):
 
         for col in trials_to_plot:
-            ax[row, col].imshow(ca1_z[col, :, sort_vec], vmin=0, vmax=1, aspect='auto',
+            h = ax[row, col].imshow(ca1_z[col, :, sort_vec], vmin=0, vmax=1, aspect='auto',
                                 cmap='viridis')
             if col == 0:
                 ax[row,col].set_xlabel('Pos.')
                 ax[row,col].set_ylabel('Cells')
+                if row == 0:
+                    plt.colorbar(h,ax=ax[row,col])
             else:
                 ax[row,col].set_yticks([])
 
