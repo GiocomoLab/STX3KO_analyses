@@ -144,11 +144,13 @@ def plot_cells(ca1, cell_inds=None, n_cols=20):
         col = cell % n_cols
         row = int(cell / n_cols)
         ax = fig.add_subplot(gs[row, col])
-        ax.imshow(ca1[:, :, cell], cmap="Greys")
+        h = ax.imshow(ca1[:, :, cell], cmap="Greys")
 
         if col == 0:
             ax.set_xlabel('pos')
             ax.set_ylabel('trial #')
+            if row==0:
+                plt.colorbar(h,ax=ax)
         else:
             ax.set_xticks([])
             ax.set_yticks([])
