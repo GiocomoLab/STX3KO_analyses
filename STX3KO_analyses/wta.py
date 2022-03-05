@@ -10,7 +10,7 @@ class KWTA():
 
     def __init__(self, n_pos=30, w_max=100, n_ca3=1000, n_ca1=1000, n_winners=100,
                  eta=1E-4, tau=1E-5, eta_ctrl=None, max_pos=10, ca3_sigma_mag=.08,
-                 weight_dist='lognormal', w_sigma_mag=1E-3, w_norm_decay=1E-3, ca1_noise=1):
+                 weight_dist='lognormal', w_sigma_mag=1E-3, w_norm_decay=1E-3, ca1_noise=1, ca3_width = .5):
         '''
         K-Winners-Take-All model with Hebbian learning for inheriting frozen CA3 linear track place cells
         representations to CA1
@@ -44,6 +44,7 @@ class KWTA():
         self.n_winners = n_winners
         self.eta = eta
         self.tau = tau
+        self.ca3_width = ca3_width
         self.ca3_sigma_mag = ca3_sigma_mag
         self.w_sigma_mag = w_sigma_mag
         self.w_norm_decay = w_norm_decay
@@ -52,7 +53,7 @@ class KWTA():
 
         # make ca3 place fields
         self.mu = np.linspace(0, self.max_pos, num=n_ca3)[:, np.newaxis]  # centers of place fields
-        self.ca3 = tpu.utilities.gaussian(self.mu, .5, self.pos)  # cells by positions
+        self.ca3 = tpu.utilities.gaussian(self.mu, self.ca3_width, self.pos)  # cells by positions
 
         # initialize weights
         if weight_dist == 'uniform':
