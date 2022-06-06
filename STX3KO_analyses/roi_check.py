@@ -82,7 +82,7 @@ class RoiChecker:
                 break
             i += 1
         plt.close()
-        self.df.to_csv("roi_check.csv")
+        self.df.to_csv("roi_check.csv", index=False)
 
     def check_uncurrated(self):
         """
@@ -102,7 +102,7 @@ class RoiChecker:
 
             i+=1
         plt.close()
-        self.df.to_csv("roi_check.csv")
+        self.df.to_csv("roi_check.csv",index=False)
 
     def init_figure(self):
 
@@ -219,16 +219,17 @@ class RoiChecker:
 
         # plot merge
         merge_roi = self.merge[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]]
+        # merge_roi /= np.amax(merge_roi)
         # w/ roi mask
         self.imhandles[(0,3,'img')].set_data(merge_roi)
-        self.imhandles[(0,3,'img')].set_clim(vmin=0, vmax=1)
+        self.imhandles[(0,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
         self.imhandles[(0,3,'roi')].set_data(roi_mask[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]])
         # w/ roi circle
         self.imhandles[(1,3,'img')].set_data(merge_roi)
-        self.imhandles[(1,3,'img')].set_clim(vmin=0, vmax=1)
+        self.imhandles[(1,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
         # w/o mark
         self.imhandles[(2,3,'img')].set_data(merge_roi)
-        self.imhandles[(2,3,'img')].set_clim(vmin=0, vmax=1)
+        self.imhandles[(2,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
 
         # plot merge multiplied channel
         merge_roi_mult = self.merge_mult[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]]
@@ -328,7 +329,7 @@ class RoiChecker:
         elif cmd == 'q':
 
             if input("save?") in ['1', 'y', 'yes','Y','Yes','']:
-                self.df.to_csv("roi_check.csv")
+                self.df.to_csv("roi_check.csv", index=False)
             else:
                 print("not saving")
             plt.close(self.fig)
