@@ -88,9 +88,9 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
 
 
 
-def load_single_day(mouse, day, verbose = True):
+def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMazeSessPkls'):
     #     mouse = '4467331.2'
-    pkldir = os.path.join('/home/mplitt/YMazeSessPkls/', mouse)
+    pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
 
         deets = ymaze_sess_deets.KO_sessions[mouse][day]
