@@ -87,24 +87,24 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
     return sess
 
 
-def load_single_day(mouse,day,verbose=True,pkl_basedir = '/home/mplitt/YMazeSessPkls'):
+# def load_single_day(mouse,day,verbose=True,pkl_basedir = '/home/mplitt/YMazeSessPkls'):
     
-    if pkl_basedir=='/home/mplitt/YMazeSessPkls':
-        return load_single_day_orig(mouse,day,verbose=verbose, pkl_basedir=pkl_basedir)
+#     if pkl_basedir=='/home/mplitt/YMazeSessPkls':
+#         return load_single_day_orig(mouse,day,verbose=verbose, pkl_basedir=pkl_basedir)
     
-    mouse_dir = os.path.join(pkl_basedir, mouse)
-    if mouse in ymaze_sess_deets.KO_sessions.keys():
-        deets = ymaze_sess_deets.KO_sessions[mouse][day]
-    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
-        deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
-    else:
-        raise Exception("invalid mouse name")
+#     mouse_dir = os.path.join(pkl_basedir, mouse)
+#     if mouse in ymaze_sess_deets.KO_sessions.keys():
+#         deets = ymaze_sess_deets.KO_sessions[mouse][day]
+#     elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
+#         deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
+#     else:
+#         raise Exception("invalid mouse name")
 
-    sess = session.YMazeSession.from_file(os.path.join(mouse_dir, deets['date'], "sess.pkl"), verbose=False, novel_arm=deets['novel_arm'])
-    return sess
+#     sess = session.YMazeSession.from_file(os.path.join(mouse_dir, deets['date'], "sess.pkl"), verbose=False, novel_arm=deets['novel_arm'])
+#     return sess
     
 
-def load_single_day_orig(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMazeSessPkls'):
+def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMazeSessPkls_UpsampledTrialMats'):
     #     mouse = '4467331.2'
     pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
@@ -119,7 +119,8 @@ def load_single_day_orig(mouse, day, verbose = True, pkl_basedir = '/home/mplitt
         print(deets)
     if isinstance(deets, tuple):
         
-        with open(os.path.join(pkldir, "roi_aligner_results.pkl"), 'rb') as file:
+        roi_aligner_dir = os.path.join('/home/mplitt/YMazeSessPkls', mouse)
+        with open(os.path.join(roi_aligner_dir, "roi_aligner_results.pkl"), 'rb') as file:
             match_inds = dill.load(file)
 
         common_roi_mapping = common_rois(match_inds, [d['ravel_ind'] for d in deets])
