@@ -197,7 +197,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         c = (t2 - _t) / (t2 - t1) * b1 + (_t - t1) / (t2 - t1) * b2
         return c
 
-    def add_pos_binned_trial_matrix(self, ts_name, pos_key='t', min_pos=13, max_pos=43, bin_size=1, mat_only=True,
+    def add_pos_binned_trial_matrix(self, ts_name, pos_key='t', min_pos=13, max_pos=43, bin_size=1, mat_only=True, 
                                     **trial_matrix_kwargs):
         """
 
