@@ -148,7 +148,7 @@ class PeriRewardPlaceCellFrac:
                                       (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
 
         # smooth ratemap by 1 bin
-        ratemap = sp.ndimage.filters.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
+        ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
 
         return np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
 
@@ -326,7 +326,7 @@ class PeriRewardPlaceCellActivity:
 
         x = np.arange(-10, 3)
         anova_mask = (x > -5) * (x <= -1)
-        # plot_mask = (x >= -10) * (x <= 1)
+        plot_mask = (x >= -10) * (x <= 1)
 
         def get_ratemap_sum(ratemap):
             '''
