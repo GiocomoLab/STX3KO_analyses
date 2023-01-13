@@ -163,12 +163,12 @@ class PeriRewardPlaceCellFrac:
 
         fig, ax = plt.subplots(2, self.n_days, figsize=[self.n_days * 5, 10], sharey=True)
 
-        # x = np.arange(-30, 15)
-        # anova_mask = (x > -5) * (x <= -1)
-        # plot_mask = (x >= -10) * (x <= 1)
-        x = np.arange(-60, 30)
-        anova_mask = (x > -10) * (x <= -1)
-        plot_mask = (x >= -20) * (x <= 1)
+        x = np.arange(-30, 15)
+        anova_mask = (x > -5) * (x <= -1)
+        plot_mask = (x >= -10) * (x <= 1)
+        # x = np.arange(-60, 30)
+        # anova_mask = (x > -10) * (x <= -1)
+        # plot_mask = (x >= -20) * (x <= 1)
 
         def get_hist(frac):
             '''
