@@ -14,7 +14,7 @@ from matplotlib.gridspec import GridSpec as gridspec
 class RoiChecker:
 
     def __init__(self, statfile, opsfile, run_correct_bleedthrough=False,n_tiles = 3,
-                 box_size=20):
+                 box_size=20, init_notcell=False):
         """
 
         :param statfile:
@@ -67,7 +67,16 @@ class RoiChecker:
             self.df = pd.read_csv("roi_check.csv")
             print("roi_check.csv found.")
         else:
-            self.df = pd.DataFrame(columns=['roi_index', 'Cre', 'NotCre', 'Unsure', 'NotCell'], index = range(self.stat.shape[0]))
+            self.df = pd.DataFrame(columns=['roi_index', 'Cre', 'NotCre', 'Unsure', 'NotCell'], index=range(self.stat.shape[0]))
+            if init_notcell:
+                s2p_iscell = np.load("iscell.npy", allow_pickle=True)
+                for cell in range(self.stat.shape[0]):
+                    if s2p_iscell[cell, 0] == 0:
+                        self.df.loc[cell, 'NotCell'] = 1
+                        for col in self.df.columns:
+                            if col != 'NotCell' and col != 'roi_index':
+                                self.df.loc[cell, col] = 0
+
 
 
     def loop_rois(self, start_index=0):
