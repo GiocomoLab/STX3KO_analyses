@@ -139,7 +139,7 @@ def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMaz
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
                                           trial_mat_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed'),
-                                          timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 't', 'LR'),
+                                          timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 't', 'LR', 'reward'),
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
