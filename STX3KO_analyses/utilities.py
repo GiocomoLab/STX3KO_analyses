@@ -165,10 +165,10 @@ def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMaz
 def single_mouse_concat_vr_sessions(mouse, date_inds=None):
     pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
 
-    if mouse in ymaze_sess_deets.KO_sessions.keys():
-        sessions_deets = ymaze_sess_deets.KO_sessions[mouse]
-    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
-        sessions_deets = ymaze_sess_deets.CTRL_sessions[mouse]
+    if mouse in ymaze_sess_deets.KO_behavior_sessions.keys():
+        sessions_deets = ymaze_sess_deets.KO_behavior_sessions[mouse]
+    elif mouse in ymaze_sess_deets.CTRL_behavior_sessions.keys():
+        sessions_deets = ymaze_sess_deets.CTRL_behavior_sessions[mouse]
     else:
         print("mouse ID typo")
         print("shenanigans")
