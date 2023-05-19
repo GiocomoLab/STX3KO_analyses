@@ -273,6 +273,7 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
                                              trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_th', 'spks_norm', 'licks', 'speed'],
-                                             timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_th', 'spks_norm', 'licks', 'speed'],
+                                             timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
+                                                           't', 'LR', 'reward', 'block_number'),
                                              load_ops=load_ops, load_stats = load_stats)
     return concat_sess
