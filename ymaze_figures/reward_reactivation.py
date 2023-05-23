@@ -23,6 +23,97 @@
 #     a) plot their activity during a reactivation event
 #     b) are they highly synchronous
     
+
+class RewardReactivation:
+    
+    def __init__(self, sess):
+        
+        if isinstance(sess.scan_info,list):
+            self.frame_rate = sess.scan_info[0]['frame_rate']
+        else:
+            self.frame_rate = sess.scan_info['frame_rate']
+        
+        
+        
+        
+        self.spks = sess.timeseries['spks']
+        self.trial_mat = sess.trial_matrices['spks_norm']
+        self.speed = sess.timeseries['speed']
+        self.lr = sess.timeseries['LR']
+        self.t = sess.timeseries['t']
+        self.reward = sess.timeseries['reward']
+        
+        self.novel_arm = sess.novel_arm
+        self.trial_info = sess.trial_info
+        self.trial_start_inds = sess.trial_start_inds
+        self.teleport_inds = sess.teleport_inds
+        
+        
+        # mask for post reward epochs
+        self.post_reward_epochs = None
+        self._post_reward_mask(sess)
+        
+        # threshold spks timeseries to get "significant" transients
+        self.thresh_spks = .2*np.nanmax(sess.timeseries['spks'], axis=-1, keepdims=True)
+        self.spks_th = 1.*np.copy(self.spks)
+        self.spks_th[self.spks_th<self.thresh_spks]=0
+        
+        
+        
+        # all activations during stopping, including periods when not near reward zone
+        self.activation_mask = None
+        # activations during reward consumption
+        self.post_reward_activation_mask = None
+        # all activations during running
+        self.trial_activation_mask = None
+        self.get_activations()
+        
+        # active during trial and during reward consumption
+        self.post_reward_reactivation_mask = None
+        # active during trial but not during reward consumption
+        self.non_reactivation_mask = None
+        self.get_post_reward_reactivations()
+        
+        
+    def _post_reward_mask(self, sess, max_post_reward_time = 5, max_post_reward_dist = 3):
+        post_reward_bool = 0.*self.t.ravel()
+        for start,stop in zip(self.trial_start_inds, self.teleport_inds):
+
+            cum_reward = np.cumsum(self.reward.ravel()[start:stop])>0
+            post_reward_inds = np.argwhere(cum_reward).ravel()
+            if post_reward_inds.shape[0]>0:
+                post_reward_bool[post_reward_inds[0]+start:start+np.minimum(post_reward_inds[0]+int(max_post_reward_time*self.frame_rate),stop-start)] = 1
+
+
+        nov_post_rzone_mask = (sess.timeseries['LR']==sess.novel_arm)*(sess.timeseries['t']>sess.rzone_nov['tfront']+max_post_reward_dist)
+        fam_post_rzone_mask = (sess.timeseries['LR']==-1*sess.novel_arm)*(sess.timeseries['t']>sess.rzone_fam['tfront']+max_post_reward_dist)
+        post_reward_bool[nov_post_rzone_mask.ravel()]=0
+        post_reward_bool[fam_post_rzone_mask.ravel()]=0
+        self.post_reward_epochs = post_reward_bool
+        
+        
+    def get_activations(self):
+    
+        spks_ledge = 1*(np.diff(1.*(self.spks_th>0),prepend=0,axis=-1)>0)
+
+        self.activation_mask = 1*(spks_ledge>0)*(self.speed<2)
+        self.post_reward_activation_mask = 1*(spks_ledge>0)*(self.speed<2)*(self.post_reward_epochs[np.newaxis,:])
+        self.trial_activation_mask = 1*(spks_ledge>0)*(1-self.post_reward_epochs[np.newaxis,:])
+    
+    def get_post_reward_reactivations(self):
+        post_reward_reactivation_mask = np.zeros((self.spks.shape[0],self.trial_start_inds.shape[0]))
+        non_reactivation_mask = np.zeros((self.spks.shape[0],self.trial_start_inds.shape[0]))
+        for trial, (start,stop) in enumerate(zip(self.trial_start_inds,self.teleport_inds)):
+            post_reward_reactivation_mask[:,trial] = 1*(self.post_reward_activation_mask[:,start:stop].sum(axis=-1)>0)*(self.trial_activation_mask[:,start:stop].sum(axis=-1)>0)
+            non_reactivation_mask[:,trial] = 1*(self.post_reward_activation_mask[:,start:stop].sum(axis=-1)==0)*(self.trial_activation_mask[:,start:stop].sum(axis=-1)>0)
+        
+        self.post_reward_reactivation_mask = post_reward_reactivation_mask
+        self.non_reactivation_mask = non_reactivation_mask
+        
+    
+
+        
+
     
 def post_reward_mask(sess,fr):
     post_reward_bool = 0.*sess.timeseries['t'].ravel()
