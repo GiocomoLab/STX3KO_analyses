@@ -82,3 +82,84 @@ def spatial_com(avg_trial_mat):
     # center of mass / expected value
     return (avg_trial_mat_norm * inds).sum(axis=0)
 
+
+
+def trial_matrix(arr_in, pos_in, tstart_inds, tstop_inds, bin_size=10, min_pos = 0,
+                 max_pos=450, speed=None, speed_thr=2, perm=False,
+                 mat_only=False, impute_nans = False, sum=False):
+    """
+
+    :param arr: timepoints x anything array to be put into trials x positions format
+    :param pos: position at each timepoint
+    :param tstart_inds: indices of trial starts
+    :param tstop_inds: indices of trial stops
+    :param bin_size: spatial bin size in cm
+    :param max_pos: maximum position on track
+    :param speed: vector of speeds at each timepoint. If None, then no speed filtering is done
+    :param speed_thr: speed threshold in cm/s. Timepoints of low speed are dropped
+    :param perm: bool. whether to circularly permute timeseries before binning. used for permutation testing
+    :param mat_only: bool. return just spatial binned data or also occupancy, bin edges, and bin bin_centers
+    :return: if mat_only
+                    trial_mat - position binned data
+             else
+                    trial_mat
+                    occ_mat - trials x positions matrix of bin occupancy
+                    bin_edges - position bin edges
+                    bin_centers - bin centers
+    """
+
+    arr = np.copy(arr_in)
+    pos = np.copy(pos_in)
+
+    ntrials = tstart_inds.shape[0]
+    if speed is not None:  # mask out speeds below speed threshold
+        pos[speed < speed_thr] = -1000
+        arr[speed < speed_thr, :] = np.nan
+
+    # make position bins
+    bin_edges = np.arange(min_pos, max_pos + bin_size, bin_size)
+    bin_centers = bin_edges[:-1] + bin_size / 2
+    bin_edges = bin_edges.tolist()
+
+    # if arr is a vector, expand dimension
+    if len(arr.shape) < 2:
+        arr = arr[:, np.newaxis]
+        # arr = np.expand_dims(arr, axis=1)
+
+    trial_mat = np.zeros([int(ntrials), len(bin_edges) - 1, arr.shape[1]])
+    trial_mat[:] = np.nan
+    occ_mat = np.zeros([int(ntrials), len(bin_edges) - 1])
+    for trial in range(int(ntrials)):  # for each trial
+        # get trial indices
+        firstI, lastI = tstart_inds[trial], tstop_inds[trial]
+
+        arr_t, pos_t = arr[firstI:lastI, :], pos[firstI:lastI]
+        if perm:  # circularly permute if desired
+            pos_t = np.roll(pos_t, np.random.randint(pos_t.shape[0]))
+
+        # average within spatial bins
+        for b, (edge1, edge2) in enumerate(zip(bin_edges[:-1], bin_edges[1:])):
+            if np.where((pos_t > edge1) & (pos_t <= edge2))[0].shape[0] > 0:
+                if sum:
+                    trial_mat[trial, b] = np.nansum(arr_t[(pos_t > edge1) & (pos_t <= edge2), :], axis=0)
+                else:
+                    trial_mat[trial, b] = np.nanmean(arr_t[(pos_t > edge1) & (pos_t <= edge2), :], axis=0)
+                # occ_mat[trial, b] = np.where((pos_t > edge1) & (pos_t <= edge2))[0].shape[0]
+                occ_mat[trial, b] = (1-np.isnan(arr_t[(pos_t > edge1) & (pos_t <= edge2),0])).sum()
+            else:
+                pass
+
+    if impute_nans:
+        for trial in range(trial_mat.shape[0]):
+            nan_inds = np.isnan(trial_mat[trial,:,0])
+            _c = bin_centers[~nan_inds]
+            for cell in range(trial_mat.shape[2]):
+                _m = trial_mat[trial, ~nan_inds, cell]
+                trial_mat[trial,:,cell] = np.interp(bin_centers, _c, _m)
+
+
+    if mat_only:
+        return np.squeeze(trial_mat)
+    else:
+        return np.squeeze(trial_mat), np.squeeze(occ_mat / (occ_mat.sum(axis=1)[:, np.newaxis] + 1E-3)), bin_edges, bin_centers
+
