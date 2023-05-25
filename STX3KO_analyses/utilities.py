@@ -138,7 +138,7 @@ def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMaz
             sess_list.append(_sess)
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                                          trial_mat_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed'),
+                                          trial_mat_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 'spks_nostop'),
                                           timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
                                                            't', 'LR', 'reward', 'block_number', 'spks_nostop'),
                                           run_place_cells=True)
@@ -274,6 +274,6 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
     concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
                                              trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_th', 'spks_norm', 'licks', 'speed', 'spks_nostop'],
                                              timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
-                                                           't', 'LR', 'reward', 'block_number', 'spks_no_stop'),
+                                                           't', 'LR', 'reward', 'block_number', 'spks_nostop'),
                                              load_ops=load_ops, load_stats = load_stats)
     return concat_sess
