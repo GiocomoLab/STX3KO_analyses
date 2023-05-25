@@ -138,8 +138,9 @@ def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMaz
             sess_list.append(_sess)
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','licks', 'speed', 't'),
-                                          timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','licks', 'speed','t'),
+                                          trial_mat_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed'),
+                                          timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
+                                                           't', 'LR', 'reward', 'block_number'),
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
@@ -165,10 +166,10 @@ def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMaz
 def single_mouse_concat_vr_sessions(mouse, date_inds=None):
     pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
 
-    if mouse in ymaze_sess_deets.KO_sessions.keys():
-        sessions_deets = ymaze_sess_deets.KO_sessions[mouse]
-    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
-        sessions_deets = ymaze_sess_deets.CTRL_sessions[mouse]
+    if mouse in ymaze_sess_deets.KO_behavior_sessions.keys():
+        sessions_deets = ymaze_sess_deets.KO_behavior_sessions[mouse]
+    elif mouse in ymaze_sess_deets.CTRL_behavior_sessions.keys():
+        sessions_deets = ymaze_sess_deets.CTRL_behavior_sessions[mouse]
     else:
         print("mouse ID typo")
         print("shenanigans")
@@ -271,7 +272,8 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
 
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
-                                             trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks', 'speed'],
-                                             timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks', 'speed'],
+                                             trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_th', 'spks_norm', 'licks', 'speed'],
+                                             timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
+                                                           't', 'LR', 'reward', 'block_number'),
                                              load_ops=load_ops, load_stats = load_stats)
     return concat_sess
