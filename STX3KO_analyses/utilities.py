@@ -201,7 +201,7 @@ def single_mouse_concat_vr_sessions(mouse, date_inds=None):
             sess_list.append(sess)
             date_inds_ravel.append(date_ind)
 
-            print(deets['date'], deets['scene'])
+            # print(deets['date'], deets['scene'])
 
             if mouse == '4467975.1' and date_ind == 0:
                 sess.trial_info['block_number'] += 1
