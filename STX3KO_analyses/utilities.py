@@ -38,7 +38,7 @@ def common_rois(roi_matches, inds):
             #             print(j,roi,ind)
             common_roi_mapping[j + 1, i] = ref[targ_ind]['targ_inds'][ind]
 
-    return common_roi_mapping.astype(np.int)
+    return common_roi_mapping.astype(int)
 
 def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), timeseries_keys = ('licks', 'speed')):
     pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
