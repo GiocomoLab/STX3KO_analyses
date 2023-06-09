@@ -1,25 +1,41 @@
-name: STX3_test
+name: STX3
 channels:
+  - pytorch
+  - numba
   - defaults
   - anaconda
   - conda-forge
-
 dependencies:
-  - dill
-  - h5py
-  - python=3.8
-  - jupyterlab
-  - matplotlib
-  - numpy>=1.19
-  - numba>=0.43.1
-  - pandas
+  - python>=3.8,<3.9
   - pip
+  - mkl
+  - tbb
+  - numpy
+  - numba
+  - matplotlib
   - scikit-learn
-  - scipy>=1.6
+  - h5py=2.10.0
+  - dill
+  - jupyterlab
+  - pandas
   - sqlite
   - statsmodels
   - pingouin
   - pip:
-      - "--editable=/home/mplitt/repos/TwoPUtils/"
-      - "--editable=/home/mplitt/repos/suite2p/"
-      - -e .
+    - scipy>=1.4.0
+    - pyqt5
+    - pyqt5.sip
+    - pyqt5-tools
+    - torch>=1.7.1
+    - natsort
+    - rastermap>0.1.0
+    - tifffile
+    - scanimage-tiff-reader>=1.4.1
+    - pyqtgraph
+    - importlib-metadata
+    - paramiko
+    - pynwb
+    - sbxreader
+    - suite2p
+    - '--editable=/home/mplitt/repos/TwoPUtils'
+    - -e .

@@ -1,6 +1,8 @@
 import dill
 import numpy as np
 import scipy as sp
+import pandas as pd
+
 from sklearn.linear_model import LinearRegression
 import TwoPUtils
 
@@ -43,6 +45,13 @@ class YMazeSession(TwoPUtils.sess.Session):
             elif self.novel_arm == 1:
                 self.rzone_fam = self.rzone_early
                 self.rzone_nov = self.rzone_late
+
+        if isinstance(self.iscell, pd.DataFrame):
+            self.mcherry_curated = True
+        else:
+            self.mcherry_curated = False
+
+
 
     @classmethod
     def from_file(cls, filename, **kwargs):
@@ -188,7 +197,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         c = (t2 - _t) / (t2 - t1) * b1 + (_t - t1) / (t2 - t1) * b2
         return c
 
-    def add_pos_binned_trial_matrix(self, ts_name, pos_key='t', min_pos=13, max_pos=43, bin_size=1, mat_only=True,
+    def add_pos_binned_trial_matrix(self, ts_name, pos_key='t', min_pos=13, max_pos=43, bin_size=1, mat_only=True, 
                                     **trial_matrix_kwargs):
         """
 
@@ -301,6 +310,38 @@ class YMazeSession(TwoPUtils.sess.Session):
             return self.place_cell_info['left']['masks']
         else:
             return None
+
+    def mcherry_pos_timeseries(self, fkey):
+        '''
+
+        :param fkey:
+        :return:
+        '''
+        return self.timeseries[fkey][self.iscell.loc[:, 'Cre'].to_numpy()>0,:]
+
+    def mcherry_neg_timeseries(self, fkey):
+        '''
+
+        :param fkey:
+        :return:
+        '''
+        return self.timeseries[fkey][self.iscell.loc[:, 'NotCre'].to_numpy()>0,:]
+
+    def mcherry_pos_trialmatrix(self, fkey):
+        '''
+        :param fkey:
+        :return:
+        '''
+        return self.trial_matrices[fkey][:, :, self.iscell.loc[:, 'Cre'].to_numpy()>0]
+
+    def mcherry_neg_trialmatrix(self, fkey):
+        '''
+        :param fkey:
+        :return:
+        '''
+        return self.trial_matrices[fkey][:, :, self.iscell.loc[:, 'NotCre'].to_numpy()>0]
+
+
 
 
 class ConcatYMazeSession:

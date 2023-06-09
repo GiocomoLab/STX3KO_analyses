@@ -87,10 +87,26 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
     return sess
 
 
+# def load_single_day(mouse,day,verbose=True,pkl_basedir = '/home/mplitt/YMazeSessPkls'):
+    
+#     if pkl_basedir=='/home/mplitt/YMazeSessPkls':
+#         return load_single_day_orig(mouse,day,verbose=verbose, pkl_basedir=pkl_basedir)
+    
+#     mouse_dir = os.path.join(pkl_basedir, mouse)
+#     if mouse in ymaze_sess_deets.KO_sessions.keys():
+#         deets = ymaze_sess_deets.KO_sessions[mouse][day]
+#     elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
+#         deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
+#     else:
+#         raise Exception("invalid mouse name")
 
-def load_single_day(mouse, day, verbose = True):
+#     sess = session.YMazeSession.from_file(os.path.join(mouse_dir, deets['date'], "sess.pkl"), verbose=False, novel_arm=deets['novel_arm'])
+#     return sess
+    
+
+def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMazeSessPkls'):
     #     mouse = '4467331.2'
-    pkldir = os.path.join('/home/mplitt/YMazeSessPkls/', mouse)
+    pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
 
         deets = ymaze_sess_deets.KO_sessions[mouse][day]
@@ -102,7 +118,9 @@ def load_single_day(mouse, day, verbose = True):
     if verbose:
         print(deets)
     if isinstance(deets, tuple):
-        with open(os.path.join(pkldir, "roi_aligner_results.pkl"), 'rb') as file:
+        
+        roi_aligner_dir = os.path.join('/home/mplitt/YMazeSessPkls', mouse)
+        with open(os.path.join(roi_aligner_dir, "roi_aligner_results.pkl"), 'rb') as file:
             match_inds = dill.load(file)
 
         common_roi_mapping = common_rois(match_inds, [d['ravel_ind'] for d in deets])
@@ -120,8 +138,9 @@ def load_single_day(mouse, day, verbose = True):
             sess_list.append(_sess)
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','licks', 'speed'),
-                                          timeseries_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','licks', 'speed'),
+                                          trial_mat_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 'spks_nostop'),
+                                          timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
+                                                           't', 'LR', 'reward', 'block_number', 'spks_nostop'),
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
@@ -147,10 +166,10 @@ def load_single_day(mouse, day, verbose = True):
 def single_mouse_concat_vr_sessions(mouse, date_inds=None):
     pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
 
-    if mouse in ymaze_sess_deets.KO_sessions.keys():
-        sessions_deets = ymaze_sess_deets.KO_sessions[mouse]
-    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
-        sessions_deets = ymaze_sess_deets.CTRL_sessions[mouse]
+    if mouse in ymaze_sess_deets.KO_behavior_sessions.keys():
+        sessions_deets = ymaze_sess_deets.KO_behavior_sessions[mouse]
+    elif mouse in ymaze_sess_deets.CTRL_behavior_sessions.keys():
+        sessions_deets = ymaze_sess_deets.CTRL_behavior_sessions[mouse]
     else:
         print("mouse ID typo")
         print("shenanigans")
@@ -182,7 +201,7 @@ def single_mouse_concat_vr_sessions(mouse, date_inds=None):
             sess_list.append(sess)
             date_inds_ravel.append(date_ind)
 
-            print(deets['date'], deets['scene'])
+            # print(deets['date'], deets['scene'])
 
             if mouse == '4467975.1' and date_ind == 0:
                 sess.trial_info['block_number'] += 1
@@ -253,7 +272,8 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
 
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
-                                             trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks', 'speed'],
-                                             timeseries_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_norm', 'licks', 'speed'],
+                                             trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_th', 'spks_norm', 'licks', 'speed', 'spks_nostop'],
+                                             timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
+                                                           't', 'LR', 'reward', 'block_number', 'spks_nostop'),
                                              load_ops=load_ops, load_stats = load_stats)
     return concat_sess
