@@ -74,8 +74,8 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
         sess = session.YMazeSession.from_file(
             os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
             verbose=False, novel_arm=deets['novel_arm'])
-        sess.add_timeseries(licks=sess.vr_data['lick']._values)
-        sess.add_pos_binned_trial_matrix('licks')
+        # sess.add_timeseries(licks=sess.vr_data['lick']._values)
+        # sess.add_pos_binned_trial_matrix('licks')
         # sess.novel_arm = deets['novel']
         # setattr(sess, 'novel_arm', deets['novel'])
 
