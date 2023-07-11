@@ -675,6 +675,8 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
 
     fig, ax = plt.subplots(4,2, figsize= [10,20])
     ax[0, 0].imshow(sort_norm(ctrl_l_train, ctrl_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+    ax[0, 0].set_title(f"mCherry: Left, N cells {ctrl_l_test.shape[1]}")
+
     ax[0, 1].imshow(sort_norm(ctrl_l, ctrl_r_lcells).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
 
     ax[0, 0].plot([-.5, ctrl_l_train.shape[0]- .5], [-.5, ctrl_l_train.shape[1]-.5], color='blue')
