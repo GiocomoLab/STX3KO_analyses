@@ -651,7 +651,7 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
             r_rm_train.append(np.nanmean(r_trialmat[::2, :, :], axis=0))
             r_rm_test.append(np.nanmean(r_trialmat[1::2, :, :], axis=0))
 
-        return np.concatenate(l_rm, axis=-1), np.concatentate(r_rm, axis=-1), \
+        return np.concatenate(l_rm, axis=-1), np.concatenate(r_rm, axis=-1), \
                np.concatenate(l_rm_train, axis=-1), np.concatenate(l_rm_test, axis=-1), \
                np.concatenate(r_rm_train, axis=-1), np.concatenate(r_rm_test, axis=-1)
 
