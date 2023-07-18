@@ -161,7 +161,7 @@ class PeriRewardPlaceCellFrac:
         :return:
         '''
 
-        fig, ax = plt.subplots(2, self.n_days, figsize=[self.n_days * 5, 10], sharey=True)
+        fig, ax = plt.subplots(2, self.n_days, figsize=[self.n_days * 5, 5], sharey=True)
 
         x = np.arange(-30, 15)
         anova_mask = (x > -5) * (x <= -1)

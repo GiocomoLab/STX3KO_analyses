@@ -145,7 +145,7 @@ def plot_cells(ca1, cell_inds=None, n_cols=20):
         col = cell % n_cols
         row = int(cell / n_cols)
         ax = fig.add_subplot(gs[row, col])
-        h = ax.imshow(ca1[:, :, cell], cmap="Greys")
+        h = ax.imshow(ca1[:, :, cell], cmap="magma")
 
         if col == 0:
             ax.set_xlabel('pos')
@@ -179,7 +179,7 @@ def plot_pop_activity(ca1, trials_to_plot=None):
 
         for col in trials_to_plot:
             h = ax[row, col].imshow(ca1_z[col, :, sort_vec], vmin=0, vmax=1, aspect='auto',
-                                cmap='viridis')
+                                cmap='pink')
             if col == 0:
                 ax[row,col].set_xlabel('Pos.')
                 ax[row,col].set_ylabel('Cells')
