@@ -697,11 +697,11 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
 
     ax[2, 1].imshow(sort_norm(ko_l, ko_r_lcells).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
     ax[2, 1].plot([-.5, ko_l_train.shape[0]- .5], [-.5, ko_l_train.shape[1]-.5], color='blue')
-    ax[2, 1].set_title("Cre: Left Trial, Right Sort")
+    ax[2, 1].set_title("Cre: Right Trials, Left Sort")
 
     ax[3, 0].imshow(sort_norm(ko_r_train, ko_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
     ax[3, 0].plot([-.5, ko_r_train.shape[0]- .5], [-.5, ko_r_train.shape[1]-.5], color='blue')
-    ax[3, 0].set_title(f"Cre: Left, N cells {ko_r_test.shape[1]}")
+    ax[3, 0].set_title(f"Cre: Right, N cells {ko_r_test.shape[1]}")
 
     ax[3, 1].imshow(sort_norm(ko_r, ko_l_rcells).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
     ax[3, 1].plot([-.5, ko_r_train.shape[0]- .5], [-.5, ko_r_train.shape[1]-.5], color='blue')
