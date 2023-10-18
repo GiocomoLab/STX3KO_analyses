@@ -178,7 +178,7 @@ def plot_pop_activity(ca1, trials_to_plot=None):
     for row, sort_vec in zip(trials_to_plot, sort_vecs):
 
         for col in trials_to_plot:
-            h = ax[row, col].imshow(ca1_z[col, :, sort_vec], vmin=0, vmax=1, aspect='auto',
+            h = ax[row, col].imshow(ca1_z[col, :, sort_vec], vmin=0, vmax=4, aspect='auto',
                                 cmap='pink')
             if col == 0:
                 ax[row,col].set_xlabel('Pos.')
