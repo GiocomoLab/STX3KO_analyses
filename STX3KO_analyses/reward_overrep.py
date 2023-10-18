@@ -166,10 +166,7 @@ class PeriRewardPlaceCellFrac:
         x = np.arange(-30, 15)
         anova_mask = (x > -5) * (x <= -1)
         plot_mask = (x >= -10) * (x <= 1)
-        # x = np.arange(-60, 30)
-        # anova_mask = (x > -10) * (x <= -1)
-        # plot_mask = (x >= -20) * (x <= 1)
-
+        
         def get_hist(frac):
             '''
 
@@ -195,7 +192,7 @@ class PeriRewardPlaceCellFrac:
         for day in range(self.n_days):
             # ax[0, day].plot(x[plot_mask], self.ko_plot_array[:, day, :].T, color='red')
             ko_mu, ko_sem = self.ko_plot_array[:, day, :].mean(axis=0), sp.stats.sem(self.ko_plot_array[:, day, :])
-            ax[1, day].fill_between(x[plot_mask], ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
+            ax[ day].fill_between(x[plot_mask], ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
 
             # ax[0, day].plot(x[plot_mask], self.ctrl_plot_array[:, day, :].T, color='black')
             ctrl_mu, ctrl_sem = self.ctrl_plot_array[:, day, :].mean(axis=0), sp.stats.sem(
@@ -203,7 +200,7 @@ class PeriRewardPlaceCellFrac:
             ax[1, day].fill_between(x[plot_mask], ctrl_mu - ctrl_sem, ctrl_mu + ctrl_sem, color='black', alpha=.3)
 
             for row in range(2):
-                # ax[row, day].set_ylim([.0, .075])
+                
                 ax[row, day].set_xlim([-10, 1])
 
                 ax[row, day].spines['top'].set_visible(False)
@@ -211,8 +208,7 @@ class PeriRewardPlaceCellFrac:
 
                 ax[row, day].set_title("Day %d" % (day + 1))
                 ax[row, day].set_xlabel("Distance from reward")
-        ax[0, 0].set_ylabel('% of cells')
-        ax[1, 0].set_ylabel('% of cells')
+        ax[0].set_ylabel('% of cells')
 
         fig.subplots_adjust(hspace=.5)
 
@@ -244,7 +240,7 @@ class PeriRewardPlaceCellFrac:
                 df['ko_ctrl'].append(1)
                 df['day'].append(day)
                 df['frac'].append(self.ctrl_sums[mouse, day])
-                df['mouse'].append(mouse + 5)
+                df['mouse'].append(mouse + )
 
         df = pd.DataFrame(df)
         results = {}
@@ -254,23 +250,7 @@ class PeriRewardPlaceCellFrac:
             print('Mixed design ANOVA results')
             print(aov)
 
-        # if group_tukey:
-        #     ko_ctrl_tukey = pairwise_tukey(data=df, dv='frac', between='ko_ctrl')
-        #     results['ko_ctrl_tukey'] = ko_ctrl_tukey
-        #     if verbose:
-        #         print('PostHoc Tukey: KO vs Ctrl')
-        #         print(ko_ctrl_tukey)
-        #
-        # if day_tukey:
-        #     day_stats = []
-        #     print('PostHov Tukey on each day')
-        #     for day in self.days:
-        #         print('Day %d' % day)
-        #         stats = pairwise_tukey(data=df[df['day'] == day], dv='frac', between='ko_ctrl')
-        #         day_stats.append(stats)
-        #         if verbose:
-        #             print(stats)
-        #     results['day_tukey'] = day_stats
+       
 
         return results
 
@@ -361,6 +341,7 @@ class PeriRewardPlaceCellActivity:
             #                             self.ctrl_plot_mu[m, day, :] + self.ctrl_plot_sem[m, day, :], color='black',
             #                             alpha=.3)
 
+            ax[1, day].plot(x, 1/30.*(0*x + 1.), 'k--')
             ko_mu, ko_sem = self.ko_plot_mu[:, day, :].mean(axis=0), sp.stats.sem(self.ko_plot_mu[:, day, :])
             ax[1, day].fill_between(x, ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
 
@@ -621,8 +602,6 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
         :return:
         '''
         l_rm_train, l_rm_test, r_rm_train, r_rm_test = [], [], [], []
-        l_rm, r_rm = [], []
-        l_rm_rcells, r_rm_lcells = [], []
         for mouse in mice:
             sess = u.load_single_day(mouse, day)
             if 'left' in sess.place_cell_info.keys():
@@ -638,18 +617,10 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
             r_trialmask = sess.trial_info['LR'] == 1
 
             l_trialmat = trial_mat[l_trialmask, :, :]
-            l_trialmat_rcells = l_trialmat[:, :, r_cellmask]
             l_trialmat = l_trialmat[:, :, l_cellmask]
 
             r_trialmat = trial_mat[r_trialmask, :, :]
-            r_trialmat_lcells = r_trialmat[:, :, l_cellmask]
             r_trialmat = r_trialmat[:, :, r_cellmask]
-
-            l_rm.append(np.nanmean(l_trialmat, axis=0))
-            r_rm.append(np.nanmean(r_trialmat, axis=0))
-
-            l_rm_rcells.append(np.nanmean(l_trialmat_rcells, axis=0))
-            r_rm_lcells.append(np.nanmean(r_trialmat_lcells, axis=0))
 
             l_rm_train.append(np.nanmean(l_trialmat[::2, :, :], axis=0))
             l_rm_test.append(np.nanmean(l_trialmat[1::2, :, :], axis=0))
@@ -657,9 +628,7 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
             r_rm_train.append(np.nanmean(r_trialmat[::2, :, :], axis=0))
             r_rm_test.append(np.nanmean(r_trialmat[1::2, :, :], axis=0))
 
-        return np.concatenate(l_rm, axis=-1), np.concatenate(r_rm, axis=-1), \
-               np.concatenate(l_rm_rcells, axis=-1), np.concatenate(r_rm_lcells, axis=-1), \
-               np.concatenate(l_rm_train, axis=-1), np.concatenate(l_rm_test, axis=-1), \
+        return np.concatenate(l_rm_train, axis=-1), np.concatenate(l_rm_test, axis=-1), \
                np.concatenate(r_rm_train, axis=-1), np.concatenate(r_rm_test, axis=-1)
 
     def sort_norm(rm_train, rm_test):
@@ -670,44 +639,29 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
 
         return rm_test[:, sortvec]
 
-    ko_l, ko_r, ko_l_rcells, ko_r_lcells, ko_l_train, ko_l_test, ko_r_train, ko_r_test = lr_ratemaps(ymaze_sess_deets.ko_mice)
-    ctrl_l, ctrl_r, ctrl_l_rcells, ctrl_r_lcells, ctrl_l_train, ctrl_l_test, ctrl_r_train, ctrl_r_test = lr_ratemaps(ymaze_sess_deets.ctrl_mice)
+    ko_l_train, ko_l_test, ko_r_train, ko_r_test = lr_ratemaps(ymaze_sess_deets.ko_mice)
+    ctrl_l_train, ctrl_l_test, ctrl_r_train, ctrl_r_test = lr_ratemaps(ymaze_sess_deets.ctrl_mice)
 
-    fig, ax = plt.subplots(4,2, figsize= [10,20])
+    fig, ax = plt.subplots(2,2, figsize= [10,10])
     ax[0, 0].imshow(sort_norm(ctrl_l_train, ctrl_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+    ax[0, 1].imshow(sort_norm(ctrl_r_train, ctrl_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+
     ax[0, 0].plot([-.5, ctrl_l_train.shape[0]- .5], [-.5, ctrl_l_train.shape[1]-.5], color='blue')
-    ax[0, 0].set_title(f"mCherry: Left, N cells {ctrl_l_test.shape[1]}")
+    ax[0, 1].plot([-.5, ctrl_r_train.shape[0] - .5], [-.5, ctrl_r_train.shape[1] - .5], color='blue')
 
-    ax[0, 1].imshow(sort_norm(ctrl_l, ctrl_r_lcells).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
-    ax[0, 1].plot([-.5, ctrl_l_train.shape[0] - .5], [-.5, ctrl_l_train.shape[1] - .5], color='blue')
-    ax[0, 1].set_title("mCherry: Right Trials, Left Sort")
+    ax[0, 0].set_title("mCherry: Left, N cells %d" % ctrl_l_test.shape[1])
+    ax[0, 1].set_title("mCherry: Right, N cells %d" % ctrl_r_test.shape[1])
 
-    ax[1, 0].imshow(sort_norm(ctrl_r_train, ctrl_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
-    ax[1, 0].plot([-.5, ctrl_r_train.shape[0]- .5], [-.5, ctrl_r_train.shape[1]-.5], color='blue')
-    ax[1, 0].set_title(f"mCherry: Right, N cells {ctrl_r_test.shape[1]}")
+    ax[1, 0].imshow(sort_norm(ko_l_train, ko_l_test).T, cmap = 'pink', aspect = 'auto', vmin=vmin, vmax=vmax)
+    ax[1, 1].imshow(sort_norm(ko_r_train, ko_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
 
-    ax[1, 1].imshow(sort_norm(ctrl_r, ctrl_l_rcells).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
-    ax[1, 1].plot([-.5, ctrl_r_train.shape[0]- .5], [-.5, ctrl_r_train.shape[1]-.5], color='blue')
-    ax[1, 1].set_title("mCherry: Left Trials, Right Sort")
+    ax[1, 0].plot([-.5, ko_l_train.shape[0] - .5], [-.5, ko_l_train.shape[1] - .5], color='blue')
+    ax[1, 1].plot([-.5, ko_r_train.shape[0] - .5], [-.5, ko_r_train.shape[1] - .5], color='blue')
 
+    ax[1, 0].set_title("Cre: Left, N cells %d" % ko_l_train.shape[1])
+    ax[1, 1].set_title("Cre: Right, N cells %d" % ko_r_train.shape[1])
 
-    ax[2, 0].imshow(sort_norm(ko_l_train, ko_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
-    ax[2, 0].plot([-.5, ko_l_train.shape[0]- .5], [-.5, ko_l_train.shape[1]-.5], color='blue')
-    ax[2, 0].set_title(f"Cre: Left, N cells {ko_l_test.shape[1]}")
-
-    ax[2, 1].imshow(sort_norm(ko_l, ko_r_lcells).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
-    ax[2, 1].plot([-.5, ko_l_train.shape[0]- .5], [-.5, ko_l_train.shape[1]-.5], color='blue')
-    ax[2, 1].set_title("Cre: Left Trial, Right Sort")
-
-    ax[3, 0].imshow(sort_norm(ko_r_train, ko_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
-    ax[3, 0].plot([-.5, ko_r_train.shape[0]- .5], [-.5, ko_r_train.shape[1]-.5], color='blue')
-    ax[3, 0].set_title(f"Cre: Left, N cells {ko_r_test.shape[1]}")
-
-    ax[3, 1].imshow(sort_norm(ko_r, ko_l_rcells).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
-    ax[3, 1].plot([-.5, ko_r_train.shape[0]- .5], [-.5, ko_r_train.shape[1]-.5], color='blue')
-    ax[3, 1].set_title("Cre: Left Trial, Right Sort")
-
-    for row in range(4):
+    for row in [0,1]:
         for col in [0,1]:
             ax[row,col].set_yticks([])
             ax[row,col].set_ylabel('Cells')
