@@ -161,7 +161,7 @@ class PeriRewardPlaceCellFrac:
         :return:
         '''
 
-        fig, ax = plt.subplots(2, self.n_days, figsize=[self.n_days * 5, 5], sharey=True)
+        fig, ax = plt.subplots(1, self.n_days, figsize=[self.n_days * 5, 5], sharey=True)
 
         x = np.arange(-30, 15)
         anova_mask = (x > -5) * (x <= -1)
@@ -192,23 +192,23 @@ class PeriRewardPlaceCellFrac:
         for day in range(self.n_days):
             # ax[0, day].plot(x[plot_mask], self.ko_plot_array[:, day, :].T, color='red')
             ko_mu, ko_sem = self.ko_plot_array[:, day, :].mean(axis=0), sp.stats.sem(self.ko_plot_array[:, day, :])
-            ax[1, day].fill_between(x[plot_mask], ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
+            ax[day].fill_between(x[plot_mask], ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
 
             # ax[0, day].plot(x[plot_mask], self.ctrl_plot_array[:, day, :].T, color='black')
             ctrl_mu, ctrl_sem = self.ctrl_plot_array[:, day, :].mean(axis=0), sp.stats.sem(
                 self.ctrl_plot_array[:, day, :])
-            ax[1, day].fill_between(x[plot_mask], ctrl_mu - ctrl_sem, ctrl_mu + ctrl_sem, color='black', alpha=.3)
-            ax[1, day].plot(x, 1/30.*(0*x + 1.), 'k--', zorder = -10)
-            for row in range(2):
+            ax[day].fill_between(x[plot_mask], ctrl_mu - ctrl_sem, ctrl_mu + ctrl_sem, color='black', alpha=.3)
+            ax[day].plot(x, 1/30.*(0*x + 1.), 'k--', zorder = -10)
+            # for row in range(2):
                 
-                ax[row, day].set_xlim([-10, 1])
+            ax[day].set_xlim([-10, 1])
 
-                ax[row, day].spines['top'].set_visible(False)
-                ax[row, day].spines['right'].set_visible(False)
+            ax[day].spines['top'].set_visible(False)
+            ax[day].spines['right'].set_visible(False)
 
-                ax[row, day].set_title("Day %d" % (day + 1))
-                ax[row, day].set_xlabel("Distance from reward")
-        ax[1,0].set_ylabel('% of cells')
+            ax[day].set_title("Day %d" % (day + 1))
+            ax[day].set_xlabel("Distance from reward")
+        ax[0].set_ylabel('% of cells')
 
         fig.subplots_adjust(hspace=.5)
 
