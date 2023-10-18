@@ -240,7 +240,7 @@ class PeriRewardPlaceCellFrac:
                 df['ko_ctrl'].append(1)
                 df['day'].append(day)
                 df['frac'].append(self.ctrl_sums[mouse, day])
-                df['mouse'].append(mouse + )
+                df['mouse'].append(mouse )
 
         df = pd.DataFrame(df)
         results = {}
