@@ -36,20 +36,24 @@ class RoiChecker:
         self.n_tiles = n_tiles
 
         # meanImgs
-        self.green = self.ops['meanImg']
-        self.red = self.ops['meanImg_chan2']
+        maxval = (2**16)/2
+        self.green = self.ops['meanImg']/maxval
+        self.red = self.ops['meanImg_chan2']/maxval
         if run_correct_bleedthrough:
             self.ops['meanImg_chan2_corrected'] = correct_bleedthrough(self.ops['Ly'], self.ops['Lx'],
                                                                         self.n_tiles, np.copy(self.ops['meanImg']),
                                                                        np.copy(self.ops['meanImg_chan2']))
 
         self.red_corr = self.ops['meanImg_chan2_corrected']
+        
 
         # merged image
         self.merge = np.zeros([self.green.shape[0], self.green.shape[1], 3])
-        self.merge[:, :, 1] = self.green / np.amax(self.green)
-        self.merge[:, :, 2] = self.red / np.amax(self.red)
-        self.merge[:, :, 0] = self.red / np.amax(self.red)
+        self.merge[:, :, 1] = self.green #/ maxval #np.amax(self.green)
+        # self.merge[:, :, 2] = self.red / maxval #np.amax(self.red)
+        self.merge[:, :, 0] = self.red #/ maxval #np.amax(self.red)
+        self.merge = np.minimum(self.merge,.4)/.4
+        
 
         self.merge_mult = self.green * self.red / np.amax(self.green * self.red)
         self.merge_mult_corr = self.green * self.red_corr / np.amax(self.green * self.red_corr)
@@ -112,6 +116,23 @@ class RoiChecker:
             i+=1
         plt.close()
         self.df.to_csv("roi_check.csv",index=False)
+        
+    def check_cells(self):
+        """
+    
+        """
+        
+        plt.show(block=False)
+        i = 0
+        while i<self.stat.shape[0]:
+            if self.df.loc[i,'NotCell']!=1:
+                i = self.check_roi(i)
+                
+            if i=='q':
+                break
+            i+=1
+        plt.close()
+        self.df.to_csv("roi_check.csv", index=False)
 
     def init_figure(self):
 
@@ -187,31 +208,37 @@ class RoiChecker:
         # w/ roi mask
         green_roi = self.green[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]]
         self.imhandles[(0,0,'img')].set_data(green_roi)
-        self.imhandles[(0,0,'img')].set_clim(vmin=np.amin(green_roi), vmax=np.amax(green_roi))
+        # self.imhandles[(0,0,'img')].set_clim(vmin=np.amin(green_roi), vmax=np.amax(green_roi))
+        self.imhandles[(0,0,'img')].set_clim(vmin=0, vmax=.4)
         self.imhandles[(0,0,'roi')].set_data(roi_mask[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]])
 
         # w/ roi circle
         self.imhandles[(1,0,'img')].set_data(green_roi)
-        self.imhandles[(1,0,'img')].set_clim(vmin=np.amin(green_roi), vmax=np.amax(green_roi))
+        # self.imhandles[(1,0,'img')].set_clim(vmin=np.amin(green_roi), vmax=np.amax(green_roi))
+        self.imhandles[(1,0,'img')].set_clim(vmin=0, vmax=.4)
 
         # w/o mark
         self.imhandles[(2,0,'img')].set_data(green_roi)
-        self.imhandles[(2,0,'img')].set_clim(vmin=np.amin(green_roi), vmax=np.amax(green_roi))
+        # self.imhandles[(2,0,'img')].set_clim(vmin=np.amin(green_roi), vmax=np.amax(green_roi))
+        self.imhandles[(2,0,'img')].set_clim(vmin=0, vmax=.4)
 
         # plot red channel
         red_roi = self.red[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]]
         # w/ roi mask
         self.imhandles[(0,1,'img')].set_data(red_roi)
-        self.imhandles[(0,1,'img')].set_clim(vmin=np.amin(red_roi), vmax=np.amax(red_roi))
+        # self.imhandles[(0,1,'img')].set_clim(vmin=np.amin(red_roi), vmax=np.amax(red_roi))
+        self.imhandles[(0,1,'img')].set_clim(vmin=0, vmax=.4)
         self.imhandles[(0,1,'roi')].set_data(roi_mask[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]])
 
         # w/ roi circle
         self.imhandles[(1,1,'img')].set_data(red_roi)
-        self.imhandles[(1,1,'img')].set_clim(vmin=np.amin(red_roi), vmax=np.amax(red_roi))
+        # self.imhandles[(1,1,'img')].set_clim(vmin=np.amin(red_roi), vmax=np.amax(red_roi))
+        self.imhandles[(1,1,'img')].set_clim(vmin=0, vmax=.4)
 
         # w/o mark
         self.imhandles[(2,1,'img')].set_data(red_roi)
-        self.imhandles[(2,1,'img')].set_clim(vmin=np.amin(red_roi), vmax=np.amax(red_roi))
+        # self.imhandles[(2,1,'img')].set_clim(vmin=np.amin(red_roi), vmax=np.amax(red_roi))
+        self.imhandles[(2,1,'img')].set_clim(vmin=0, vmax=.4)
 
         # plot corrected red channel
         red_corr_roi = self.red_corr[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]]
@@ -231,14 +258,17 @@ class RoiChecker:
         # merge_roi /= np.amax(merge_roi)
         # w/ roi mask
         self.imhandles[(0,3,'img')].set_data(merge_roi)
-        self.imhandles[(0,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
+        # self.imhandles[(0,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
+        self.imhandles[(0,3,'img')].set_clim(vmin=0, vmax=.4)
         self.imhandles[(0,3,'roi')].set_data(roi_mask[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]])
         # w/ roi circle
         self.imhandles[(1,3,'img')].set_data(merge_roi)
-        self.imhandles[(1,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
+        # self.imhandles[(1,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
+        self.imhandles[(1,3,'img')].set_clim(vmin=0, vmax=.4)
         # w/o mark
         self.imhandles[(2,3,'img')].set_data(merge_roi)
-        self.imhandles[(2,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
+        # self.imhandles[(2,3,'img')].set_clim(vmin=0, vmax=np.amax(merge_roi))
+        self.imhandles[(2,3,'img')].set_clim(vmin=0, vmax=.4)
 
         # plot merge multiplied channel
         merge_roi_mult = self.merge_mult[ybounds[0]:ybounds[1], xbounds[0]:xbounds[1]]
