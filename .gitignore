@@ -4,3 +4,5 @@ OldNotebooks/.ipynb_checkpoints
 STX3KO_analyses/__pycache__/*.pyc
 STX3KO_analyses/behavior/__pycache__/*.pyc
 .gitignore
+**/.ipynb_checkpoints/
+**/__pycache__*
