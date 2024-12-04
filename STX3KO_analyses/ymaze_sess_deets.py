@@ -19,6 +19,21 @@ exclude_list = {
         {'date': '29_11_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 14, 'novel': 1, 'ravel_ind': 0},)
 }
 
+SparseKO_sessions = {
+    'SparseKO_05': ({'date': '30_10_2024', 'scene': 'RunningTraining_scan', 'session': 2, 'scan': 3, 'novel_arm': -1, 'exp_day': 0},
+                    {'date': '16_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 22, 'exp_day': 1},
+                    {'date': '17_11_2024', 'scene': 'YMaze_LNovel', 'session': 2, 'scan': 13, 'exp_day': 2},
+                    {'date': '18_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 10, 'exp_day': 3},
+                    {'date': '19_11_2024', 'scene': 'YMaze_LNovel', 'session': 2, 'scan': 16, 'exp_day': 4},
+                    {'date': '20_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 20, 'exp_day': 5},
+                    {'date': '21_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 16, 'exp_day': 6},
+                    {'date': '22_11_2024', 'scene': 'YMaze_LNovel_LongTimeout', 'session': 1, 'scan': 23, 'exp_day': 7},
+                  ),
+    
+    'SparseKO_02': ({'date': '16_11_2024', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 14, 'exp_day': 1},
+                   
+                  ),
+
 KO_sessions = {
     '4467975.1':   ({'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 6, 'scan': 14, 'novel_arm': -1, 'ravel_ind': 1},
         #(({'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3, 'novel_arm': -1, 'ravel_ind': 0},
