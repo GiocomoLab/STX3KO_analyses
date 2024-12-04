@@ -30,7 +30,7 @@ SparseKO_sessions = {
                     {'date': '22_11_2024', 'scene': 'YMaze_LNovel_LongTimeout', 'session': 1, 'scan': 23, 'exp_day': 7},
                   ),
     
-    'SparseKO_02': ({'date': '16_11_2024', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 14, 'exp_day': 1},
+    'SparseKO_02': ({'date': '16_11_2024', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 14,'novel_arm': -1, 'exp_day': 1},
                     {'date': '17_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 25, 'exp_day': 2},
                     {'date': '18_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 18,  'exp_day': 3},
                     {'date': '19_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 4, 'exp_day': 4},
