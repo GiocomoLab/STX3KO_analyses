@@ -46,7 +46,9 @@ basedir, sbxdir
 ```python
 
 # file_list = stx3.ymaze_sess_deets.SparseKO_sessions[mouse]
-file_list = [ {'date': '22_11_2024', 'scene': 'YMaze_LNovel_LongTimeout', 'session': 1, 'scan': 19, 'exp_day': 7} ]
+# file_list = [ {'date': '22_11_2024', 'scene': 'YMaze_LNovel_LongTimeout', 'session': 1, 'scan': 19, 'exp_day': 7} ]
+file_list = [ {'date': '16_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 17, 'exp_day': 1} ]
+
 file_list
 ```
 
@@ -74,7 +76,7 @@ for fn,f in enumerate(file_list):
     
     # run suite2p to run motion registration AND extract ROIs on the first
     # functional channel (channel 1, green, PMT0)
-    ops = tpu.s2p.set_ops(d={'data_path': [os.path.split(fullpath)[0]],
+    ops_orig = tpu.s2p.set_ops(d={'data_path': [os.path.split(fullpath)[0]],
                            'save_path0': fullpath,
                            'fast_disk':[],
                            'move_bin':False,
@@ -92,18 +94,12 @@ for fn,f in enumerate(file_list):
                            'threshold_scaling':.6, #.6
                             'nplanes':nplanes})
 
-    ops=s2p.run_s2p(ops=ops)
+    ops_orig=s2p.run_s2p(ops=ops_orig)
 
     # !rm {h5name} 
 ```
 
-## Copy the original ops!
-
-```python
-ops_orig = ops.copy()
-```
-
-## Option to copy binary files so you don't have to re-register
+## Copy binary files so you don't have to re-register
 
 ```python
 ## Use the existing motion-registered binary and
