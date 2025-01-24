@@ -642,7 +642,7 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
     ko_l_train, ko_l_test, ko_r_train, ko_r_test = lr_ratemaps(ymaze_sess_deets.ko_mice)
     ctrl_l_train, ctrl_l_test, ctrl_r_train, ctrl_r_test = lr_ratemaps(ymaze_sess_deets.ctrl_mice)
 
-    fig, ax = plt.subplots(1,2, figsize= [10,10])
+    fig, ax = plt.subplots(2,2, figsize= [10,10])
     ax[0,0].imshow(sort_norm(ctrl_l_train, ctrl_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
     ax[0,1].imshow(sort_norm(ctrl_r_train, ctrl_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
 
