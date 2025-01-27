@@ -221,20 +221,22 @@ class YMazeSession(TwoPUtils.sess.Session):
             self.trial_matrices['bin_edges'] = np.arange(min_pos, max_pos + bin_size, bin_size)
             self.trial_matrices['bin_centers'] = self.trial_matrices['bin_edges'][:-1] + bin_size / 2
 
-    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', Fneu_coef=.7, tau=None, key_out=None, **dff_kwargs):
+    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, **dff_kwargs):
         """
 
         :return:
         """
         if key_out is None:
-            key_out = Fkey + '_dff'
-            
+            key_out = Fkey + '_dff'    
         
         if tau is None:
             if self.n_channels >1:
-                tau = self.s2p_ops['tau']['channel_1']['tau']
+                tau = self.s2p_ops['tau']['channel_0']['tau']
             else:
                 tau = self.s2p_ops['tau']
+                
+        if spks_key is None:
+            spks_key = 'spks'
             
  
         Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
@@ -258,9 +260,10 @@ class YMazeSession(TwoPUtils.sess.Session):
             spks[:, start_ind:stop_ind] = dcnv.oasis(dff[:, start_ind:stop_ind], 2000, tau,
                                                         self.scan_info['frame_rate'])
 
-        self.add_timeseries(**{key_out: dff, 'spks': spks})
+        
+        self.add_timeseries(**{key_out: dff, spks_key: spks})
         self.add_pos_binned_trial_matrix(key_out)
-        self.add_pos_binned_trial_matrix('spks')
+        self.add_pos_binned_trial_matrix(spks_key)
 
     def place_cells_calc(self, Fkey='F_dff', trial_mask=None, lr_split=True, out_key=None, min_pos=13, max_pos=43,
                          bin_size=1, **pc_kwargs):
