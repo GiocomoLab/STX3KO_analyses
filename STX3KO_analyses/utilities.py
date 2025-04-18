@@ -104,7 +104,7 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
 #     return sess
     
 
-def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMazeSessPkls'):
+def load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMaze_VR_Pkls/',verbose = True):
     #     mouse = '4467331.2'
     pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
@@ -119,7 +119,7 @@ def load_single_day(mouse, day, verbose = True, pkl_basedir = '/home/mplitt/YMaz
         print(deets)
     if isinstance(deets, tuple):
         
-        roi_aligner_dir = os.path.join('/home/mplitt/YMazeSessPkls', mouse)
+        roi_aligner_dir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
         with open(os.path.join(roi_aligner_dir, "roi_aligner_results.pkl"), 'rb') as file:
             match_inds = dill.load(file)
 

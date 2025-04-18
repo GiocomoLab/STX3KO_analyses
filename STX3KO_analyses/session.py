@@ -9,7 +9,25 @@ import TwoPUtils
 from suite2p.extraction import dcnv
 from scipy.interpolate import interp1d as spline
 
+def p_from_pop_shuffle(cell_SIs, perm_SIs):
+    """
+    Calculate place cell p values for spatial information 
+    relative to shuffles from the whole population
 
+    :param cell_SIs: spatial information for each cell; array of shape N, or Nx1
+    :param perm_SIs: permuted spatial information per shuffle;
+                     array of shape n_perms x n_cells (but any shape works)
+    :return p_pop: array of p values per cell
+
+    """
+
+    all_SI_perms = np.ravel(perm_SIs)
+    p_pop = np.ones((cell_SIs.shape[0],))
+    for cell in range(cell_SIs.shape[0]):
+        p_pop[cell] = (cell_SIs[cell] <= all_SI_perms).sum()/len(all_SI_perms)
+
+    return p_pop
+    
 class YMazeSession(TwoPUtils.sess.Session):
 
     def __init__(self, prev_sess=None, **kwargs):
@@ -221,7 +239,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             self.trial_matrices['bin_edges'] = np.arange(min_pos, max_pos + bin_size, bin_size)
             self.trial_matrices['bin_centers'] = self.trial_matrices['bin_edges'][:-1] + bin_size / 2
 
-    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, **dff_kwargs):
+    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, chan_mask = None, **dff_kwargs):
         """
 
         :return:
@@ -248,6 +266,8 @@ class YMazeSession(TwoPUtils.sess.Session):
             stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
             print(start_ind, stop_ind)
 
+            curr_idx = range(start_ind, stop_ind)
+            
             Freg[:, start_ind:stop_ind] = self.timeseries[Fkey][:, start_ind:stop_ind] - Fneu_coef * self.timeseries[
                                                                                                          Fneukey][:,
                                                                                                      start_ind:stop_ind] + Fneu_coef * np.amin(
@@ -261,6 +281,61 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                         self.scan_info['frame_rate'])
 
         
+        self.add_timeseries(**{key_out: dff, spks_key: spks})
+        self.add_pos_binned_trial_matrix(key_out)
+        self.add_pos_binned_trial_matrix(spks_key)
+        
+    def neuropil_corrected_dff_ES(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, chan_mask=None, **dff_kwargs):
+        """
+        Neuropil-corrected dF/F calculation with an optional channel mask.
+        """
+        if key_out is None:
+            key_out = Fkey + '_dff'
+        if tau is None:
+            tau = self.s2p_ops['tau']['channel_0']['tau'] if self.n_channels > 1 else self.s2p_ops['tau']
+        if spks_key is None:
+            spks_key = 'spks'
+            
+        # Initialize arrays filled with NaN
+        Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
+        dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
+        spks = np.zeros(self.timeseries[Fkey].shape) * np.nan
+        
+        for block in np.unique(self.trial_info['block_number']).tolist():
+            start_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0]
+            stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
+            print(start_ind, stop_ind)
+            
+            if chan_mask is not None:
+                # Ensure mask is the correct length
+                if len(chan_mask) != self.timeseries[Fkey].shape[1]:
+                    raise ValueError("chan_mask length does not match time series length")
+                mask_range = chan_mask[start_ind:stop_ind]  # Mask within this range
+            else:
+                mask_range = np.ones(stop_ind - start_ind, dtype=bool)  # Default to all True
+                
+            if not np.any(mask_range):
+                continue
+
+                
+            curr_idx = np.arange(start_ind, stop_ind)
+            
+            # Extract masked segment
+            if chan_mask is not None:
+                curr_idx = curr_idx[chan_mask[curr_idx]]
+                print(curr_idx)
+            if len(curr_idx) == 0:
+                continue
+            
+            # Apply Neuropil correction only where mask is True
+            Freg[:, curr_idx] = self.timeseries[Fkey][:, curr_idx] - Fneu_coef * self.timeseries[Fneukey][:, curr_idx] \
+                                + Fneu_coef * np.nanmin(self.timeseries[Fneukey][:, curr_idx], axis=1, keepdims=True)
+
+            Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
+            dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx])
+            spks[:, curr_idx] = dcnv.oasis(dff[:, curr_idx], 2000, tau, self.scan_info['frame_rate'])
+            
+        # Add processed data back to time series while preserving NaNs
         self.add_timeseries(**{key_out: dff, spks_key: spks})
         self.add_pos_binned_trial_matrix(key_out)
         self.add_pos_binned_trial_matrix(spks_key)
@@ -290,6 +365,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                                            bin_size=bin_size, **pc_kwargs)
 
                 d[key] = {'masks': masks, 'SI': SI, 'p': p}
+                
         else:
             mask = trial_mask
             masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
@@ -299,6 +375,61 @@ class YMazeSession(TwoPUtils.sess.Session):
                                                                        bin_size=bin_size, **pc_kwargs)
             d.update({'masks': masks, 'SI': SI, 'p': p})
 
+            
+    def place_cells_calc_pop(self, Fkey='F_dff', trial_mask=None, lr_split=True, out_key=None, min_pos=13, max_pos=43,
+                         bin_size=1, p_thr = 0.5, output_shuffle = False, shuffle_method = "individual",**pc_kwargs):
+
+        # choose appropriate target dictionary
+        if out_key is None:
+            d = self.place_cell_info
+        else:
+            self.place_cell_info.update({out_key: {}})
+            d = self.place_cell_info[out_key]
+
+        if (shuffle_method == 'population') or output_shuffle:
+            tmp_output_shuffle = True
+        else:
+            tmp_output_shuffle = False
+
+        if trial_mask is None:
+            trial_mask = np.ones(self.trial_start_inds.shape) > 0
+
+        if lr_split:
+
+            lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
+                        'right': (self.trial_info['LR'] == 1) * trial_mask}
+            for key, mask in lr_masks.items():
+                masks, SI, p, perms, SI_perms = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+                                                                           self.trial_start_inds[mask],
+                                                                           self.teleport_inds[mask],
+                                                                           min_pos=min_pos, max_pos=max_pos,
+                                                                           bin_size=bin_size, output_shuffle=tmp_output_shuffle, **pc_kwargs)
+
+                d[key] = {'masks': masks, 'SI': SI, 'SI_pop': SI_perms, 'p': p}
+
+                if shuffle_method == "population":
+                    print(f"updating p with population shuffle for {key}")
+                    p_adj = p_from_pop_shuffle(SI, SI_perms)
+                    d[key]['p'] = p_adj
+                    d[key]['masks'] = p_adj < p_thr
+                
+        else:
+            mask = trial_mask
+            masks, SI, p, perms, SI_perms = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+                                                                       self.trial_start_inds[mask],
+                                                                       self.teleport_inds[mask],
+                                                                       min_pos=min_pos, max_pos=max_pos,
+                                                                       bin_size=bin_size, output_shuffle=tmp_output_shuffle,**pc_kwargs)
+            d.update({'masks': masks, 'SI': SI, 'SI_perms':SI_perms, 'p': p})
+
+            if shuffle_method == "population":
+                print("updating p with population shuffle")
+                p0 = p_from_pop_shuffle(SI, SI_perms)
+                d['p'] = p0 < p_thr
+                d['masks'] = p0 <p_thr
+    
+    
+            
     def fam_place_cell_mask(self):
         '''
 
@@ -362,8 +493,10 @@ class ConcatYMazeSession:
                  trial_mat_keys=['F_dff', ],
                  timeseries_keys=(), run_place_cells=True, day_inds=None,
                  load_ops=False, load_stats = False):
+
         attrs = self.concat(sess_list, common_roi_mapping, trial_info_keys, trial_mat_keys,
                             timeseries_keys, run_place_cells, day_inds, load_ops, load_stats)
+
 
         self.__dict__.update(attrs)
         trial_info_keys = []
@@ -486,7 +619,7 @@ class ConcatYMazeSession:
             attrs['place_cell_info'] = place_cells
 
         return attrs
-
+    
     def fam_place_cell_mask(self):
         '''
 
