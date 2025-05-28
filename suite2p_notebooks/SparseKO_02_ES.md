@@ -147,7 +147,9 @@ print('Deleting h5 file')
 !del {h5name} 
 ```
 
+<!-- #region jp-MarkdownHeadingCollapsed=true -->
 ## Copying binaries function written into for loop
+<!-- #endregion -->
 
 ```python
 for fn,f in enumerate(file_list):
@@ -279,7 +281,9 @@ print('Deleting h5 file')
 !del {h5name} 
 ```
 
+<!-- #region jp-MarkdownHeadingCollapsed=true -->
 ## Below here was our attempt to use Carsen Stringer's method of copying the reg_files
+<!-- #endregion -->
 
 ```python
 ### SETUP FOR RUNNING ONLY CELL DETECTION ON SECOND CHANNEL

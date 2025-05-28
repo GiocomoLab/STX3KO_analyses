@@ -10,7 +10,8 @@ def loop_func_over_mice(func, mice):
     return {mouse: func(mouse) for mouse in mice}
 
 def loop_func_over_days(func, days, **kwargs):
-    return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days]
+    # return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days] # uncomment if not downsampled
+    return lambda mouse: [func(load_single_day_noconcat(mouse, day), **kwargs) for day in days]
 
 
 def common_rois(roi_matches, inds):
@@ -64,7 +65,8 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
     if mouse in ["SparseKO_02","SparseKO_03", "SparseKO_05"]:
         pkldir = os.path.join('C:/Users/esay/data/Stx3/YMaze_VR_Pkls/v2', mouse)
     else:
-        pkldir = os.path.join('Z:/giocomo/mplitt/2P_Data/STX3KO/YMaze_VR_Pkls/', mouse)
+        pkldir = os.path.join("C://Users/esay/data/Stx3/YMaze_VR_Pkls/", mouse)
+        # pkldir = os.path.join('Z:/giocomo/mplitt/2P_Data/STX3KO/YMaze_VR_Pkls/', mouse)
     if mouse in ymaze_sess_deets.KO_behavior_sessions.keys():
 
         deets = ymaze_sess_deets.KO_behavior_sessions[mouse][day]
@@ -136,14 +138,17 @@ def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSes
 
         deets = ymaze_sess_deets.KO_sessions[mouse][day]
         # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+        # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
 
-        pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_behavior_v3", mouse)
-        
+        # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_lickrate", mouse)
+        pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
     elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
         deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
+        # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
         # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
 
-        pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_behavior_v3", mouse)
+        # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_lickrate", mouse)
+        pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
     elif mouse in ymaze_sess_deets.SparseKO_sessions.keys():
         deets = ymaze_sess_deets.SparseKO_sessions[mouse][day]
     else:
@@ -165,6 +170,7 @@ def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSes
                 verbose=False, novel_arm=_deets['novel_arm'])
             _sess.add_timeseries(licks=_sess.vr_data['lick']._values)
             _sess.add_pos_binned_trial_matrix('licks')
+            
             # setattr(_sess,'novel_arm', _deets['novel'])
             # _sess.novel_arm = _deets['novel']
             #             _sess_list.append(sess)
@@ -185,6 +191,7 @@ def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSes
             verbose=False, novel_arm=deets['novel_arm'])
         sess.add_timeseries(licks=sess.vr_data['lick']._values)
         sess.add_pos_binned_trial_matrix('licks')
+
         # sess.novel_arm = deets['novel']
         # setattr(sess, 'novel_arm', deets['novel'])
 
@@ -195,7 +202,53 @@ def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSes
 
     return sess
 
+def load_single_day_noconcat(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSessPkls",verbose = True):
+    #     mouse = '4467331.2'
+    pkldir = os.path.join(pkl_basedir, mouse)
+    if mouse in ymaze_sess_deets.KO_sessions.keys():
 
+        deets = ymaze_sess_deets.KO_sessions[mouse][day]
+        # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+        # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
+
+        pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
+        
+    elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
+        deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
+        # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
+        # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+
+        pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
+    elif mouse in ymaze_sess_deets.SparseKO_sessions.keys():
+        deets = ymaze_sess_deets.SparseKO_sessions[mouse][day]
+    else:
+        raise Exception("invalid mouse name")
+
+    # if verbose:
+    #     print(deets)
+    if isinstance(deets, tuple):
+        deets = deets[0]
+        print(deets)
+        filename = os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session']))
+        with open(filename, 'rb') as file:
+            sess = dill.load(file)
+    else:
+        print(deets)
+        sess = session.YMazeSession.from_file(
+            os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
+            verbose=False, novel_arm=deets['novel_arm'])
+        sess.add_timeseries(licks=sess.vr_data['lick']._values)
+        sess.add_pos_binned_trial_matrix('licks')
+
+    # sess.novel_arm = deets['novel']
+    # setattr(sess, 'novel_arm', deets['novel'])
+
+    if mouse == '4467975.1' and day == 0:
+        sess.trial_info['block_number'] += 1
+    if mouse == '4467332.2' and day == 0:
+        sess.trial_info['block_number'] += 2
+
+    return sess
 
 def single_mouse_concat_vr_sessions(mouse, date_inds=None):
     pkldir = os.path.join('C:/Users/esay/data/Stx3/YMaze_VR_Pkls/', mouse)

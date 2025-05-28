@@ -1,5 +1,7 @@
 from . import session
-from . import utilities as u
+# from . import utilities as u #uncomment for original code
+from . import utilities_ES as u
+
 from . import ymaze_sess_deets
 
 from matplotlib import pyplot as plt
@@ -112,7 +114,8 @@ class PeriRewardPlaceCellFrac:
         self.__dict__.update({'days': days, 'ts_key': ts_key, 'fam': fam})
         self.n_days = days.shape[0]
 
-        get_pc_max = u.loop_func_over_days(self.argmax_perireward, days, ts_key=ts_key, fam=fam)
+        # get_pc_max = u.loop_func_over_days(self.argmax_perireward, days, ts_key=ts_key, fam=fam)
+        get_pc_max = u.loop_func_over_days(self.argmax_perireward_downsample, days, ts_key=ts_key, fam=fam)
 
         self.ko_frac = {mouse: get_pc_max(mouse) for mouse in self.ko_mice}
         self.ctrl_frac = {mouse: get_pc_max(mouse) for mouse in self.ctrl_mice}
@@ -151,7 +154,36 @@ class PeriRewardPlaceCellFrac:
         ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
 
         return np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
+        
+    @staticmethod
+    def argmax_perireward_downsample(sess: session.YMazeSession, ts_key: str = 'spks', fam: bool = True):
+        '''
 
+        :param sess:
+        :param ts_key:
+        :param fam:
+        :return:
+        '''
+
+        trials_mat = sess.trial_matrices[ts_key]
+        bin_edges = sess.trial_matrices['bin_edges']
+        downsample_mask = sess.trial_matrices['downsample']
+        if fam:
+            trial_mask = (sess.trial_info['LR'] == -1 & downsample_mask) * sess.novel_arm 
+            cell_mask = sess.fam_place_cell_mask()
+            rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
+                                      (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
+
+        else:
+            trial_mask = sess.trial_info['LR'] == sess.novel_arm & downsample_mask
+            cell_mask = sess.nov_place_cell_mask()
+            rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
+                                      (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
+
+        # smooth ratemap by 1 bin
+        ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
+
+        return np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
     def perireward_hist(self):
         '''
 
