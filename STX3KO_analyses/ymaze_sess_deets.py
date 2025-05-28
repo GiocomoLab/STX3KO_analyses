@@ -50,7 +50,46 @@ SparseKO_sessions = {
                     {'date': '21_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 12, 'novel_arm': 1, 'exp_day': 6},
                     {'date': '22_11_2024', 'scene': 'YMaze_LNovel_LongTimeout', 'session': 1, 'scan': 19, 'novel_arm': 1, 'exp_day': 7},
                    
-                  )
+                  ),
+    
+    'SparseKO_06': (
+                    {'date': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 7, 'novel_arm': 1, 'exp_day': 1},
+                    {'date': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 23, 'novel_arm': 1, 'exp_day': 2},
+        
+    ),
+    
+    'SparseKO_08': (
+                    {'date': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 11, 'novel_arm': 0, 'exp_day': 1},
+                    {'date': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 26, 'novel_arm': 0, 'exp_day': 2},
+        
+    ),
+    
+    'SparseKO_09': (
+                    {'date': '24_05_2025', 'scene': 'TrainingYMaze', 'session': 2, 'scan': 20, 'exp_day': '0_mux'},
+                    {'date': '25_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': 0, 'exp_day': 1},
+                    {'date': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 14, 'novel_arm': 0, 'exp_day': 2},
+                    {'date': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 3, 'scan': 1, 'novel_arm': 0, 'exp_day': 3}, # ran out of disk space while scanning
+        
+    ),
+    
+    'SparseKO_10': (
+                    {'date': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 17, 'novel_arm': 1, 'exp_day': 1},
+                    {'date': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 7, 'scan': 19, 'novel_arm': 1, 'exp_day': 2},
+        
+    ),
+        
+    'SparseKO_13': (
+                    {'date': '22_05_2025', 'scene': '980test', 'session': 0, 'scan': 2, 'exp_day': '-1_980'},
+                    {'date': '23_05_2025', 'scene': 'TrainingYMaze_BlockScan', 'session': 2, 'scan': 10, 'exp_day': '0_block'},
+                    {'date': '23_05_2025', 'scene': 'TrainingYMaze', 'session': 1, 'scan': 15, 'exp_day': '0_nomux'},
+                    {'date': '23_05_2025', 'scene': 'TrainingYMaze', 'session': 2, 'scan': 17, 'exp_day': '0_mux'},
+                    {'date': '24_05_2025', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 27, 'novel_arm': 1, 'exp_day': 1},
+                    {'date': '25_05_2025', 'scene': 'YMaze_LNovel', 'session': 2, 'scan': 8, 'novel_arm': 1, 'exp_day': 2},
+                    {'date': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 20, 'novel_arm': 1, 'exp_day': 3},
+        
+        
+                    
+                  ),
 }
 KO_sessions = {
     '4467975.1':   (
