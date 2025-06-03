@@ -336,6 +336,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             spks[:, curr_idx] = dcnv.oasis(dff[:, curr_idx], 2000, tau, self.scan_info['frame_rate'])
             
         # Add processed data back to time series while preserving NaNs
+        #changed to muxing version 
         self.add_timeseries(**{key_out: dff, spks_key: spks})
         self.add_pos_binned_trial_matrix(key_out)
         self.add_pos_binned_trial_matrix(spks_key)

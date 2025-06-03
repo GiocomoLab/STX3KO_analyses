@@ -9,7 +9,7 @@ ctrl_mice = ('4467331.1', '4467331.2', '4467332.1', '4467332.2', '4467333.1',
              'mCherry6', 'mCherry7', 'mCherry8', 'mCherry9')
 ctrl_vr_mice = ('4467331.1', '4467331.2', '4467332.1', '4467332.2', '4467333.1',
              'mCherry6', 'mCherry7', 'mCherry8', 'mCherry9')
-sparse_mice = ('SparseKO_05','SparseKO_02','SparseKO_03')
+sparse_mice = ('SparseKO_05','SparseKO_02','SparseKO_03','SparseKO_13')
 
 exclude_list = {
     '4467975.4':{'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 5, 'novel_arm': 1, 'ravel_ind': 0},
