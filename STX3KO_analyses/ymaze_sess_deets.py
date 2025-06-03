@@ -87,9 +87,11 @@ SparseKO_sessions = {
                     {'date': '25_05_2025', 'scene': 'YMaze_LNovel', 'session': 2, 'scan': 8, 'novel_arm': 1, 'exp_day': 2},
                     {'date': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 20, 'novel_arm': 1, 'exp_day': 3},
                     {'date': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 22, 'novel_arm': 1, 'exp_day': 4},
-        
-        
-        
+                    {'date': '28_05_2025', 'scene': 'YMaze_LNovel', 'session': 2, 'scan': 16, 'novel_arm': 1, 'exp_day': 5},
+                    {'date': '29_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 20, 'novel_arm': 1, 'exp_day': 6},
+                    {'date': '30_05_2025', 'scene': 'YMaze_LNovel_LongTimeout', 'session': 1, 'scan': 8, 'novel_arm': 1, 'exp_day': 7},
+
+
                     
                   ),
 }

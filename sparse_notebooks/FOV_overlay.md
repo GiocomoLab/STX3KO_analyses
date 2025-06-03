@@ -38,9 +38,9 @@ from STX3KO_analyses.path_dicts.path_dict_firebird import path_dictionary as pat
 <!-- #endregion -->
 
 ```python
-mouse = "SparseKO_09" #"GCAMP12"
+mouse = "SparseKO_13" #"GCAMP12"
 plot_ROIs = True
-exp_day = '0_mux'
+exp_day = 1
 #basedir = os.path.join("/mnt/BigDisk", "2P_scratch", mouse)
 basedir = os.path.join(path_dict['preprocessed_root'], mouse)
 # basedir = os.path.join(path_dict['sbx_root'], mouse)
@@ -82,7 +82,7 @@ if plot_ROIs:
 dual_color = True
 plot_ROIs=True
 
-aspect_ratio = '1' # 'original' or '1'
+aspect_ratio = 'original' # 'original' or '1'
 
 if aspect_ratio == '1':
     aspect = ops['Lx']/(ops['Ly'])
@@ -128,10 +128,10 @@ if plot_ROIs:
             masks[stat['ypix'],stat['xpix']]=1 #np.float64(i)/np.float64(stats.size)
     ax[3].imshow(ops['meanImg'],
                  cmap="Greys_r",
-                 vmax=np.percentile(ops['meanImg'].ravel(),99.9),
+                 vmax=np.percentile(ops['meanImg'].ravel(),89.5),
                 aspect=aspect)
-    ax[3].imshow(masks,alpha=0.6,
-                 cmap='Greens_r',
+    ax[3].imshow(masks,alpha=0.8,vmin=0, vmax=1.3,
+                 cmap='Greens',
                 aspect=aspect) #RdYlGn_r') #'prism'
     
     # Now get the second set of ROIs
@@ -151,14 +151,14 @@ if plot_ROIs:
         if iscell_2[i,0]>0:
             stat = stats_2[i]
             masks[stat['ypix'],stat['xpix']]=1 #np.float64(i)/np.float64(stats_2.size)
-    ax[3].imshow(masks,alpha=0.68,
-                 cmap='Reds_r',
+    ax[3].imshow(masks,alpha=0.8,
+                 cmap='Reds',vmin=0, vmax=1.3,
                 aspect=aspect) #'RdYlGn') #'prism'
     
 
 if not dual_color:
     ax[2].imshow(ops['meanImgE'],cmap="Greys_r")
-    ax[2].imshow(masks,alpha=.68,cmap='gist_rainbow')
+    ax[2].imshow(masks,alpha=.8,cmap='gist_rainbow')
 
 
 for i in range(4):
@@ -167,10 +167,14 @@ for i in range(4):
 
 f.patch.set_facecolor('white')
 
-save_figures = True
+save_figures = False
 if save_figures:
-    pt.savefig(f,figdir,"%s_day%s_mean_FOV_overlay" % (mouse, exp_day), extension='.pdf')
+    pt.savefig(f,figdir,"%s_day%s_mean_FOV_overlay_bright" % (mouse, exp_day), extension='.png')
 #f.savefig(os.path.join(figdir,("%s_day%d_mean_FOV_overlay.pdf" % (mouse, exp_day))),format='pdf')
+```
+
+```python
+np.sum(iscell[:,0]), np.sum(iscell_2[:,0])
 ```
 
 ```python
