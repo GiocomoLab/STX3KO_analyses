@@ -53,7 +53,7 @@ basedir, sbxdir
 ```python
 file_list = stx.ymaze_sess_deets.SparseKO_sessions[mouse]
 
-file_list = [file_list[-1]]
+file_list = [file_list[1]]
 file_list
 ```
 

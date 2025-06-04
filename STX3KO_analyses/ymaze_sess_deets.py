@@ -95,6 +95,16 @@ SparseKO_sessions = {
                     {'date': '01_06_2025', 'scene': 'YMaze_LNovel_LongTimeout', 'session': 3, 'scan': 28, 'novel_arm': 1, 'exp_day': 7},
         
     ),
+    'SparseKO_11': (
+                    {'date': '29_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 23, 'novel_arm': 1, 'exp_day': 1},
+                    {'date': '30_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 12, 'novel_arm': 1, 'exp_day': 2},
+                    {'date': '31_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 9, 'novel_arm': 1, 'exp_day': 3},
+                    {'date': '01_06_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 31, 'novel_arm': 1, 'exp_day': 4},
+                    {'date': '02_06_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': 1, 'exp_day': 5},
+                    {'date': '03_06_2025', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 10, 'novel_arm': 1, 'exp_day': 6},
+                    {'date': '04_06_2025', 'scene': 'YMaze_LNovel_LongTimeout', 'session': 1, 'scan': 13, 'novel_arm': 1, 'exp_day': 7},
+        
+    ),
         
     'SparseKO_13': (
                     {'date': '22_05_2025', 'scene': '980test', 'session': 0, 'scan': 2, 'exp_day': '-1_980'},
