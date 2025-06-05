@@ -41,7 +41,7 @@ path_dict
 ```
 
 ```python
-mouse = "SparseKO_06"
+mouse = "SparseKO_08"
 basedir = os.path.join(path_dict['preprocessed_root'],mouse) #"/mnt/BigDisk/2P_scratch/GRABDA15"
 sbxdir = os.path.join(path_dict['sbx_root'],mouse) 
 
@@ -53,7 +53,7 @@ basedir, sbxdir
 ```python
 file_list = stx.ymaze_sess_deets.SparseKO_sessions[mouse]
 
-file_list = [file_list[2]]
+file_list = [file_list[0]]
 file_list
 ```
 
@@ -160,7 +160,7 @@ for fn,f in enumerate(file_list):
     opsEnd=s2p.run_s2p(ops=ops)
     
     ## Optional: remove h5 file to save disk space
-    !rm {h5name} 
+    # !rm {h5name} 
 
 ```
 
