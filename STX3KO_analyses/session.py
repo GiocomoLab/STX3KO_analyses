@@ -431,29 +431,45 @@ class YMazeSession(TwoPUtils.sess.Session):
     
     
             
-    def fam_place_cell_mask(self):
+    def fam_place_cell_mask(self, mux = False, chan = None, key = 'F_dff'):
         '''
 
         :return:
         '''
-        if self.novel_arm == -1:
-            return self.place_cell_info['right']['masks']
-        elif self.novel_arm == 1:
-            return self.place_cell_info['left']['masks']
+        if mux:
+            if self.novel_arm == -1:
+                return self.place_cell_info[f"{chan}{key}"]['right']['masks']
+            elif self.novel_arm == 1:
+                return self.place_cell_info[f"{chan}{key}"]['left']['masks']
+            else:
+                return None
         else:
-            return None
+            if self.novel_arm == -1:
+                return self.place_cell_info['right']['masks']
+            elif self.novel_arm == 1:
+                return self.place_cell_info['left']['masks']
+            else:
+                return None
 
-    def nov_place_cell_mask(self):
+    def nov_place_cell_mask(self, mux = False, chan = None, key = 'F_dff'):
         '''
 
         :return:
         '''
-        if self.novel_arm == 1:
-            return self.place_cell_info['right']['masks']
-        elif self.novel_arm == -1:
-            return self.place_cell_info['left']['masks']
+        if mux: 
+            if self.novel_arm == 1:
+                return self.place_cell_info[f"{chan}{key}"]['right']['masks']
+            elif self.novel_arm == -1:
+                return self.place_cell_info[f"{chan}{key}"]['left']['masks']
+            else:
+                return None
         else:
-            return None
+            if self.novel_arm == 1:
+                return self.place_cell_info['right']['masks']
+            elif self.novel_arm == -1:
+                return self.place_cell_info['left']['masks']
+            else:
+                return None
 
     def mcherry_pos_timeseries(self, fkey):
         '''

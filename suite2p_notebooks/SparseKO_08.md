@@ -41,7 +41,7 @@ path_dict
 ```
 
 ```python
-mouse = "SparseKO_08"
+mouse = "SparseKO_09"
 basedir = os.path.join(path_dict['preprocessed_root'],mouse) #"/mnt/BigDisk/2P_scratch/GRABDA15"
 sbxdir = os.path.join(path_dict['sbx_root'],mouse) 
 
@@ -53,7 +53,7 @@ basedir, sbxdir
 ```python
 file_list = stx.ymaze_sess_deets.SparseKO_sessions[mouse]
 
-file_list = [file_list[0]]
+file_list = [file_list[-1]]
 file_list
 ```
 
@@ -134,6 +134,10 @@ for fn,f in enumerate(file_list):
     ops['meanImg'] = np.copy(ops_orig['meanImg_chan2'])
     ops['meanImg_chan2'] = mimg
 
+    mimg = np.copy(ops_orig['meanImg'])
+    ops['meanImg'] = np.copy(ops_orig['meanImg_chan2'])
+    ops['meanImg_chan2'] = mimg
+
     # switch reg_file paths (maybe don't need to actually copy the reg_file
     # ops['reg_file'] = orig_reg_file_2
     # ops['reg_file_chan2'] = orig_reg_file_1
@@ -162,6 +166,18 @@ for fn,f in enumerate(file_list):
     ## Optional: remove h5 file to save disk space
     # !rm {h5name} 
 
+```
+
+```python
+np.array_equal(ops_orig['meanImgE'],opsEnd['meanImgE'])
+```
+
+```python
+ops_orig
+```
+
+```python
+opsEnd
 ```
 
 ```python

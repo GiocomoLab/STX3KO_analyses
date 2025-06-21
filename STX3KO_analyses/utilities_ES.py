@@ -131,24 +131,24 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
 #     return sess
 
 
-def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSessPkls",verbose = True):
+def load_single_day(mouse, day, pkl_basedir = "Z://giocomo/esay/Stx3/YMazeSessPkls", verbose = True): #"C://Users/esay/data/Stx3/YMazeSessPkls",verbose = True):
     #     mouse = '4467331.2'
     pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
 
         deets = ymaze_sess_deets.KO_sessions[mouse][day]
-        # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+        pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
         # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
 
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_lickrate", mouse)
-        pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
+        # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
     elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
         deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
         # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
-        # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+        pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
 
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_lickrate", mouse)
-        pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
+        # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
     elif mouse in ymaze_sess_deets.SparseKO_sessions.keys():
         deets = ymaze_sess_deets.SparseKO_sessions[mouse][day]
     else:
