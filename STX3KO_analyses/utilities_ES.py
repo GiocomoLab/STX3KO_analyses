@@ -62,8 +62,8 @@ def get_ind_of_exp_day(sess_list, exp_day):
     
 def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), timeseries_keys = ('licks', 'speed')):
     # pkldir = os.path.join('Z:/giocomo/mplitt/2P_Data/STX3KO/YMaze_VR_Pkls/', mouse)
-    if mouse in ["SparseKO_02","SparseKO_03", "SparseKO_05"]:
-        pkldir = os.path.join('C:/Users/esay/data/Stx3/YMaze_VR_Pkls/v2', mouse)
+    if mouse in ["SparseKO_02","SparseKO_03", "SparseKO_05","SparseKO_06","SparseKO_08","SparseKO_09","SparseKO_10","SparseKO_11","SparseKO_13"]:
+        pkldir = os.path.join('C:/Users/esay/data/Stx3/YMaze_VR_Pkls/', mouse)
     else:
         pkldir = os.path.join("C://Users/esay/data/Stx3/YMaze_VR_Pkls/", mouse)
         # pkldir = os.path.join('Z:/giocomo/mplitt/2P_Data/STX3KO/YMaze_VR_Pkls/', mouse)
@@ -131,7 +131,7 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
 #     return sess
 
 
-def load_single_day(mouse, day, pkl_basedir = "Z://giocomo/esay/Stx3/YMazeSessPkls", verbose = True): #"C://Users/esay/data/Stx3/YMazeSessPkls",verbose = True):
+def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSessPkls",verbose = True):
     #     mouse = '4467331.2'
     pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
@@ -370,7 +370,7 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
     return concat_sess
 
 def is_putative_interneuron(sess, ts_key='dff', method='speed',
-                            prct=10, r_thresh=0.3):
+                            prct=10, r_thresh=0.3, mux = False):
     """
     Find putative interneurons based on spatially-binned
     trial_mat values, ratio of 99th prctile to mean, per cell.
@@ -402,8 +402,15 @@ def is_putative_interneuron(sess, ts_key='dff', method='speed',
         is_int = trial_mat_ratio < np.percentile(trial_mat_ratio, prct)
 
     elif method == 'speed':
+        if mux: 
+            if 'channel_0' in ts_key:
+                speed = np.copy(sess.vr_data_chan0['speed']._values)
+            elif 'channel_1' in ts_key:
+                speed  = np.copy(sess.vr_data_chan1['speed']._values)
+        else:     
+            speed = np.copy(sess.vr_data['speed']._values)
+            
         speed_corr = np.zeros((use_trial_mat.shape[1],))
-        speed = np.copy(sess.vr_data['speed']._values)
         nanmask = ~np.isnan(sess.timeseries[ts_key][0, :])
 
         for c in range(use_trial_mat.shape[1]):

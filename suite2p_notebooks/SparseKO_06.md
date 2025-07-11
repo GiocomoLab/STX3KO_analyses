@@ -41,7 +41,7 @@ path_dict
 ```
 
 ```python
-mouse = "SparseKO_08"
+mouse = "SparseKO_11"
 basedir = os.path.join(path_dict['preprocessed_root'],mouse) #"/mnt/BigDisk/2P_scratch/GRABDA15"
 sbxdir = os.path.join(path_dict['sbx_root'],mouse) 
 
@@ -53,7 +53,7 @@ basedir, sbxdir
 ```python
 file_list = stx.ymaze_sess_deets.SparseKO_sessions[mouse]
 
-file_list = [file_list[1]]
+file_list = [file_list[-1]]
 file_list
 ```
 

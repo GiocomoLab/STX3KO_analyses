@@ -102,8 +102,11 @@ class YMazeSession(TwoPUtils.sess.Session):
         block_number_counter = 0
 
         for i in range(1, tport_times.shape[-1]):
-            if iti[i - 1] > 60:
+
+            # Ella changed threshold from > 60 and added rounding
+            if round(iti[i - 1]) >= 59:
                 block_number_counter += 1
+                print(block_number_counter)
             block_number_trial[i] = block_number_counter
 
         return block_number_trial
@@ -239,6 +242,30 @@ class YMazeSession(TwoPUtils.sess.Session):
             self.trial_matrices['bin_edges'] = np.arange(min_pos, max_pos + bin_size, bin_size)
             self.trial_matrices['bin_centers'] = self.trial_matrices['bin_edges'][:-1] + bin_size / 2
 
+    def add_pos_binned_trial_matrix_mux(self, ts_name, pos_key='t', min_pos=13, max_pos=43, bin_size=1, mat_only=True, 
+                                    **trial_matrix_kwargs):
+        """
+
+        :param ts_name:
+        :param pos_key:
+        :param min_pos:
+        :param max_pos:
+        :param bin_size:
+        :param mat_only:
+        :param trial_matrix_kwargs:
+        :return:
+        """
+        super(YMazeSession, self).add_pos_binned_trial_matrix_mux(ts_name, pos_key,
+                                                              min_pos=min_pos,
+                                                              max_pos=max_pos,
+                                                              bin_size=bin_size,
+                                                              mat_only=mat_only,
+                                                              **trial_matrix_kwargs)
+
+        if 'bin_edges' not in self.trial_matrices.keys() or 'bin_centers' not in self.trial_matrices.keys():
+            self.trial_matrices['bin_edges'] = np.arange(min_pos, max_pos + bin_size, bin_size)
+            self.trial_matrices['bin_centers'] = self.trial_matrices['bin_edges'][:-1] + bin_size / 2
+
     def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, chan_mask = None, **dff_kwargs):
         """
 
@@ -341,8 +368,50 @@ class YMazeSession(TwoPUtils.sess.Session):
         self.add_pos_binned_trial_matrix(key_out)
         self.add_pos_binned_trial_matrix(spks_key)
 
+    
+    def neuropil_corrected_dff_mux(self, Fkey_='F', Fneukey_='Fneu', spks_key_=None, Fneu_coef=.7, tau=None, key_out=None, channels=None, **dff_kwargs):
+        """
+        Neuropil-corrected dF/F calculation for multi-chan muxed data.
+        """
+
+        for chan in channels:
+            Fkey = chan + '_' + Fkey_
+            Fneukey = chan + '_' + Fneukey_
+            tau = self.s2p_ops[chan]['tau']
+            spks_key = chan + '_' + spks_key_
+
+            key_out = chan + '_' + Fkey_ + '_dff'
+            
+            # Initialize arrays filled with NaN
+            Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
+            dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
+            spks = np.zeros(self.timeseries[Fkey].shape) * np.nan
+
+            start_inds = self.trial_starts[chan]
+            end_inds = self.trial_ends[chan]
+            
+            for block in np.unique(self.trial_info['block_number']).tolist():
+                start_ind = start_inds[self.trial_info['block_number'] == block][0]
+                stop_ind = end_inds[self.trial_info['block_number'] == block][-1]
+                print(start_ind, stop_ind)
+
+                curr_idx = np.arange(start_ind, stop_ind)
+    
+                Freg[:, curr_idx] = self.timeseries[Fkey][:, curr_idx] - Fneu_coef * self.timeseries[Fneukey][:, curr_idx] \
+                                    + Fneu_coef * np.nanmin(self.timeseries[Fneukey][:, curr_idx], axis=1, keepdims=True)
+    
+                Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
+                dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx])
+                spks[:, curr_idx] = dcnv.oasis(dff[:, curr_idx], 2000, tau, self.scan_info['frame_rate'])
+                
+            self.add_timeseries_mux(**{key_out: dff, spks_key: spks})
+            self.add_pos_binned_trial_matrix_mux(key_out, channel = chan)
+            self.add_pos_binned_trial_matrix_mux(spks_key, channel = chan)
+
+
+        
     def place_cells_calc(self, Fkey='F_dff', trial_mask=None, lr_split=True, out_key=None, min_pos=13, max_pos=43,
-                         bin_size=1, **pc_kwargs):
+                         bin_size=1, mux = False, **pc_kwargs):
 
         # choose appropriate target dictionary
         if out_key is None:
@@ -355,18 +424,40 @@ class YMazeSession(TwoPUtils.sess.Session):
             trial_mask = np.ones(self.trial_start_inds.shape) > 0
 
         if lr_split:
+            if mux :
+                if 'channel_0' in Fkey:
+                    vr_data = self.vr_data_chan0
+                    start_inds = self.trial_starts['channel_0']
+                    end_inds = self.trial_ends['channel_0']
+                elif 'channel_1' in Fkey:
+                    vr_data = self.vr_data_chan1
+                    start_inds = self.trial_starts['channel_1']
+                    end_inds = self.trial_ends['channel_1']
 
-            lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
-                        'right': (self.trial_info['LR'] == 1) * trial_mask}
-            for key, mask in lr_masks.items():
-                masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
-                                                                           self.trial_start_inds[mask],
-                                                                           self.teleport_inds[mask],
-                                                                           min_pos=min_pos, max_pos=max_pos,
-                                                                           bin_size=bin_size, **pc_kwargs)
+                lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
+                            'right': (self.trial_info['LR'] == 1) * trial_mask}
+                for key, mask in lr_masks.items():
+                    masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, vr_data['t'],
+                                                                               start_inds[mask],
+                                                                               end_inds[mask],
+                                                                               min_pos=min_pos, max_pos=max_pos,
+                                                                               bin_size=bin_size, **pc_kwargs)
+    
+                    d[key] = {'masks': masks, 'SI': SI, 'p': p}
 
-                d[key] = {'masks': masks, 'SI': SI, 'p': p}
+            else:
                 
+                lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
+                            'right': (self.trial_info['LR'] == 1) * trial_mask}
+                for key, mask in lr_masks.items():
+                    masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+                                                                               self.trial_start_inds[mask],
+                                                                               self.teleport_inds[mask],
+                                                                               min_pos=min_pos, max_pos=max_pos,
+                                                                               bin_size=bin_size, **pc_kwargs)
+    
+                    d[key] = {'masks': masks, 'SI': SI, 'p': p}
+                    
         else:
             mask = trial_mask
             masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
@@ -438,9 +529,9 @@ class YMazeSession(TwoPUtils.sess.Session):
         '''
         if mux:
             if self.novel_arm == -1:
-                return self.place_cell_info[f"{chan}{key}"]['right']['masks']
+                return self.place_cell_info[f"{chan}_{key}"]['right']['masks']
             elif self.novel_arm == 1:
-                return self.place_cell_info[f"{chan}{key}"]['left']['masks']
+                return self.place_cell_info[f"{chan}_{key}"]['left']['masks']
             else:
                 return None
         else:
@@ -458,7 +549,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         '''
         if mux: 
             if self.novel_arm == 1:
-                return self.place_cell_info[f"{chan}{key}"]['right']['masks']
+                return self.place_cell_info[f"{chan}_{key}"]['right']['masks']
             elif self.novel_arm == -1:
                 return self.place_cell_info[f"{chan}{key}"]['left']['masks']
             else:
