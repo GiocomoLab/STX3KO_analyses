@@ -436,7 +436,9 @@ class YMazeSession(TwoPUtils.sess.Session):
 
                 lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
                             'right': (self.trial_info['LR'] == 1) * trial_mask}
+                
                 for key, mask in lr_masks.items():
+
                     masks, SI, p = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, vr_data['t'],
                                                                                start_inds[mask],
                                                                                end_inds[mask],
@@ -551,7 +553,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             if self.novel_arm == 1:
                 return self.place_cell_info[f"{chan}_{key}"]['right']['masks']
             elif self.novel_arm == -1:
-                return self.place_cell_info[f"{chan}{key}"]['left']['masks']
+                return self.place_cell_info[f"{chan}_{key}"]['left']['masks']
             else:
                 return None
         else:

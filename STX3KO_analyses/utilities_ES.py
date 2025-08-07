@@ -11,7 +11,7 @@ def loop_func_over_mice(func, mice):
 
 def loop_func_over_days(func, days, **kwargs):
     # return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days] # uncomment if not downsampled
-    return lambda mouse: [func(load_single_day_noconcat(mouse, day), **kwargs) for day in days]
+    return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days]
 
 
 def common_rois(roi_matches, inds):
@@ -131,7 +131,7 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
 #     return sess
 
 
-def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSessPkls",verbose = True):
+def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSessPkls/smooth_spks",verbose = True):
     #     mouse = '4467331.2'
     pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
@@ -370,7 +370,7 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
     return concat_sess
 
 def is_putative_interneuron(sess, ts_key='dff', method='speed',
-                            prct=10, r_thresh=0.3, mux = False):
+                            prct=10, r_thresh=0.18, mux = False):
     """
     Find putative interneurons based on spatially-binned
     trial_mat values, ratio of 99th prctile to mean, per cell.
@@ -382,7 +382,7 @@ def is_putative_interneuron(sess, ts_key='dff', method='speed',
     :param prct: (for method 'trial_mat_ratio') percentile of ROIs within animal to cut off
     :param r_thresh: (for method 'speed') threshold for speed correlation r
     :return: is_int (list) with a Boolean for each ROI, where
-        putative interneuron is True.
+        putative interneuron is True. NOTE: ELLA SWITCHED >/< SO IS_INT HAS NON-INTERNEURONS AS TRUE 
     """
 
     use_trial_mat = np.copy(sess.trial_matrices[ts_key][0])
@@ -419,4 +419,27 @@ def is_putative_interneuron(sess, ts_key='dff', method='speed',
 
         is_int = speed_corr < r_thresh
 
+    elif method == 'z_score':
+        ts = sess.timeseries[ts_key]
+        n_cells = ts.shape[0]
+        # is_int = np.zeros(n_cells, dtype = bool)
+        
+        zscored = np.empty_like(ts)
+        for c in range(n_cells):
+            trace = ts[c,:]
+            if np.isnan(trace.all()):
+                is_int[c] = False
+                continue
+
+            trace_z = (trace - np.nanmean(trace)) / np.nanstd(trace)
+            zscored[c,:] = trace_z
+            # z_thresh = np.nanpercentile(zscored, 90)
+            # max_z = np.nanmax(trace_z)
+            # print(max_z)
+            # is_int[c] = max_z >= z_thresh
+        z_thresh = np.nanpercentile(np.nanmax(zscored, axis = 1), 70)
+        print(z_thresh)
+        print(np.nanmax(zscored, axis = 1))
+        is_int = np.nanmax(zscored, axis = 1) >=z_thresh
+    
     return is_int

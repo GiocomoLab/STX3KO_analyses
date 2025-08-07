@@ -152,7 +152,7 @@ class LMM_PeriRewardPlaceCellFrac:
 
 class PeriRewardPlaceCellFrac:
 
-    def __init__(self, days=np.arange(6), ts_key='spks', fam=True):
+    def __init__(self, days=np.arange(6), ts_key='F_dff', fam=True):
         '''
 
         :param days:
@@ -161,7 +161,7 @@ class PeriRewardPlaceCellFrac:
         '''
         # self.ko_mice = ymaze_sess_deets.ko_mice
         # self.ctrl_mice = ymaze_sess_deets.ctrl_mice
-        self.sparse_mice = ymaze_sess_deets.sparse_mice[3:]
+        self.sparse_mice = ymaze_sess_deets.sparse_mice
         self.__dict__.update({'days': days, 'ts_key': ts_key, 'fam': fam})
         self.n_days = days.shape[0]
 
@@ -791,6 +791,91 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.
     return fig, ax
 
 
+def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'spks', vmin = -.25, vmax = 5):
+    '''
+
+    :param day:
+    :param ts_key:
+    :return:
+    '''
+
+
+    def lr_ratemaps(mice, chan):
+        '''
+
+        :param mice:
+        :return:
+        '''
+        l_rm_train, l_rm_test, r_rm_train, r_rm_test = [], [], [], []
+        for mouse in mice:
+            sess = u.load_single_day(mouse, day)
+            key = chan + '_' + ts_key
+            if 'left' in sess.place_cell_info[key].keys():
+                l_cellmask = sess.place_cell_info[key]['left']['masks']
+                r_cellmask= sess.place_cell_info[key]['left']['masks']
+            else:
+                l_cellmask = sess.place_cell_info[key][-1]['masks'].sum(axis=0)>0
+                r_cellmask = sess.place_cell_info[key][1]['masks'].sum(axis=0) > 0
+
+            trial_mat = sess.trial_matrices[key]
+
+            l_trialmask = sess.trial_info['LR'] == -1
+            r_trialmask = sess.trial_info['LR'] == 1
+
+            l_trialmat = trial_mat[l_trialmask, :, :]
+            l_trialmat = l_trialmat[:, :, l_cellmask]
+
+            r_trialmat = trial_mat[r_trialmask, :, :]
+            r_trialmat = r_trialmat[:, :, r_cellmask]
+
+            l_rm_train.append(np.nanmean(l_trialmat[::2, :, :], axis=0))
+            l_rm_test.append(np.nanmean(l_trialmat[1::2, :, :], axis=0))
+
+            r_rm_train.append(np.nanmean(r_trialmat[::2, :, :], axis=0))
+            r_rm_test.append(np.nanmean(r_trialmat[1::2, :, :], axis=0))
+
+        return np.concatenate(l_rm_train, axis=-1), np.concatenate(l_rm_test, axis=-1), \
+               np.concatenate(r_rm_train, axis=-1), np.concatenate(r_rm_test, axis=-1)
+
+    def sort_norm(rm_train, rm_test):
+        mu, std = np.nanmean(rm_train, axis=0, keepdims=True), np.nanstd(rm_train, axis=0, keepdims=True)
+        sortvec = np.argsort(np.argmax(rm_train, axis=0))
+
+        rm_test = (rm_test-mu)/std
+
+        return rm_test[:, sortvec]
+
+    ko_l_train, ko_l_test, ko_r_train, ko_r_test = lr_ratemaps(ymaze_sess_deets.sparse_mice, 'channel_0')
+    ctrl_l_train, ctrl_l_test, ctrl_r_train, ctrl_r_test = lr_ratemaps(ymaze_sess_deets.sparse_mice, 'channel_1')
+
+    fig, ax = plt.subplots(2,2, figsize= [10,10])
+    ax[0,0].imshow(sort_norm(ctrl_l_train, ctrl_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+    ax[0,1].imshow(sort_norm(ctrl_r_train, ctrl_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+
+    ax[0,0].plot([-.5, ctrl_l_train.shape[0]- .5], [-.5, ctrl_l_train.shape[1]-.5], color='blue')
+    ax[0,1].plot([-.5, ctrl_r_train.shape[0] - .5], [-.5, ctrl_r_train.shape[1] - .5], color='blue')
+
+    ax[0, 0].set_title("RGECO: Left, N cells %d" % ctrl_l_test.shape[1])
+    ax[0, 1].set_title("RGECO: Right, N cells %d" % ctrl_r_test.shape[1])
+
+   
+    ax[1, 0].imshow(sort_norm(ko_l_train, ko_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+    ax[1, 0].plot([-.5, ko_l_train.shape[0]- .5], [-.5, ko_l_train.shape[1]-.5], color='blue')
+    ax[1, 0].set_title(f"GCaMP: Left, N cells {ko_l_test.shape[1]}")
+
+    ax[1, 1].imshow(sort_norm(ko_r_train, ko_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+    ax[1, 1].plot([-.5, ko_l_train.shape[0]- .5], [-.5, ko_l_train.shape[1]-.5], color='blue')
+    ax[1, 1].set_title("GCaMP: Right Trials, Left Sort")
+
+    for row in [0,1]:
+        for col in [0,1]:
+            ax[row,col].set_yticks([])
+            ax[row,col].set_ylabel('Cells')
+            ax[row, col].set_xlabel('Pos')
+
+    fig.subplots_adjust(hspace=.25, wspace=.5)
+    fig.suptitle('Day %d' % day)
+    return fig, ax
 
 
 def plot_leftright_crossval_placecells_acrossdays(mice):
