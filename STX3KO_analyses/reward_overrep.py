@@ -161,7 +161,7 @@ class PeriRewardPlaceCellFrac:
         '''
         # self.ko_mice = ymaze_sess_deets.ko_mice
         # self.ctrl_mice = ymaze_sess_deets.ctrl_mice
-        self.sparse_mice = ymaze_sess_deets.sparse_mice
+        self.sparse_mice = ymaze_sess_deets.sparse_mice[:-1]
         self.__dict__.update({'days': days, 'ts_key': ts_key, 'fam': fam})
         self.n_days = days.shape[0]
 
@@ -181,7 +181,7 @@ class PeriRewardPlaceCellFrac:
         self.sparse_plot_array = None
 
     @staticmethod
-    def argmax_perireward(sess: session.YMazeSession, ts_key: str = 'spks', fam: bool = True, multi_chan = True):
+    def argmax_perireward(sess: session.YMazeSession, ts_key: str = 'F_dff', fam: bool = True, multi_chan = True):
         '''
 
         :param sess:
@@ -234,7 +234,7 @@ class PeriRewardPlaceCellFrac:
         return result
         
     @staticmethod
-    def argmax_perireward_downsample(sess: session.YMazeSession, ts_key: str = 'spks', fam: bool = True):
+    def argmax_perireward_downsample(sess: session.YMazeSession, ts_key: str = 'F_dff', fam: bool = True):
         '''
 
         :param sess:
@@ -289,11 +289,19 @@ class PeriRewardPlaceCellFrac:
                 for col, data in enumerate(data_list):
 
                     data_arr = data.get(chan, None)
-                    
+
+                    if data_arr is None or len(data_arr) <=1:
+                        continue
+                        
                     hist = np.array([np.count_nonzero(data_arr.ravel() == _bin) for _bin in x.tolist()])
+                    if hist.sum() == 0:
+                        continue
+                    
                     hist_sm = sp.ndimage.filters.gaussian_filter1d(hist, 1)
                     hist = hist / hist.sum()
                     hist_sm = hist_sm / hist_sm.sum()
+
+                        
 
                     # TO-DO check if denominator needs to be changed here
                     # sums[m, col] = hist[anova_mask].sum() / hist[~anova_mask].sum()
@@ -705,7 +713,7 @@ class PeriRewardSpeed:
         return results
 
 
-def plot_leftright_crossval_placecells_withinday(day, ts_key = 'spks', vmin = -.25, vmax = 5):
+def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = -.25, vmax = 5):
     '''
 
     :param day:
@@ -849,7 +857,7 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'spks', vm
     ctrl_l_train, ctrl_l_test, ctrl_r_train, ctrl_r_test = lr_ratemaps(ymaze_sess_deets.sparse_mice, 'channel_1')
 
     fig, ax = plt.subplots(2,2, figsize= [10,10])
-    ax[0,0].imshow(sort_norm(ctrl_l_train, ctrl_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+    im0 = ax[0,0].imshow(sort_norm(ctrl_l_train, ctrl_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
     ax[0,1].imshow(sort_norm(ctrl_r_train, ctrl_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
 
     ax[0,0].plot([-.5, ctrl_l_train.shape[0]- .5], [-.5, ctrl_l_train.shape[1]-.5], color='blue')
@@ -872,6 +880,7 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'spks', vm
             ax[row,col].set_yticks([])
             ax[row,col].set_ylabel('Cells')
             ax[row, col].set_xlabel('Pos')
+    # cbar = fig.colorbar(im0, ax = ax.ravel().tolist())
 
     fig.subplots_adjust(hspace=.25, wspace=.5)
     fig.suptitle('Day %d' % day)

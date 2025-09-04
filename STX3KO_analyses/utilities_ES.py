@@ -2,6 +2,7 @@ import os
 
 import dill
 import numpy as np
+import warnings
 
 import TwoPUtils as tpu
 from . import session, ymaze_sess_deets
@@ -13,7 +14,134 @@ def loop_func_over_days(func, days, **kwargs):
     # return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days] # uncomment if not downsampled
     return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days]
 
+def center_of_mass(data, coord=None, axis=0):
+    """
+    Find the data's absolute center of mass (COM) along the given axis
 
+    :param data: mass
+    :param coord: coordinates of the data, from which we calculate center of mass
+            -- If coord==None, coord are the indices of the data.
+    :param axis: axis to calculate across
+    :return:
+    """
+
+    valid_data = np.copy(data) #[np.where(~np.isnan(data))]
+
+    if np.sum(~np.isnan(valid_data))>0:
+        if coord is None:
+            coord = np.indices((data.shape))[axis]
+            # coord = np.arange(0, data.shape[axis])
+
+        #valid_coord = coord[~np.isnan(data)]
+
+        # make data positive, looking for center of upward-going mass
+        mass = valid_data - np.nanmin(valid_data, axis=axis, keepdims=True)
+
+        normalizer = np.nansum(np.abs(valid_data), axis=axis, keepdims=True)
+
+        with np.errstate(invalid='ignore', divide='ignore'):
+            COM = (
+                    np.nansum(np.abs(valid_data) * coord, axis=axis, keepdims=True) / normalizer
+            )
+    else:
+        COM = np.nan
+
+    return COM
+
+def field_from_thresh(trial_mat, coord, cells=None,
+                      prctile=0.2,
+                      axis=None,
+                      sigma=2):
+    """
+    Calculates the field coordinates for a single place field,
+    defined as activity >= prctile*(max-min)+min
+
+    :param trial_mat: position-binned activity
+    :param coord: the coordinates of the data (i.e. positions)
+    :param prctile: percentile of activity change to use as threshold
+    :param axis:
+    :return: coordinates of the place field
+    """
+    fields_per_cell = {'included cells': {},
+                       'number': {},
+                       'widths': {},
+                       'pos': {},
+                       'COM': {}}
+
+    trial_mat = np.copy(trial_mat)
+
+    if len(trial_mat.shape) < 3:
+        if len(trial_mat.shape) < 2:
+            trial_mean = trial_mat
+            trial_mean = np.expand_dims(trial_mean, axis=1)
+            if cells is None:
+                cells = [0]
+        else:
+            trial_mat = np.expand_dims(trial_mat, axis=2)
+            trial_mean = np.nanmean(trial_mat, axis=0)
+            if cells is None:
+                cells = range(trial_mat.shape[2])
+    else:
+        trial_mean = np.nanmean(trial_mat, axis=0)
+        if cells is None:
+            cells = range(trial_mat.shape[2])
+
+    fields_per_cell['included cells'] = cells
+
+    for cell in cells:
+        minmax = np.nanmax(trial_mean[:, cell], axis=axis) - \
+            np.nanmin(trial_mean[:, cell], axis=axis)
+        thresh = prctile * minmax + np.nanmin(trial_mean[:, cell], axis=axis)
+        # trying the mean of the mean firing as the thresh
+
+        # thresh = np.nanmean(trial_mean[:, cell])
+
+        above_thresh = np.where(trial_mean[:, cell] > thresh)[0]
+
+        fields_inds = find_contiguous(above_thresh, stepsize=1)
+        # only accept fields longer than 2 bins
+        fields_inds = fields_inds[[len(f) >= 2 for f in fields_inds]]
+        fields_pos = []
+        for f in fields_inds:
+            fields_pos.append(coord[f])  # a list of arrays
+
+        fields_per_cell['number'][cell] = len(fields_pos)
+        fields_per_cell['widths'][cell] = [(f[-1] - f[0]) for f in fields_pos]
+        fields_per_cell['pos'][cell] = fields_pos
+        fields_per_cell['COM'][cell] = []
+
+        # find center of mass of each field
+        for field in fields_pos:
+            data = trial_mean[:, cell]
+            field_COM = center_of_mass(
+                data[np.isin(coord,
+                             field)
+                     ],
+                coord=field,
+                axis=0)
+
+            fields_per_cell['COM'][cell].append(field_COM)
+
+    return fields_per_cell
+    
+def find_contiguous(data, stepsize=1, up_to_stepsize=None):
+    """
+    Find contiguous runs of elements based on a "stepsize" difference between them.
+    Thanks to Stack Exchange for this inspiration
+
+    :param data: array in which to look for contiguous runs
+    :param stepsize: target difference between elements
+    :return: an array of arrays
+    """
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=np.VisibleDeprecationWarning)
+        if up_to_stepsize is not None:
+            runs = np.asarray(np.split(data, np.where(np.diff(data) > stepsize)[0] + 1)) #, dtype=object)
+        else:
+            runs = np.asarray(np.split(data, np.where(np.diff(data) != stepsize)[0] + 1)) #, dtype=object)
+        return runs
+        
 def common_rois(roi_matches, inds):
     ref = roi_matches[inds[0]]
     ref_common_rois = []
@@ -304,7 +432,7 @@ def single_mouse_concat_vr_sessions(mouse, date_inds=None):
                                              load_ops=False, run_place_cells=False)
     return concat_sess
 
-def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_stats = True):
+def single_mouse_concat_sessions(mouse, chan, date_inds=None, load_ops = False, load_stats = True):
     pkldir = os.path.join('C:/Users/esay/data/Stx3/YMazeSessPkls/', mouse)
 
     with open(os.path.join(pkldir, "roi_aligner_results.pkl"), 'rb') as file:
@@ -355,11 +483,6 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
             date_inds_ravel.append(date_ind)
             roi_inds.append(deets['ravel_ind'])
             print(deets['date'], deets['scene'])
-
-            if mouse == '4467975.1' and date_ind == 0:
-                sess.trial_info['block_number'] += 1
-            if mouse == '4467332.2' and date_ind == 0:
-                sess.trial_info['block_number'] += 2
 
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
