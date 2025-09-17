@@ -156,13 +156,13 @@ KO_sessions = {
          #'ravel_ind': 8}),
 
                     
-                    '''
+                  
          {'date': '05_10_2020', 'scene': 'YMaze_RewardReversal', 'session': 1, 'scan': 3, 'novel_arm': -1, 'ravel_ind': 9},
          (
              {'date': '06_10_2020', 'scene': 'YMaze_RewardReversal', 'session': 1, 'scan': 2, 'novel_arm': -1,
               'ravel_ind': 10},
              {'date': '06_10_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 5, 'novel_arm': -1, 'ravel_ind': 11}),
-             '''
+             
                     
          ),
 
