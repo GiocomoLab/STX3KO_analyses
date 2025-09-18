@@ -471,7 +471,7 @@ class YMazeSession(TwoPUtils.sess.Session):
 
             
     def place_cells_calc_pop(self, Fkey='F_dff', trial_mask=None, lr_split=True, out_key=None, min_pos=13, max_pos=43,
-                         bin_size=1, p_thr = 0.5, output_shuffle = False, shuffle_method = "individual",**pc_kwargs):
+                         bin_size=1, p_thr = 0.05, output_shuffle = False, shuffle_method = "individual",**pc_kwargs):
 
         # choose appropriate target dictionary
         if out_key is None:

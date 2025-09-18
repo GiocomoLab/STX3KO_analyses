@@ -265,7 +265,7 @@ def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSes
     if mouse in ymaze_sess_deets.KO_sessions.keys():
 
         deets = ymaze_sess_deets.KO_sessions[mouse][day]
-        pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+        # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
         # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
 
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_lickrate", mouse)
@@ -273,7 +273,7 @@ def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSes
     elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
         deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
         # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
-        pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+        # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
 
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_lickrate", mouse)
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
