@@ -6,3 +6,7 @@ STX3KO_analyses/behavior/__pycache__/*.pyc
 **/.ipynb_checkpoints/
 **/__pycache__
 STX3KO_analyses.egg-info
+ActiveNotebooks/df_shifts.pkl
+.gitignore
+ActiveNotebooks/place_field_stats_dff.npy
+ActiveNotebooks/df_rewardfrac_dff.pkl
