@@ -39,7 +39,7 @@ class HSE:
         
         
         self.spks = sess.timeseries['F_dff']
-        self.trial_mat = sess.trial_matrices['F_dff_nostop']
+        self.trial_mat = sess.trial_matrices['F_dff']
         self.speed = sess.timeseries['speed']
         self.lr = sess.timeseries['LR'].ravel()
         self.t = sess.timeseries['t'].ravel()
@@ -61,7 +61,8 @@ class HSE:
         # threshold spks timeseries to get "significant" transients
         self.thresh_spks = .2*np.nanmax(sess.timeseries['F_dff'], axis=-1, keepdims=True)
         self.spks_th = 1.*np.copy(self.spks)
-        self.spks_th[self.spks<self.thresh_spks]=0
+        # self.spks_th[(self.spks<self.thresh_spks)]=0
+        self.spks_th[(self.spks<.2)]=0
         
         
         
@@ -177,7 +178,7 @@ class HSE:
         pop_act_boxcar = sp.signal.convolve(act.sum(axis=0), boxcar, mode='same')
         return np.histogram(pop_act_boxcar[post_reward_bool>0], bin_edges)[0]
 
-    def get_popact_thresh(self, nperms = 1000, p_thresh=.99):
+    def get_popact_thresh(self, nperms = 1000, p_thresh=.95):
         self.bin_edges = np.arange(100)
         
         

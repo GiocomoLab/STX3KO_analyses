@@ -12,7 +12,7 @@ def loop_func_over_mice(func, mice):
 
 def loop_func_over_days(func, days, **kwargs):
     # return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days] # uncomment if not downsampled
-    return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days]
+    return lambda mouse: [func(load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls'), **kwargs) for day in days]
 
 def center_of_mass(data, coord=None, axis=0):
     """
@@ -306,8 +306,8 @@ def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSes
             sess_list.append(_sess)
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','licks', 'speed'),#, 'spks_nostop''spks_th',),
-                                          timeseries_keys=('F_dff', 'spks',  'F_dff_norm', 'spks_norm','licks', 'speed', 
+                                          trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','licks', 'speed',  'spks_nostop', 'F_dff_nostop'),
+                                          timeseries_keys=('F_dff', 'spks',  'F_dff_norm', 'spks_norm','licks', 'speed', 'spks_nostop','F_dff_nostop',
                                                            't', 'LR'),#, 'spks_nostop''spks_th','reward',, 'block_number' ),
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:

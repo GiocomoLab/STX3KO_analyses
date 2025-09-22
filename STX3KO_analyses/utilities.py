@@ -11,6 +11,25 @@ def loop_func_over_mice(func, mice):
 def loop_func_over_days(func, days, **kwargs):
     return lambda mouse: [func(load_single_day(mouse, day), **kwargs) for day in days]
 
+def add_sig_field_thresh(sess, shuff_results, key='F_dff_th', min_bins=1, max_bins=25):
+    '''
+    add info about single field permutations to sess file
+    '''
+    
+    field_perm_masks = {'sig_bins':{}, 'cell_masks':{}}
+    for ttype in ('fam', 'nov'):
+        if ttype == 'nov':
+            trial_mask = sess.trial_info['LR']==sess.novel_arm
+        else:
+            trial_mask = sess.trial_info['LR']!=sess.novel_arm 
+
+        sig_bins = np.nanmean(sess.trial_matrices[key][trial_mask,:,:],axis=0)>shuff_results[ttype]
+        field_perm_masks['sig_bins'][ttype] = sig_bins
+        sig_bin_count = (1.*sig_bins).sum(axis=0)
+
+        field_perm_masks['cell_masks'][ttype] = (sig_bin_count>min_bins) * (sig_bin_count<max_bins)
+    sess.field_perm_masks = field_perm_masks
+    return sess
 
 def common_rois(roi_matches, inds):
     ref = roi_matches[inds[0]]
@@ -104,7 +123,12 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
 #     return sess
     
 
-def load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls/',verbose = True):
+def load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls/',verbose = True,
+                    trial_mat_keys=('F_dff', 'F_dff_th', 'spks', 'spks_th', 'F_dff_norm', 'F_dff_bin',
+                            'spks_norm','licks', 'speed', 'spks_nostop'),
+                    timeseries_keys=('F_dff', 'F_dff_th', 'spks', 'spks_th', 'F_dff_norm', 'F_dff_bin',
+                            'spks_norm','licks', 'speed', 
+                            't', 'LR', 'reward', 'block_number', 'spks_nostop'),):
     #     mouse = '4467331.2'
     pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
@@ -138,9 +162,8 @@ def load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls/',verbos
             sess_list.append(_sess)
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
-                                          trial_mat_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 'spks_nostop'),
-                                          timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
-                                                           't', 'LR', 'reward', 'block_number', 'spks_nostop'),
+                                          trial_mat_keys=trial_mat_keys,
+                                          timeseries_keys=timeseries_keys,
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
@@ -215,7 +238,12 @@ def single_mouse_concat_vr_sessions(mouse, date_inds=None):
                                              load_ops=False, run_place_cells=False)
     return concat_sess
 
-def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_stats = True):
+def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_stats = True,
+                                trial_mat_keys=['F_dff', 'F_dff_norm', 'F_dff_th', 'F_dff_bin', 'spks', 'spks_th', 
+                                                'spks_norm', 'licks', 'speed', 'spks_nostop'],
+                                timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'F_dff_th', 'F_dff_bin',
+                                                'spks_norm','licks', 'speed', 
+                                                't', 'LR', 'reward', 'block_number', 'spks_nostop'),):
     pkldir = os.path.join('/home/mplitt/YMazeSessPkls/', mouse)
 
     with open(os.path.join(pkldir, "roi_aligner_results.pkl"), 'rb') as file:
@@ -272,8 +300,8 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
 
     common_roi_mapping = common_rois(match_inds, roi_inds)
     concat_sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
-                                             trial_mat_keys=['F_dff', 'F_dff_norm', 'spks', 'spks_th', 'spks_norm', 'licks', 'speed', 'spks_nostop'],
-                                             timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'spks_norm','licks', 'speed', 
-                                                           't', 'LR', 'reward', 'block_number', 'spks_nostop'),
+                                             trial_mat_keys=trial_mat_keys,
+                                             timeseries_keys=timeseries_keys,
                                              load_ops=load_ops, load_stats = load_stats)
     return concat_sess
+ 

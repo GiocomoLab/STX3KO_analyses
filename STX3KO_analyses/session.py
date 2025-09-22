@@ -1,4 +1,5 @@
 import dill
+import cloudpickle
 import numpy as np
 import scipy as sp
 import pandas as pd
@@ -80,7 +81,7 @@ class YMazeSession(TwoPUtils.sess.Session):
         :return:
         '''
         with open(filename, 'rb') as file:
-            return cls(prev_sess=dill.load(file), **kwargs)
+            return cls(prev_sess=pd.read_pickle(file), **kwargs)
 
     def get_trial_info(self):
         """
@@ -602,10 +603,10 @@ class ConcatYMazeSession:
     def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'],
                  trial_mat_keys=['F_dff', ],
                  timeseries_keys=(), run_place_cells=True, day_inds=None,
-                 load_ops=False, load_stats = False):
+                 load_ops=False, load_stats = False, run_field_perm_masks=True):
 
         attrs = self.concat(sess_list, common_roi_mapping, trial_info_keys, trial_mat_keys,
-                            timeseries_keys, run_place_cells, day_inds, load_ops, load_stats)
+                            timeseries_keys, run_place_cells, day_inds, load_ops, load_stats, run_field_perm_masks)
 
 
         self.__dict__.update(attrs)
@@ -613,7 +614,7 @@ class ConcatYMazeSession:
 
     @staticmethod
     def concat(_sess_list, common_roi_mapping, t_info_keys, t_mat_keys,
-               timeseries_keys, run_place_cells, day_inds, load_ops, load_stats):
+               timeseries_keys, run_place_cells, day_inds, load_ops, load_stats, run_field_perm_masks):
         attrs = {}
         attrs['day_inds'] = day_inds
         # same info
@@ -652,6 +653,9 @@ class ConcatYMazeSession:
         if run_place_cells:
             place_cells = {-1: {'masks': [], 'SI': [], 'p': []}, 1: {'masks': [], 'SI': [], 'p': []}}
 
+        if run_field_perm_masks:
+            field_perm_masks = {'sig_bins': {'fam': [], 'nov': []}, 
+                                'cell_masks': {'fam': [], 'nov':[]}}
 
         cell_info_attrs= ['s2p_stats', 's2p_ops']
         attrs.update({k:[] for k in cell_info_attrs})
@@ -704,6 +708,12 @@ class ConcatYMazeSession:
                     for k in ['masks', 'SI', 'p']:
                         place_cells[lr][k].append(_sess.place_cell_info[_lr][k][common_roi_mapping[ind, :]])
 
+            if run_field_perm_masks:
+                for ttype in ('fam', 'nov'):
+                    field_perm_masks['sig_bins'][ttype].append(_sess.field_perm_masks['sig_bins'][ttype][:, common_roi_mapping[ind,:]])
+                    field_perm_masks['cell_masks'][ttype].append(_sess.field_perm_masks['cell_masks'][ttype][common_roi_mapping[ind,:]])
+                    
+
             cum_frames += _sess.timeseries['licks'].shape[1]
         # print(t_info_keys)
         for k in ['trial_start_inds', 'teleport_inds']:
@@ -727,6 +737,9 @@ class ConcatYMazeSession:
                 for k in ['masks', 'SI', 'p']:
                     place_cells[lr][k] = np.array(place_cells[lr][k])
             attrs['place_cell_info'] = place_cells
+
+        if run_field_perm_masks:
+            attrs['field_perm_masks'] = field_perm_masks
 
         return attrs
     

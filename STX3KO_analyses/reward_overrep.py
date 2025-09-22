@@ -816,7 +816,7 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'spks', vm
         '''
         l_rm_train, l_rm_test, r_rm_train, r_rm_test = [], [], [], []
         for mouse in mice:
-            sess = u.load_single_day(mouse, day)
+            sess = u.load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls')
             key = chan + '_' + ts_key
             if 'left' in sess.place_cell_info[key].keys():
                 l_cellmask = sess.place_cell_info[key]['left']['masks']
