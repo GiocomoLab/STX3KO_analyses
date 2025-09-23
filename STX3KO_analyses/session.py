@@ -494,7 +494,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             lr_masks = {'left': (self.trial_info['LR'] == -1) * trial_mask,
                         'right': (self.trial_info['LR'] == 1) * trial_mask}
             for key, mask in lr_masks.items():
-                masks, SI, p, perms, SI_perms = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+                masks, SI, p,  SI_perms = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
                                                                            self.trial_start_inds[mask],
                                                                            self.teleport_inds[mask],
                                                                            min_pos=min_pos, max_pos=max_pos,
@@ -510,7 +510,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                 
         else:
             mask = trial_mask
-            masks, SI, p, perms, SI_perms = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
+            masks, SI, p, SI_perms = TwoPUtils.spatial_analyses.place_cells_calc(self.timeseries[Fkey].T, self.vr_data['t'],
                                                                        self.trial_start_inds[mask],
                                                                        self.teleport_inds[mask],
                                                                        min_pos=min_pos, max_pos=max_pos,

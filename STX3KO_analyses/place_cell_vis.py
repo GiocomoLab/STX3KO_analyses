@@ -69,10 +69,12 @@ def plot_single_trial_place_cells_dense(mouse, day, fam=True):
     
     if fam:
         trial_mask = sess.trial_info['LR']!=sess.novel_arm
-        pc_mask = sess.field_perm_masks['cell_masks']['fam']
+        pc_mask = sess.fam_place_cell_mask()
+        # pc_mask = sess.field_perm_masks['cell_masks']['fam']
     else:
         trial_mask = sess.trial_info['LR']==sess.novel_arm
-        pc_mask = sess.field_perm_masks['cell_masks']['nov']
+        pc_mask = sess.nov_place_cell_mask()
+        # pc_mask = sess.field_perm_masks['cell_masks']['nov']
 
     avg_trial_mat = np.nanmean(sess.trial_matrices['F_dff'][trial_mask,:,:], axis=0)[:, pc_mask]
     sort = np.argsort(np.argmax(avg_trial_mat,axis=0))[::-1]
@@ -295,8 +297,9 @@ def plot_crossval_placecells_across_days(mice, max_sess = 6, key = 'F_dff'):
         # for each day that is being used for sorting
         for sort_day in range(max_sess):
 
-            place_cell_mask = (np.array(concat_sess.field_perm_masks['cell_masks']['fam']).sum(axis=0)==6) + \
-                              (np.array(concat_sess.field_perm_masks['cell_masks']['nov']).sum(axis=0)==6)
+            # place_cell_mask = (np.array(concat_sess.field_perm_masks['cell_masks']['fam']).sum(axis=0)==6) + \
+            #                   (np.array(concat_sess.field_perm_masks['cell_masks']['nov']).sum(axis=0)==6)
+            place_cell_mask = concat_sess.fam_place_cell_mask() + concat_sess.nov_place_cell_mask()
             
             trial_mask = (concat_sess.trial_info['sess_num']==sort_day)*(concat_sess.trial_info['LR']==-1*concat_sess.novel_arm)
             trial_inds = np.arange(trial_mask.shape[0])

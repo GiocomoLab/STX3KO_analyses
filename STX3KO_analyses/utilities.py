@@ -156,7 +156,8 @@ def load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls/',verbos
             _sess.add_timeseries(licks=_sess.vr_data['lick']._values)
             _sess.add_pos_binned_trial_matrix('licks')
             # setattr(_sess,'novel_arm', _deets['novel'])
-            # _sess.novel_arm = _deets['novel']
+            # _sess.novel_arm = _deets['novel']ies(licks=_sess.vr_data['lick']._values)
+            # _sess.a
             #             _sess_list.append(sess)
             print(_deets['date'], _deets['scene'])
             sess_list.append(_sess)
@@ -165,6 +166,9 @@ def load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls/',verbos
                                           trial_mat_keys=trial_mat_keys,
                                           timeseries_keys=timeseries_keys,
                                           run_place_cells=True)
+        for ttype in ('fam', 'nov'):
+            sess.field_perm_masks['sig_bins'][ttype] = np.array(sess.field_perm_masks['sig_bins'][ttype]).sum(axis=0)==len(deets)
+            sess.field_perm_masks['cell_masks'][ttype] = np.array(sess.field_perm_masks['cell_masks'][ttype]).sum(axis=0)==len(deets)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
             sess.trial_info['block_number'][mask] -= 1

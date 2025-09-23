@@ -31,7 +31,7 @@ if __name__=="__main__":
                     for _deets in deets:
                         print(_deets)
                         
-                        sess.place_cells_calc(Fkey='F_dff', nperms=1000)
+                        sess.place_cells_calc_pop(Fkey='F_dff', nperms=100, shuffle_method='population', p_thr=.05)
                         sess._abc_impl = None
                         tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
                         
@@ -39,6 +39,6 @@ if __name__=="__main__":
                     print(deets)
                     sess = load_single_sess(mouse,deets)
                     
-                    sess.place_cells_calc(Fkey='F_dff', nperms=1000)
+                    sess.place_cells_calc_pop(Fkey='F_dff', nperms=100, shuffle_method='population', p_thr=.05)
                     sess._abc_impl = None
                     tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
