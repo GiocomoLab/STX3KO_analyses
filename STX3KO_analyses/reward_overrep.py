@@ -1,6 +1,6 @@
 from . import session
 from . import utilities as u #uncomment for original code
-# from . import utilities_ES as u
+from . import utilities_ES as u_es
 
 from . import ymaze_sess_deets
 
@@ -13,373 +13,454 @@ import pandas as pd
 
 from pingouin import mixed_anova, pairwise_ttests
 
-class LMM_PeriRewardPlaceCellFrac:
 
-    def __init__(self, days = np.arange(5), ts_key = 'spks'):
 
+
+
+
+
+class PeriRewardCellFrac_Dense:
+
+    def __init__(self, mouse_dict, days, ts_key='F_dff', place_cell_only=False):
+        '''
+        mouse_dict : e.g. {'ctrl': ctrl_mice, 'ko':ko_mice}
         '''
 
+        self.mouse_dict = mouse_dict
+        self.days = days
 
-        :param days:
-        :param ts_key:
-        '''
-
-        self.ko_mice = ymaze_sess_deets.ko_mice
-        self.ctrl_mice = ymaze_sess_deets.ctrl_mice
-        self.sparse_mice = ymaze_sess_deets.sparse_mice
-        self.__dict__.update({'days': days, 'days_z': sp.stats.zscore(days), 'ts_key': ts_key, 'fam': fam})
-        self.n_days = days.shape[0]
-
-        self.df = pd.DataFrame({'mouse':[],'ko':[],'day':[],'lr':[], 'novfam':[], 'frac': []})
-        self.fill_df()
+        self.df = None
+        self.ttypes = ('fam', 'nov')
+        self.place_cell_only = place_cell_only
+        self.fill_df(ts_key)
+        
 
 
-    def fill_df(self):
-        # for mouse in self.ko_mice:
-        #     for day, dz in zip(self.days,self.days_z):
-        #         self.argmax_perireward(u.load_single_day(mouse, day), 1, dz)
-        for mouse in self.sparse_mice:
-            for day, dz in zip(self.days,self.days_z):
-                self.argmax_perireward(u.load_single_day(mouse, day), 1, dz, multi_chan= True)
+    def fill_df(self, ts_key):
+        df = {
+            'cond': [],
+            'mouse':[],
+            'day': [],
+            'ttype': [],
+            'lr': [],
+            'frac': []
+        }
+
+        for cond, mice in self.mouse_dict.items():
+            for mouse in mice:
+                for day in self.days:
+                    for ttype in self.ttypes:
+                        sess = u.load_single_day(mouse, day)
+                        if ttype == 'fam':
+                            trial_mask = sess.trial_info['LR']!=sess.novel_arm
+                            lr = -1*sess.novel_arm
+                            cell_mask = sess.fam_place_cell_mask()
+                        else:
+                            trial_mask = sess.trial_info['LR']==sess.novel_arm
+                            lr = sess.novel_arm
+                            cell_mask = sess.nov_place_cell_mask()
+
+
+                        first_bin = sess.trial_matrices['bin_centers'][0]
+                        if lr == -1:
+                            antic_zone = (sess.rzone_early['tfront']-5, sess.rzone_early['tfront']-1)
+                        else:
+                            antic_zone = (sess.rzone_late['tfront']-5, sess.rzone_late['tfront']-1)
+                        antic_zone = [a-first_bin for a in antic_zone]
+
+                        avg_mat = np.nanmean(sess.trial_matrices[ts_key][trial_mask,:,:],axis=0)
+                        if self.place_cell_only:
+                            avg_mat = avg_mat[:, cell_mask]
+                        argmax = np.nanargmax(avg_mat,axis=0)
+
+                        reward_cells = (argmax>=antic_zone[0]) * (argmax<=antic_zone[1])
+                        reward_frac = reward_cells.sum().astype(float)/float(reward_cells.shape[0])
+
+                        df['cond'].append(cond)
+                        df['mouse'].append(mouse)
+                        df['day'].append(day)
+                        df['ttype'].append(ttype)
+                        df['lr'].append(lr)
+                        df['frac'].append(reward_frac)
+        self.df = pd.DataFrame.from_dict(df)
 
 
 
 
-    def argmax_perireward(self, sess: session.YMazeSession, ko, dz, ts_key: str = 'spks', multi_chan = True):
-        '''
 
-        :param sess:
-        :param ts_key:
-        :param fam:
-        :return:
-        '''
-        if multi_chan:
-            for chan in ['channel_0_', 'channel_1_']:
+
+
+
+
+
+
+# class LMM_PeriRewardPlaceCellFrac:
+
+#     def __init__(self, days = np.arange(5), ts_key = 'spks'):
+
+#         '''
+
+
+#         :param days:
+#         :param ts_key:
+#         '''
+
+#         self.ko_mice = ymaze_sess_deets.ko_mice
+#         self.ctrl_mice = ymaze_sess_deets.ctrl_mice
+#         self.sparse_mice = ymaze_sess_deets.sparse_mice
+#         self.__dict__.update({'days': days, 'days_z': sp.stats.zscore(days), 'ts_key': ts_key, 'fam': fam})
+#         self.n_days = days.shape[0]
+
+#         self.df = pd.DataFrame({'mouse':[],'ko':[],'day':[],'lr':[], 'novfam':[], 'frac': []})
+#         self.fill_df()
+
+
+#     def fill_df(self):
+#         # for mouse in self.ko_mice:
+#         #     for day, dz in zip(self.days,self.days_z):
+#         #         self.argmax_perireward(u.load_single_day(mouse, day), 1, dz)
+#         for mouse in self.sparse_mice:
+#             for day, dz in zip(self.days,self.days_z):
+#                 self.argmax_perireward(u.load_single_day(mouse, day), 1, dz, multi_chan= True)
+
+
+
+
+#     def argmax_perireward(self, sess: session.YMazeSession, ko, dz, ts_key: str = 'spks', multi_chan = True):
+#         '''
+
+#         :param sess:
+#         :param ts_key:
+#         :param fam:
+#         :return:
+#         '''
+#         if multi_chan:
+#             for chan in ['channel_0_', 'channel_1_']:
 
                 
-                trials_mat = sess.trial_matrices[f"{chan}{ts_key}"]
-                bin_edges = sess.trial_matrices['bin_edges']
-                for _arm, arm in enumerate([-1, 1]):
-                    trial_mask = sess.trial_info['LR'] == arm
-                    if sess.novel_arm == arm:
+#                 trials_mat = sess.trial_matrices[f"{chan}{ts_key}"]
+#                 bin_edges = sess.trial_matrices['bin_edges']
+#                 for _arm, arm in enumerate([-1, 1]):
+#                     trial_mask = sess.trial_info['LR'] == arm
+#                     if sess.novel_arm == arm:
     
-                        cell_mask = sess.nov_place_cell_mask(mux = True, chan = chan)
-                        rzone_front = np.argwhere(
-                            (sess.rzone_nov['tfront'] <= bin_edges[1:]) &
-                            (sess.rzone_nov['tfront'] >= bin_edges[:-1])
-                        )[0][0]
-                        nov = 'nov'
-                    else:
+#                         cell_mask = sess.nov_place_cell_mask(mux = True, chan = chan)
+#                         rzone_front = np.argwhere(
+#                             (sess.rzone_nov['tfront'] <= bin_edges[1:]) &
+#                             (sess.rzone_nov['tfront'] >= bin_edges[:-1])
+#                         )[0][0]
+#                         nov = 'nov'
+#                     else:
                             
-                        cell_mask = sess.fam_place_cell_mask(mux= True, chan=chan)
-                        rzone_front = np.argwhere(
-                            (sess.rzone_fam['tfront'] <= bin_edges[1:]) &
-                            (sess.rzone_fam['tfront'] >= bin_edges[:-1])
-                        )[0][0]
-                        nov = 'fam'
-                    # Smooth ratemap by 1 bin
-                    ratemap = sp.ndimage.gaussian_filter1d(
-                        np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0
-                    )
-                    max_inds = np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
-                    reward_frac = self.get_frac(max_inds)
-                    # Add to dataframe
-                    self.df = pd.concat((
-                        self.df,
-                        pd.DataFrame({
-                            'mouse': sess.mouse,
-                            'ko': ko,
-                            'day': day,
-                            'lr': _arm,
-                            'novfam': nov,
-                            'channel': chan[:-1],  # Add channel info to the dataframe
-                            'frac': reward_frac
-                        }, index=[len(self.df)])
-                    ), ignore_index=True)
+#                         cell_mask = sess.fam_place_cell_mask(mux= True, chan=chan)
+#                         rzone_front = np.argwhere(
+#                             (sess.rzone_fam['tfront'] <= bin_edges[1:]) &
+#                             (sess.rzone_fam['tfront'] >= bin_edges[:-1])
+#                         )[0][0]
+#                         nov = 'fam'
+#                     # Smooth ratemap by 1 bin
+#                     ratemap = sp.ndimage.gaussian_filter1d(
+#                         np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0
+#                     )
+#                     max_inds = np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
+#                     reward_frac = self.get_frac(max_inds)
+#                     # Add to dataframe
+#                     self.df = pd.concat((
+#                         self.df,
+#                         pd.DataFrame({
+#                             'mouse': sess.mouse,
+#                             'ko': ko,
+#                             'day': day,
+#                             'lr': _arm,
+#                             'novfam': nov,
+#                             'channel': chan[:-1],  # Add channel info to the dataframe
+#                             'frac': reward_frac
+#                         }, index=[len(self.df)])
+#                     ), ignore_index=True)
 
-        else:
-            trials_mat = sess.trial_matrices[ts_key]
-            bin_edges = sess.trial_matrices['bin_edges']
+#         else:
+#             trials_mat = sess.trial_matrices[ts_key]
+#             bin_edges = sess.trial_matrices['bin_edges']
     
     
-            for arm in [-1, 1]:
-                trial_mask = sess.trial_info['lr']==arm
-                if sess.novel_arm == arm:
-                    cell_mask = sess.nov_place_cell_mask()
-                    rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
-                                              (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
-                    nov = 1
-                else:
-                    cell_mask = sess.fam_place_cell_mask()
-                    rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
-                                              (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
-                    nov = 0
+#             for arm in [-1, 1]:
+#                 trial_mask = sess.trial_info['lr']==arm
+#                 if sess.novel_arm == arm:
+#                     cell_mask = sess.nov_place_cell_mask()
+#                     rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
+#                                               (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
+#                     nov = 1
+#                 else:
+#                     cell_mask = sess.fam_place_cell_mask()
+#                     rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
+#                                               (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
+#                     nov = 0
     
     
     
-                # smooth ratemap by 1 bin
-                ratemap = sp.ndimage.filters.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
-                max_inds = np.argmax(ratemap[:,cell_mask], axis = 0) - rzone_front
-                reward_frac = self.get_frac(max_inds)
+#                 # smooth ratemap by 1 bin
+#                 ratemap = sp.ndimage.filters.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
+#                 max_inds = np.argmax(ratemap[:,cell_mask], axis = 0) - rzone_front
+#                 reward_frac = self.get_frac(max_inds)
     
-                self.df.append({'mouse': sess.mouse,
-                                'ko': ko,
-                                'day': dz,
-                                'lr': arm,
-                                'novfam': nov,
-                                'frac': reward_frac}, ignore_index=True)
+#                 self.df.append({'mouse': sess.mouse,
+#                                 'ko': ko,
+#                                 'day': dz,
+#                                 'lr': arm,
+#                                 'novfam': nov,
+#                                 'frac': reward_frac}, ignore_index=True)
 
 
 
-    @staticmethod
-    def get_frac(data):
-        '''
+#     @staticmethod
+#     def get_frac(data):
+#         '''
 
-        :param frac:
-        :return:
-        '''
-        x = np.arange(-30, 15)
-        anova_mask = (x > -5) * (x <= 0)
+#         :param frac:
+#         :return:
+#         '''
+#         x = np.arange(-30, 15)
+#         anova_mask = (x > -5) * (x <= 0)
 
-        hist = np.array([np.count_nonzero(data.ravel() == _bin) for _bin in x.tolist()])
-        hist = hist / hist.sum()
+#         hist = np.array([np.count_nonzero(data.ravel() == _bin) for _bin in x.tolist()])
+#         hist = hist / hist.sum()
 
-        ## change denominator to account for very few values outside anova mask
-        # return hist[anova_mask].sum() / hist[~anova_mask].sum()
-        return hist[anova_mask].sum() / hist.sum()
+#         ## change denominator to account for very few values outside anova mask
+#         # return hist[anova_mask].sum() / hist[~anova_mask].sum()
+#         return hist[anova_mask].sum() / hist.sum()
 
 
 
-class PeriRewardPlaceCellFrac:
+# class PeriRewardPlaceCellFrac:
 
-    def __init__(self, days=np.arange(6), ts_key='F_dff', fam=True):
-        '''
+#     def __init__(self, days=np.arange(6), ts_key='F_dff', fam=True):
+#         '''
 
-        :param days:
-        :param ts_key:
-        :param fam:
-        '''
-        # self.ko_mice = ymaze_sess_deets.ko_mice
-        # self.ctrl_mice = ymaze_sess_deets.ctrl_mice
-        self.sparse_mice = ymaze_sess_deets.sparse_mice[:-1]
-        self.__dict__.update({'days': days, 'ts_key': ts_key, 'fam': fam})
-        self.n_days = days.shape[0]
+#         :param days:
+#         :param ts_key:
+#         :param fam:
+#         '''
+#         # self.ko_mice = ymaze_sess_deets.ko_mice
+#         # self.ctrl_mice = ymaze_sess_deets.ctrl_mice
+#         self.sparse_mice = ymaze_sess_deets.sparse_mice[:-1]
+#         self.__dict__.update({'days': days, 'ts_key': ts_key, 'fam': fam})
+#         self.n_days = days.shape[0]
 
-        get_pc_max = u.loop_func_over_days(self.argmax_perireward, days, ts_key=ts_key, fam=fam)
-        # get_pc_max = u.loop_func_over_days(self.argmax_perireward_downsample, days, ts_key=ts_key, fam=fam)
+#         get_pc_max = u.loop_func_over_days(self.argmax_perireward, days, ts_key=ts_key, fam=fam)
+#         # get_pc_max = u.loop_func_over_days(self.argmax_perireward_downsample, days, ts_key=ts_key, fam=fam)
 
-        # self.ko_frac = {mouse: get_pc_max(mouse) for mouse in self.ko_mice}
-        # self.ctrl_frac = {mouse: get_pc_max(mouse) for mouse in self.ctrl_mice}
-        self.sparse_frac = {mouse: get_pc_max(mouse) for mouse in self.sparse_mice}
+#         # self.ko_frac = {mouse: get_pc_max(mouse) for mouse in self.ko_mice}
+#         # self.ctrl_frac = {mouse: get_pc_max(mouse) for mouse in self.ctrl_mice}
+#         self.sparse_frac = {mouse: get_pc_max(mouse) for mouse in self.sparse_mice}
 
-        self.ko_sums = None
-        self.ctrl_sums = None
-        self.sparse_sums = None
+#         self.ko_sums = None
+#         self.ctrl_sums = None
+#         self.sparse_sums = None
 
-        self.ko_plot_array = None
-        self.ctrl_plot_array = None
-        self.sparse_plot_array = None
+#         self.ko_plot_array = None
+#         self.ctrl_plot_array = None
+#         self.sparse_plot_array = None
 
-    @staticmethod
-    def argmax_perireward(sess: session.YMazeSession, ts_key: str = 'F_dff', fam: bool = True, multi_chan = True):
-        '''
+#     @staticmethod
+#     def argmax_perireward(sess: session.YMazeSession, ts_key: str = 'F_dff', fam: bool = True, multi_chan = True):
+#         '''
 
-        :param sess:
-        :param ts_key:
-        :param fam:
-        :return:
-        '''
-        result = {}
-        if multi_chan:
-            for chan in ['channel_0', 'channel_1']:
-                trials_mat = sess.trial_matrices[f"{chan}_{ts_key}"]
-                bin_edges = sess.trial_matrices['bin_edges']
+#         :param sess:
+#         :param ts_key:
+#         :param fam:
+#         :return:
+#         '''
+#         result = {}
+#         if multi_chan:
+#             for chan in ['channel_0', 'channel_1']:
+#                 trials_mat = sess.trial_matrices[f"{chan}_{ts_key}"]
+#                 bin_edges = sess.trial_matrices['bin_edges']
 
-                if fam:
-                    trial_mask = sess.trial_info['LR'] == -1 * sess.novel_arm
-                    cell_mask = sess.fam_place_cell_mask(mux=True, chan = chan)
-                    rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
-                                              (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
+#                 if fam:
+#                     trial_mask = sess.trial_info['LR'] == -1 * sess.novel_arm
+#                     cell_mask = sess.fam_place_cell_mask(mux=True, chan = chan)
+#                     rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
+#                                               (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
         
-                else:
-                    trial_mask = sess.trial_info['LR'] == sess.novel_arm
-                    cell_mask = sess.nov_place_cell_mask(mux=True, chan = chan)
-                    rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
-                                              (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
+#                 else:
+#                     trial_mask = sess.trial_info['LR'] == sess.novel_arm
+#                     cell_mask = sess.nov_place_cell_mask(mux=True, chan = chan)
+#                     rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
+#                                               (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
         
-                # smooth ratemap by 1 bin
-                ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
-                result[chan] = np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
+#                 # smooth ratemap by 1 bin
+#                 ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
+#                 result[chan] = np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
 
 
-        else:
+#         else:
             
-            trials_mat = sess.trial_matrices[ts_key]
-            bin_edges = sess.trial_matrices['bin_edges']
-            if fam:
-                trial_mask = sess.trial_info['LR'] == -1 * sess.novel_arm
-                cell_mask = sess.fam_place_cell_mask()
-                rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
-                                          (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
+#             trials_mat = sess.trial_matrices[ts_key]
+#             bin_edges = sess.trial_matrices['bin_edges']
+#             if fam:
+#                 trial_mask = sess.trial_info['LR'] == -1 * sess.novel_arm
+#                 cell_mask = sess.fam_place_cell_mask()
+#                 rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
+#                                           (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
     
-            else:
-                trial_mask = sess.trial_info['LR'] == sess.novel_arm
-                cell_mask = sess.nov_place_cell_mask()
-                rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
-                                          (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
+#             else:
+#                 trial_mask = sess.trial_info['LR'] == sess.novel_arm
+#                 cell_mask = sess.nov_place_cell_mask()
+#                 rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
+#                                           (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
     
-            # smooth ratemap by 1 bin
-            ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
-            result = np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
-        return result
+#             # smooth ratemap by 1 bin
+#             ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
+#             result = np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
+#         return result
         
-    @staticmethod
-    def argmax_perireward_downsample(sess: session.YMazeSession, ts_key: str = 'F_dff', fam: bool = True):
-        '''
+#     @staticmethod
+#     def argmax_perireward_downsample(sess: session.YMazeSession, ts_key: str = 'F_dff', fam: bool = True):
+#         '''
 
-        :param sess:
-        :param ts_key:
-        :param fam:
-        :return:
-        '''
+#         :param sess:
+#         :param ts_key:
+#         :param fam:
+#         :return:
+#         '''
 
-        trials_mat = sess.trial_matrices[ts_key]
-        bin_edges = sess.trial_matrices['bin_edges']
-        downsample_mask = sess.trial_matrices['downsample']
-        if fam:
-            trial_mask = (sess.trial_info['LR'] == -1 & downsample_mask) * sess.novel_arm 
-            cell_mask = sess.fam_place_cell_mask()
-            rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
-                                      (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
+#         trials_mat = sess.trial_matrices[ts_key]
+#         bin_edges = sess.trial_matrices['bin_edges']
+#         downsample_mask = sess.trial_matrices['downsample']
+#         if fam:
+#             trial_mask = (sess.trial_info['LR'] == -1 & downsample_mask) * sess.novel_arm 
+#             cell_mask = sess.fam_place_cell_mask()
+#             rzone_front = np.argwhere((sess.rzone_fam['tfront'] <= bin_edges[1:]) * \
+#                                       (sess.rzone_fam['tfront'] >= bin_edges[:-1]))[0][0]
 
-        else:
-            trial_mask = sess.trial_info['LR'] == sess.novel_arm & downsample_mask
-            cell_mask = sess.nov_place_cell_mask()
-            rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
-                                      (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
+#         else:
+#             trial_mask = sess.trial_info['LR'] == sess.novel_arm & downsample_mask
+#             cell_mask = sess.nov_place_cell_mask()
+#             rzone_front = np.argwhere((sess.rzone_nov['tfront'] <= bin_edges[1:]) * \
+#                                       (sess.rzone_nov['tfront'] >= bin_edges[:-1]))[0][0]
 
-        # smooth ratemap by 1 bin
-        ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
+#         # smooth ratemap by 1 bin
+#         ratemap = sp.ndimage.gaussian_filter1d(np.nanmean(trials_mat[trial_mask, :, :], axis=0), 1, axis=0)
 
-        return np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
-    def perireward_hist(self):
-        '''
+#         return np.argmax(ratemap[:, cell_mask], axis=0) - rzone_front
+#     def perireward_hist(self):
+#         '''
 
-        :param ko_frac:
-        :param ctrl_frac:
-        :param sigma:
-        :return:
-        '''
+#         :param ko_frac:
+#         :param ctrl_frac:
+#         :param sigma:
+#         :return:
+#         '''
 
-        fig, ax = plt.subplots(1, self.n_days, figsize=[self.n_days * 5, 5], sharey=True)
+#         fig, ax = plt.subplots(1, self.n_days, figsize=[self.n_days * 5, 5], sharey=True)
 
-        x = np.arange(-30, 15)
-        anova_mask = (x > -5) * (x <= -1)
-        plot_mask = (x >= -10) * (x <= 1)
+#         x = np.arange(-30, 15)
+#         anova_mask = (x > -5) * (x <= -1)
+#         plot_mask = (x >= -10) * (x <= 1)
         
-        def get_hist(frac, chan = None):
-            '''
+#         def get_hist(frac, chan = None):
+#             '''
 
-            :param frac:
-            :return:
-            '''
-            plot_array = np.zeros([len(frac.keys()), self.n_days, int(plot_mask.sum())])
-            sums = np.zeros([len(frac.keys()), self.n_days])
-            for m, (mouse, data_list) in enumerate(frac.items()):
-                for col, data in enumerate(data_list):
+#             :param frac:
+#             :return:
+#             '''
+#             plot_array = np.zeros([len(frac.keys()), self.n_days, int(plot_mask.sum())])
+#             sums = np.zeros([len(frac.keys()), self.n_days])
+#             for m, (mouse, data_list) in enumerate(frac.items()):
+#                 for col, data in enumerate(data_list):
 
-                    data_arr = data.get(chan, None)
+#                     data_arr = data.get(chan, None)
 
-                    if data_arr is None or len(data_arr) <=1:
-                        continue
+#                     if data_arr is None or len(data_arr) <=1:
+#                         continue
                         
-                    hist = np.array([np.count_nonzero(data_arr.ravel() == _bin) for _bin in x.tolist()])
-                    if hist.sum() == 0:
-                        continue
+#                     hist = np.array([np.count_nonzero(data_arr.ravel() == _bin) for _bin in x.tolist()])
+#                     if hist.sum() == 0:
+#                         continue
                     
-                    hist_sm = sp.ndimage.filters.gaussian_filter1d(hist, 1)
-                    hist = hist / hist.sum()
-                    hist_sm = hist_sm / hist_sm.sum()
+#                     hist_sm = sp.ndimage.filters.gaussian_filter1d(hist, 1)
+#                     hist = hist / hist.sum()
+#                     hist_sm = hist_sm / hist_sm.sum()
 
                         
 
-                    # TO-DO check if denominator needs to be changed here
-                    # sums[m, col] = hist[anova_mask].sum() / hist[~anova_mask].sum()
-                    sums[m, col] = hist[anova_mask].sum() / hist.sum()
+#                     # TO-DO check if denominator needs to be changed here
+#                     # sums[m, col] = hist[anova_mask].sum() / hist[~anova_mask].sum()
+#                     sums[m, col] = hist[anova_mask].sum() / hist.sum()
                     
-                    plot_array[m, col, :] = hist_sm[plot_mask]
-            return sums, plot_array
+#                     plot_array[m, col, :] = hist_sm[plot_mask]
+#             return sums, plot_array
 
-        self.sparse_chan0_sums, self.sparse_chan0_plot_array = get_hist(self.sparse_frac, chan = 'channel_0')
-        self.sparse_chan1_sums, self.sparse_chan1_plot_array = get_hist(self.sparse_frac, chan = 'channel_1')
+#         self.sparse_chan0_sums, self.sparse_chan0_plot_array = get_hist(self.sparse_frac, chan = 'channel_0')
+#         self.sparse_chan1_sums, self.sparse_chan1_plot_array = get_hist(self.sparse_frac, chan = 'channel_1')
         
-        # self.ko_sums, self.ko_plot_array = get_hist(self.ko_frac)
-        # self.ctrl_sums, self.ctrl_plot_array = get_hist(self.ctrl_frac)
+#         # self.ko_sums, self.ko_plot_array = get_hist(self.ko_frac)
+#         # self.ctrl_sums, self.ctrl_plot_array = get_hist(self.ctrl_frac)
 
-        for day in range(self.n_days):
-            # ax[0, day].plot(x[plot_mask], self.ko_plot_array[:, day, :].T, color='red')
-            ko_mu, ko_sem = self.sparse_chan0_plot_array[:, day, :].mean(axis=0), sp.stats.sem(self.sparse_chan0_plot_array[:, day, :])
-            ax[day].fill_between(x[plot_mask], ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
+#         for day in range(self.n_days):
+#             # ax[0, day].plot(x[plot_mask], self.ko_plot_array[:, day, :].T, color='red')
+#             ko_mu, ko_sem = self.sparse_chan0_plot_array[:, day, :].mean(axis=0), sp.stats.sem(self.sparse_chan0_plot_array[:, day, :])
+#             ax[day].fill_between(x[plot_mask], ko_mu - ko_sem, ko_mu + ko_sem, color='red', alpha=.3)
 
-            # ax[0, day].plot(x[plot_mask], self.ctrl_plot_array[:, day, :].T, color='black')
-            ctrl_mu, ctrl_sem = self.sparse_chan1_plot_array[:, day, :].mean(axis=0), sp.stats.sem(
-                self.sparse_chan1_plot_array[:, day, :])
-            ax[day].fill_between(x[plot_mask], ctrl_mu - ctrl_sem, ctrl_mu + ctrl_sem, color='black', alpha=.3)
-            ax[day].plot(x, 1/30.*(0*x + 1.), 'k--', zorder = -10)
-            # for row in range(2):
+#             # ax[0, day].plot(x[plot_mask], self.ctrl_plot_array[:, day, :].T, color='black')
+#             ctrl_mu, ctrl_sem = self.sparse_chan1_plot_array[:, day, :].mean(axis=0), sp.stats.sem(
+#                 self.sparse_chan1_plot_array[:, day, :])
+#             ax[day].fill_between(x[plot_mask], ctrl_mu - ctrl_sem, ctrl_mu + ctrl_sem, color='black', alpha=.3)
+#             ax[day].plot(x, 1/30.*(0*x + 1.), 'k--', zorder = -10)
+#             # for row in range(2):
                 
-            ax[day].set_xlim([-10, 1])
+#             ax[day].set_xlim([-10, 1])
 
-            ax[day].spines['top'].set_visible(False)
-            ax[day].spines['right'].set_visible(False)
+#             ax[day].spines['top'].set_visible(False)
+#             ax[day].spines['right'].set_visible(False)
 
-            ax[day].set_title("Day %d" % (day + 1))
-            ax[day].set_xlabel("Distance from reward")
-        ax[0].set_ylabel('% of cells')
+#             ax[day].set_title("Day %d" % (day + 1))
+#             ax[day].set_xlabel("Distance from reward")
+#         ax[0].set_ylabel('% of cells')
 
-        fig.subplots_adjust(hspace=.5)
+#         fig.subplots_adjust(hspace=.5)
 
-        return fig, ax
+#         return fig, ax
 
-    def mixed_anova(self, verbose=True, group_tukey=True, day_tukey=True):
-        '''
+#     def mixed_anova(self, verbose=True, group_tukey=True, day_tukey=True):
+#         '''
 
-        :param verbose:
-        :param group_tukey:
-        :param day_tukey:
-        :return:
-        '''
+#         :param verbose:
+#         :param group_tukey:
+#         :param day_tukey:
+#         :return:
+#         '''
 
-        df = {'ko_ctrl': [],
-              'day': [],
-              'frac': [],
-              'mouse': []}
+#         df = {'ko_ctrl': [],
+#               'day': [],
+#               'frac': [],
+#               'mouse': []}
 
-        for mouse in range(len(self.ko_mice)):
-            for day in self.days:
-                df['ko_ctrl'].append(0)
-                df['day'].append(day)
-                df['frac'].append(self.ko_sums[mouse, day])
-                df['mouse'].append(mouse)
+#         for mouse in range(len(self.ko_mice)):
+#             for day in self.days:
+#                 df['ko_ctrl'].append(0)
+#                 df['day'].append(day)
+#                 df['frac'].append(self.ko_sums[mouse, day])
+#                 df['mouse'].append(mouse)
 
-        for mouse in range(len(self.ctrl_mice)):
-            for day in self.days:
-                df['ko_ctrl'].append(1)
-                df['day'].append(day)
-                df['frac'].append(self.ctrl_sums[mouse, day])
-                df['mouse'].append(mouse )
+#         for mouse in range(len(self.ctrl_mice)):
+#             for day in self.days:
+#                 df['ko_ctrl'].append(1)
+#                 df['day'].append(day)
+#                 df['frac'].append(self.ctrl_sums[mouse, day])
+#                 df['mouse'].append(mouse )
 
-        df = pd.DataFrame(df)
-        results = {}
-        aov = mixed_anova(data=df, dv='frac', between='ko_ctrl', within='day', subject='mouse')
-        results['anova'] = aov
-        if verbose:
-            print('Mixed design ANOVA results')
-            print(aov)
+#         df = pd.DataFrame(df)
+#         results = {}
+#         aov = mixed_anova(data=df, dv='frac', between='ko_ctrl', within='day', subject='mouse')
+#         results['anova'] = aov
+#         if verbose:
+#             print('Mixed design ANOVA results')
+#             print(aov)
 
        
 
-        return results
+#         return results
 
 
 class PeriRewardPlaceCellActivity:
@@ -730,7 +811,7 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = -
         '''
         l_rm_train, l_rm_test, r_rm_train, r_rm_test = [], [], [], []
         for mouse in mice:
-            sess = u.load_single_day(mouse, day)
+            sess = u.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls')
             if 'left' in sess.place_cell_info.keys():
                 l_cellmask = sess.place_cell_info['left']['masks']
                 r_cellmask= sess.place_cell_info['left']['masks']
@@ -816,7 +897,7 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'spks', vm
         '''
         l_rm_train, l_rm_test, r_rm_train, r_rm_test = [], [], [], []
         for mouse in mice:
-            sess = u.load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls')
+            sess = u_es.load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls')
             key = chan + '_' + ts_key
             if 'left' in sess.place_cell_info[key].keys():
                 l_cellmask = sess.place_cell_info[key]['left']['masks']
@@ -831,10 +912,12 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'spks', vm
             r_trialmask = sess.trial_info['LR'] == 1
 
             l_trialmat = trial_mat[l_trialmask, :, :]
-            l_trialmat = l_trialmat[:, :, l_cellmask]
+            # l_trialmat = l_trialmat[:, :, l_cellmask]
+          
 
             r_trialmat = trial_mat[r_trialmask, :, :]
-            r_trialmat = r_trialmat[:, :, r_cellmask]
+            # r_trialmat = r_trialmat[:, :, r_cellmask]
+
 
             l_rm_train.append(np.nanmean(l_trialmat[::2, :, :], axis=0))
             l_rm_test.append(np.nanmean(l_trialmat[1::2, :, :], axis=0))

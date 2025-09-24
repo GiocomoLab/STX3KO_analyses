@@ -2,8 +2,43 @@ import os
 
 import dill
 import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib.gridspec import GridSpec as gridspec
 
 from . import session, ymaze_sess_deets
+
+def plot_cells(trial_mat, cell_inds=None, n_cols=20):
+    '''
+
+    :param ca1:
+    :param cell_inds: indices of cells to plot
+    :param save_figs:
+    :return:
+    '''
+
+    if cell_inds is None:
+        cell_inds = np.arange(trial_mat.shape[-1])
+
+    n_rows = int(np.ceil(cell_inds.shape[0] / n_cols))
+    fig = plt.figure(figsize=[30, 3 * n_rows])
+    gs = gridspec(n_rows, n_cols)
+    for cell in cell_inds:
+        col = cell % n_cols
+        row = int(cell / n_cols)
+        ax = fig.add_subplot(gs[row, col])
+        h = ax.imshow(trial_mat[:, :, cell], cmap="magma")
+
+        if col == 0:
+            ax.set_xlabel('pos')
+            ax.set_ylabel('trial #')
+            if row==0:
+                plt.colorbar(h,ax=ax)
+        else:
+            ax.set_xticks([])
+            ax.set_yticks([])
+    fig.subplots_adjust(hspace=.3)
+    return fig
+
 
 def loop_func_over_mice(func, mice):
     return {mouse: func(mouse) for mouse in mice}
@@ -136,6 +171,8 @@ def load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls/',verbos
         deets = ymaze_sess_deets.KO_sessions[mouse][day]
     elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
         deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
+    elif mouse in ymaze_sess_deets.sparse_mice:
+        deets = ymaze_sess_deets.SparseKO_sessions[mouse][day]
     else:
         raise Exception("invalid mouse name")
 

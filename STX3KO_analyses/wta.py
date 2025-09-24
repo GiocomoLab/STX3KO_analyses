@@ -8,7 +8,7 @@ import TwoPUtils as tpu
 
 class KWTA():
 
-    def __init__(self, n_pos=30, w_max=100, n_ca3=1000, n_ca1=1000, n_winners=100,
+    def __init__(self, n_pos=30, w_max=100,w_min=0, n_ca3=1000, n_ca1=1000, n_winners=100,
                  eta=1E-4, tau=1E-5, eta_ctrl=None, max_pos=10, ca3_sigma_mag=.08,
                  weight_dist='lognormal', w_sigma_mag=1E-3, w_norm_decay=1E-3, ca1_noise=1, ca3_width = .5):
         '''
@@ -39,6 +39,7 @@ class KWTA():
         self.pos = np.linspace(0, 10, num=n_pos)[np.newaxis, :]  # position on track
         self.max_pos = max_pos
         self.w_max = w_max
+        self.w_min = w_min
         self.n_ca3 = n_ca3
         self.n_ca1 = n_ca1
         self.n_winners = n_winners
@@ -103,7 +104,7 @@ class KWTA():
         # decay weights by norm
         self.w -= self.w_norm_decay * np.linalg.norm(self.w, axis=-1, keepdims=True)
         # bound weights
-        self.w = np.minimum(np.maximum(self.w, 0), self.w_max)
+        self.w = np.minimum(np.maximum(self.w, self.w_min), self.w_max)
         return ca1.T
 
     # def oja(self):

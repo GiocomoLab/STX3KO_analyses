@@ -54,9 +54,10 @@ def run_dense_mice():
                 shuff_results[mouse][day] = {}
 
                 sess = u_es.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls')
+                spks = sess.timeseries['spks']
                 ##
-                spks = sess.timeseries['F_dff']-.2
-                spks[spks<0]=0
+                # spks = sess.timeseries['F_dff']-.2
+                # spks[spks<0]=0
                 ##
                 trial_starts, teleports = sess.trial_start_inds, sess.teleport_inds
                 t = sess.timeseries['t'].ravel()
@@ -70,7 +71,7 @@ def run_dense_mice():
                 shuff_results[mouse][day]['fam']=fam_shuff_thresh
                 shuff_results[mouse][day]['nov']=nov_shuff_thresh
 
-    with open('/home/mplitt/shuffle_pkls/place_field_shuff_results_F_dff.pkl','wb') as file:
+    with open('/home/mplitt/shuffle_pkls/place_field_shuff_results_spks.pkl','wb') as file:
             pickle.dump(shuff_results,file)
             
 def run_sparse_mice():
@@ -106,8 +107,8 @@ def run_sparse_mice():
             
                 shuff_trial_mat = np.array(joblib.Parallel(n_jobs=-1)(joblib.delayed(run_shuffle)(spks, trial_starts, teleports, t, lr, novel_arm, rng) for i in range(1000)))
                 print(shuff_trial_mat.shape)
-                fam_shuff_thresh = np.nanpercentile(shuff_trial_mat[:, 1, :, :], 95, axis=0)
-                nov_shuff_thresh = np.nanpercentile(shuff_trial_mat[:, 0, :, :], 95, axis=0)
+                fam_shuff_thresh = np.nanpercentile(shuff_trial_mat[:, 1, :, :], 99, axis=0)
+                nov_shuff_thresh = np.nanpercentile(shuff_trial_mat[:, 0, :, :], 99, axis=0)
                 shuff_results[mouse][day][chan]['fam']=fam_shuff_thresh
                 shuff_results[mouse][day][chan]['nov']=nov_shuff_thresh
             
@@ -116,5 +117,5 @@ def run_sparse_mice():
             pickle.dump(shuff_results,file)
 
 if __name__ == "__main__":
-    run_dense_mice()
+    # run_dense_mice()
     run_sparse_mice()
