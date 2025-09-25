@@ -86,6 +86,76 @@ class PeriRewardCellFrac_Dense:
 
 
 
+class PeriRewardCellFrac_Sparse:
+
+    def __init__(self, mice, days, ts_key='F_dff', place_cell_only=True):
+        '''
+        mouse_dict : e.g. {'ctrl': ctrl_mice, 'ko':ko_mice}
+        '''
+
+        self.mice = mice
+        self.days = days
+
+        self.df = None
+        self.ttypes = ('fam', 'nov')
+        self.place_cell_only = place_cell_only
+        self.fill_df(ts_key)
+        
+
+
+    def fill_df(self, ts_key):
+        df = {
+            'mouse':[],
+            'chan': [],
+            'day': [],
+            'ttype': [],
+            'lr': [],
+            'frac': []
+        }
+
+        
+        for mouse in self.mice:
+            for day in self.days:
+
+                if (mouse == 'SparseKO_09') and (day==2):
+                    continue
+                for ttype in self.ttypes:
+                    
+                    sess = u_es.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls')
+                    for chan in ('channel_0','channel_1'):
+                        if ttype == 'fam':
+                            trial_mask = sess.trial_info['LR']!=sess.novel_arm
+                            lr = -1*sess.novel_arm
+                            cell_mask = sess.fam_place_cell_mask(mux=True, chan=chan)
+                        else:
+                            trial_mask = sess.trial_info['LR']==sess.novel_arm
+                            lr = sess.novel_arm
+                            cell_mask = sess.nov_place_cell_mask(mux=True, chan=chan)
+
+
+                        first_bin = sess.trial_matrices['bin_centers'][0]
+                        if lr == -1:
+                            antic_zone = (sess.rzone_early['tfront']-5, sess.rzone_early['tfront']-1)
+                        else:
+                            antic_zone = (sess.rzone_late['tfront']-5, sess.rzone_late['tfront']-1)
+                        antic_zone = [a-first_bin for a in antic_zone]
+
+                        avg_mat = np.nanmean(sess.trial_matrices[f'{chan}_{ts_key}'][trial_mask,:,:],axis=0)
+                        if self.place_cell_only:
+                            avg_mat = avg_mat[:, cell_mask]
+                        argmax = np.nanargmax(avg_mat,axis=0)
+
+                        reward_cells = (argmax>=antic_zone[0]) * (argmax<=antic_zone[1])
+                        reward_frac = reward_cells.sum().astype(float)/float(reward_cells.shape[0])
+
+                        
+                        df['mouse'].append(mouse)
+                        df['day'].append(day)
+                        df['ttype'].append(ttype)
+                        df['lr'].append(lr)
+                        df['frac'].append(reward_frac)
+                        df['chan'].append(chan)
+        self.df = pd.DataFrame.from_dict(df)
 
 
 

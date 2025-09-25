@@ -41,7 +41,7 @@ def get_field_stats(field_mask):
     
     
 
-def field_masks(mouse,day,tskey, n_perms = 1000, pcnt = 95 ):
+def field_masks(mouse,day,tskey, n_perms = 1000, pcnt = 99 ):
     
     sess = u_es.load_single_day(mouse,day, pkl_basedir='/home/mplitt/YMazeSessPkls')
     
@@ -109,6 +109,6 @@ def run_sparse_mice():
 
 if __name__ == "__main__":
 
-    # run_dense_mice()
+    run_dense_mice()
     run_sparse_mice()
         
