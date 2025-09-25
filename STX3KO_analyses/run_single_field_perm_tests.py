@@ -54,7 +54,7 @@ def run_dense_mice():
                 shuff_results[mouse][day] = {}
 
                 sess = u_es.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls')
-                spks = sess.timeseries['spks']
+                spks = sess.timeseries['F_dff']
                 ##
                 # spks = sess.timeseries['F_dff']-.2
                 # spks[spks<0]=0

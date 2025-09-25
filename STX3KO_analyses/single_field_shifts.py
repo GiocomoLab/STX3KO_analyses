@@ -31,7 +31,7 @@ def get_field_shifts(trial_mat,  fields_dict, ttype):
            
         
 
-        if (width>3) and (width<25):
+        if (width>3) and (width<25) and rising_edge[1]>0 and falling_edge[1]<29:
 
             cell = rising_edge[0]
             tmat = trial_mat[:,:,cell]
@@ -42,7 +42,7 @@ def get_field_shifts(trial_mat,  fields_dict, ttype):
             # fieldmat -= np.amin(fieldmat)
             
             # greater than 20% of max
-            fieldmat_th = 1.*((fieldmat>=.25*np.nanmax(fieldmat)).sum(axis=1)>0)
+            fieldmat_th = 1.*((fieldmat>=.2*np.nanmax(fieldmat)).sum(axis=1)>0)
             # fieldmat_th = 1.*((fieldmat>=.2).sum(axis=1)>0)
 
             # cross threshold and active for 3 of 5 laps
@@ -56,7 +56,7 @@ def get_field_shifts(trial_mat,  fields_dict, ttype):
                 if formation_lap<(fieldmat.shape[0]-4):
 
                     # active on 20% of trials after formation lap
-                    activity_bool = fieldmat_th[formation_lap:].mean()>.25
+                    activity_bool = fieldmat_th[formation_lap:].mean()>.6
 
                     # if activity_bool
                     if activity_bool:
@@ -65,7 +65,7 @@ def get_field_shifts(trial_mat,  fields_dict, ttype):
                         argmax = np.array([sp.ndimage.center_of_mass(fieldmat[l,:]) for l in range(formation_lap,fieldmat.shape[0])]).ravel()
                         # mu_max = np.argmax(fieldmat[formation_lap+1:,:].mean(axis=0))
                         # mu_max = sp.ndimage.center_of_mass(fieldmat[formation_lap+1:,:].mean(axis=0))
-                        shift.append(argmax-argmax[1:].mean())
+                        shift.append(argmax-argmax[1:5].mean())
                         # shift.append(argmax-mu_max)
                         ind.append(i)
                         formation_laps.append(formation_lap)

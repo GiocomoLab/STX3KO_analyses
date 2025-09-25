@@ -360,7 +360,7 @@ class YMazeSession(TwoPUtils.sess.Session):
                                 + Fneu_coef * np.nanmin(self.timeseries[Fneukey][:, curr_idx], axis=1, keepdims=True)
 
             Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
-            dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx])
+            dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx], **dff_kwargs)
             spks[:, curr_idx] = dcnv.oasis(dff[:, curr_idx], 2000, tau, self.scan_info['frame_rate'])
             
         # Add processed data back to time series while preserving NaNs
@@ -370,12 +370,13 @@ class YMazeSession(TwoPUtils.sess.Session):
         self.add_pos_binned_trial_matrix(spks_key)
 
     
-    def neuropil_corrected_dff_mux(self, Fkey_='F', Fneukey_='Fneu', spks_key_=None, Fneu_coef=.7, tau=None, key_out=None, channels=None, **dff_kwargs):
+    def neuropil_corrected_dff_mux(self, Fkey_='F', Fneukey_='Fneu', spks_key_='spks', Fneu_coef=.7, tau=None, key_out=None, channels=None, **dff_kwargs):
         """
         Neuropil-corrected dF/F calculation for multi-chan muxed data.
         """
 
         for chan in channels:
+            print(chan)
             Fkey = chan + '_' + Fkey_
             Fneukey = chan + '_' + Fneukey_
             tau = self.s2p_ops[chan]['tau']
@@ -401,8 +402,8 @@ class YMazeSession(TwoPUtils.sess.Session):
                 Freg[:, curr_idx] = self.timeseries[Fkey][:, curr_idx] - Fneu_coef * self.timeseries[Fneukey][:, curr_idx] \
                                     + Fneu_coef * np.nanmin(self.timeseries[Fneukey][:, curr_idx], axis=1, keepdims=True)
     
-                Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
-                dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx])
+                # Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
+                dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx], **dff_kwargs)
                 spks[:, curr_idx] = dcnv.oasis(dff[:, curr_idx], 2000, tau, self.scan_info['frame_rate'])
                 
             self.add_timeseries_mux(**{key_out: dff, spks_key: spks})

@@ -43,7 +43,7 @@ def get_field_stats(field_mask):
 
 def field_masks(mouse,day,tskey, n_perms = 1000, pcnt = 99 ):
     
-    sess = u_es.load_single_day(mouse,day, pkl_basedir='/home/mplitt/YMazeSessPkls')
+    sess = u.load_single_day(mouse,day, pkl_basedir='/home/mplitt/YMazeSessPkls')
     
     def _run_fields(nov):
         if nov:
@@ -81,10 +81,10 @@ def run_dense_mice():
         print(mouse)
         
         days = np.arange(6)
-        results_list = joblib.Parallel(n_jobs=int(days.shape[0]))(joblib.delayed(field_masks)(mouse, day, 'F_dff') for day in days)
+        results_list = joblib.Parallel(n_jobs=int(days.shape[0]))(joblib.delayed(field_masks)(mouse, day, 'spks_th') for day in days)
         shuffle_results[mouse] = dict(zip(days,results_list))
 
-    with open('/home/mplitt/shuffle_pkls/dense_place_field_spatial_shuffle_F_dff.pkl','wb') as file:
+    with open('/home/mplitt/shuffle_pkls/dense_place_field_spatial_shuffle_spks_th.pkl','wb') as file:
         pickle.dump(shuffle_results, file)
 
 def run_sparse_mice():
@@ -100,7 +100,7 @@ def run_sparse_mice():
         shuffle_results[mouse] = {}
 
         for chan in ('channel_0', 'channel_1'):
-            tskey = f'{chan}_F_dff'
+            tskey = f'{chan}_spks'
             results_list = joblib.Parallel(n_jobs=int(days.shape[0]))(joblib.delayed(field_masks)(mouse, day, tskey) for day in days)
             shuffle_results[mouse][chan] = dict(zip([int(d) for d in days],results_list))
 
@@ -109,6 +109,6 @@ def run_sparse_mice():
 
 if __name__ == "__main__":
 
-    # run_dense_mice()
-    run_sparse_mice()
+    run_dense_mice()
+    # run_sparse_mice()
         

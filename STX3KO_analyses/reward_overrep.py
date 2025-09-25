@@ -84,7 +84,7 @@ class PeriRewardCellFrac_Dense:
                         df['frac'].append(reward_frac)
         self.df = pd.DataFrame.from_dict(df)
 
-
+ 
 
 class PeriRewardCellFrac_Sparse:
 
