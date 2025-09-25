@@ -26,7 +26,7 @@ def plot_cells(trial_mat, cell_inds=None, n_cols=20):
         col = cell % n_cols
         row = int(cell / n_cols)
         ax = fig.add_subplot(gs[row, col])
-        h = ax.imshow(trial_mat[:, :, cell], cmap="magma")
+        h = ax.imshow(trial_mat[:, :, cell], cmap="magma",aspect='auto')
 
         if col == 0:
             ax.set_xlabel('pos')

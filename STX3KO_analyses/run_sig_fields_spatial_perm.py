@@ -109,6 +109,6 @@ def run_sparse_mice():
 
 if __name__ == "__main__":
 
-    run_dense_mice()
+    # run_dense_mice()
     run_sparse_mice()
         
