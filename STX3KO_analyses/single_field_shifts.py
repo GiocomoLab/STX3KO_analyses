@@ -19,31 +19,33 @@ def shifts_to_matrix(shifts, max_trial):
         argmax_mat[i,:last_ind] = shift[:max_trial]
     return argmax_mat
 
-def get_field_shifts(trial_mat,  fields_dict, ttype):
+def get_field_shifts(trial_mat,  fields_dict, speed_mat):
 
-    shift, ind, formation_laps = [], [], []
+    shift, ind, formation_laps, speeds, widths = [], [], [], [],[]
     for i, (rising_edge, falling_edge, width) in enumerate(zip(fields_dict['rising_edges'],
                                                         fields_dict['falling_edges'],
                                                      fields_dict['field_widths'])):
         
-        if ttype =='novel' and falling_edge[1]<10:
-            continue
+        # if ttype =='novel' and rising_edge[1]<10:
+        #     continue
            
         
 
-        if (width>3) and (width<25) and rising_edge[1]>0 and falling_edge[1]<29:
+        if (width>5) and (width<25): # and rising_edge[1]>0:
 
             cell = rising_edge[0]
             tmat = trial_mat[:,:,cell]
             
+            
             tmat[np.isnan(tmat)]=1E-3
         
-            fieldmat = tmat[:,rising_edge[1]:falling_edge[1]]
-            # fieldmat -= np.amin(fieldmat)
+            fieldmat = tmat[:,rising_edge[1]:falling_edge[1]] 
+            fieldspeed = speed_mat[:, rising_edge[1]:falling_edge[1]]
+        
             
             # greater than 20% of max
             fieldmat_th = 1.*((fieldmat>=.2*np.nanmax(fieldmat)).sum(axis=1)>0)
-            # fieldmat_th = 1.*((fieldmat>=.2).sum(axis=1)>0)
+            # fieldmat_th = 1.*((fieldmat>=0).sum(axis=1)>0)
 
             # cross threshold and active for 3 of 5 laps
             formation_lapvec = fieldmat_th[:-4] * (sp.signal.convolve(fieldmat_th,np.ones([5,]), mode= 'valid')>=3)
@@ -53,21 +55,27 @@ def get_field_shifts(trial_mat,  fields_dict, ttype):
             
             if num_nonzero>0:
                 formation_lap = formation_lap_inds[0]
-                if formation_lap<(fieldmat.shape[0]-4):
+                if formation_lap<(fieldmat.shape[0]-4): # and formation_lap>0:
 
                     # active on 20% of trials after formation lap
-                    activity_bool = fieldmat_th[formation_lap:].mean()>.6
+                    activity_bool = fieldmat_th[formation_lap:].mean()>.2
 
                     # if activity_bool
                     if activity_bool:
-                    
-                        # argmax = np.argmax(fieldmat[formation_lap:,:],axis=1)
-                        argmax = np.array([sp.ndimage.center_of_mass(fieldmat[l,:]) for l in range(formation_lap,fieldmat.shape[0])]).ravel()
+                        
+                        sub_fieldmat = fieldmat[formation_lap:,:]
+                        speeds.append(np.nanmean(fieldspeed[formation_lap:,:],axis=-1))
+                        argmax = np.argmax(sub_fieldmat,axis=1)
+
+                        # argmax =  ((sub_fieldmat*np.arange(sub_fieldmat.shape[1])[np.newaxis,:]).sum(axis=1)+1E-5)/(sub_fieldmat.sum(axis=1)+1E-5)
+                        # argmax = np.array([sp.ndimage.center_of_mass(fieldmat[l,:]) for l in range(formation_lap,fieldmat.shape[0])]).ravel()
                         # mu_max = np.argmax(fieldmat[formation_lap+1:,:].mean(axis=0))
                         # mu_max = sp.ndimage.center_of_mass(fieldmat[formation_lap+1:,:].mean(axis=0))
-                        shift.append(argmax-argmax[1:5].mean())
+                        shift.append(argmax-argmax.mean())
                         # shift.append(argmax-mu_max)
                         ind.append(i)
                         formation_laps.append(formation_lap)
-    return shift, ind, formation_laps
+                        widths.append(width)
+    # print(widths)
+    return shift, ind, formation_laps, speeds, widths
 

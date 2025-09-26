@@ -28,7 +28,7 @@ ctrl_mice = stx.ymaze_sess_deets.ctrl_mice
 
 class HSE:
     
-    def __init__(self, sess):
+    def __init__(self, sess, tskey='F_dff'):
         
         if isinstance(sess.scan_info,list):
             self.frame_rate = sess.scan_info[0]['frame_rate']
@@ -38,8 +38,8 @@ class HSE:
         
         
         
-        self.spks = sess.timeseries['F_dff']
-        self.trial_mat = sess.trial_matrices['F_dff']
+        self.spks = sess.timeseries[tskey]
+        self.trial_mat = sess.trial_matrices[tskey]
         self.speed = sess.timeseries['speed']
         self.lr = sess.timeseries['LR'].ravel()
         self.t = sess.timeseries['t'].ravel()
@@ -59,7 +59,7 @@ class HSE:
         
         
         # threshold spks timeseries to get "significant" transients
-        self.thresh_spks = .2*np.nanmax(sess.timeseries['F_dff'], axis=-1, keepdims=True)
+        self.thresh_spks = .2#*np.nanmax(sess.timeseries[tskey], axis=-1, keepdims=True)
         self.spks_th = 1.*np.copy(self.spks)
         # self.spks_th[(self.spks<self.thresh_spks)]=0
         self.spks_th[(self.spks<.2)]=0
@@ -201,7 +201,8 @@ class HSE:
 
 if __name__ == '__main__':
     # hse_dict = {}
-    basedir = '/home/mplitt/YMazeReplayPkls/'
+    tskey='F_dff'
+    basedir = f'/home/mplitt/YMazeReplayPkls_{tskey}/'
     os.makedirs(basedir, exist_ok=True)
     for cond_key, mice in zip(('ctrl', 'cre'),(ctrl_mice, ko_mice)):
         # hse_dict[cond_key] = {}
@@ -211,7 +212,7 @@ if __name__ == '__main__':
                 print(mouse,day)
                 filename = basedir + f'{mouse}_day{day}.pkl'
                 if True: #not os.path.exists(filename):
-                    hse = HSE(u.load_single_day(mouse,day,verbose=False))
+                    hse = HSE(u.load_single_day(mouse,day,verbose=False),tskey=tskey)
 
                     with open(filename, 'wb') as file:
                         pickle.dump(hse,file)

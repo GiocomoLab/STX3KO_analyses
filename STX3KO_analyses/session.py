@@ -402,8 +402,10 @@ class YMazeSession(TwoPUtils.sess.Session):
                 Freg[:, curr_idx] = self.timeseries[Fkey][:, curr_idx] - Fneu_coef * self.timeseries[Fneukey][:, curr_idx] \
                                     + Fneu_coef * np.nanmin(self.timeseries[Fneukey][:, curr_idx], axis=1, keepdims=True)
     
-                # Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
+                Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
                 dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx], **dff_kwargs)
+
+               
                 spks[:, curr_idx] = dcnv.oasis(dff[:, curr_idx], 2000, tau, self.scan_info['frame_rate'])
                 
             self.add_timeseries_mux(**{key_out: dff, spks_key: spks})

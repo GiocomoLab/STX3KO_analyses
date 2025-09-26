@@ -1,6 +1,7 @@
 import numpy as np
 import joblib
 import pickle
+import scipy as sp
 
 
 import pandas as pd
@@ -33,15 +34,57 @@ def get_field_stats(field_mask):
     
 
     
-    num_fields = np.bincount(rising_edges[:,0])
+    # num_fields = np.bincount(rising_edges[:,0])
     
 
     
-    return rising_edges, falling_edges, field_widths, num_fields
+    return rising_edges, falling_edges, field_widths#, num_fields
     
-    
+def filter_fields(fields_dict, trial_mat):
+        
+      
+        field_dict_filt = {'field_mask': fields_dict['field_mask'],
+                           'rising_edges': [],
+                           'falling_edges': [],
+                           'field_widths': [],
+                           'formation_laps': []}
+        for i, (rising_edge, falling_edge, width) in enumerate(zip(fields_dict['rising_edges'],
+                                                    fields_dict['falling_edges'],
+                                                     fields_dict['field_widths'])):
+            if width>1 and width<20:
 
-def field_masks(mouse,day,tskey, n_perms = 1000, pcnt = 99 ):
+                cell = rising_edge[0]
+                print(cell)
+                tmat = trial_mat[:,:, cell]
+
+                fieldmat = tmat[:,rising_edge[1]:falling_edge[1]]
+                fieldmat_th = 1.*((fieldmat>=.1*np.nanmax(fieldmat)).sum(axis=1)>0)
+           
+                # cross threshold and active for 3 of 5 laps
+                formation_lapvec = fieldmat_th[:-4] * (sp.signal.convolve(fieldmat_th,np.ones([5,]), mode= 'valid')>=3)
+                formation_lap_inds = np.nonzero(formation_lapvec)[0]
+
+                num_nonzero = formation_lap_inds.shape[0]
+            
+                if num_nonzero>0:
+                    flap = formation_lap_inds[0]
+                    if flap<(fieldmat.shape[0]-4): # and formation_lap>0:
+
+                        # active on 50% of trials after formation lap
+                        activity_bool = fieldmat_th[flap:].mean()>.2
+
+                        # if activity_bool
+                        if activity_bool:
+                            field_dict_filt['rising_edges'].append(rising_edge)
+                            field_dict_filt['falling_edges'].append(falling_edge)
+                            field_dict_filt['field_widths'].append(width)
+                            field_dict_filt['formation_laps'].append(flap)
+                          
+
+            return field_dict_filt
+
+
+def field_masks(mouse,day,tskey, n_perms = 1000, pcnt = 95 ):
     
     sess = u.load_single_day(mouse,day, pkl_basedir='/home/mplitt/YMazeSessPkls')
     
@@ -50,8 +93,9 @@ def field_masks(mouse,day,tskey, n_perms = 1000, pcnt = 99 ):
             trial_mask = sess.trial_info['LR']==sess.novel_arm
         else:
             trial_mask = sess.trial_info['LR']== -1*sess.novel_arm
-        shuff_mat = np.zeros([1000, *sess.trial_matrices[tskey].shape[1:]])
+        shuff_mat = np.zeros([n_perms, *sess.trial_matrices[tskey].shape[1:]])
         trial_mat = sess.trial_matrices[tskey][trial_mask,:,:]
+        trial_mat[np.isnan(trial_mat)]=0
         n_trials = trial_mat.shape[0]
         
         shuffs = rng.integers(trial_mat.shape[1], size = [n_perms, trial_mat.shape[0]])
@@ -65,12 +109,15 @@ def field_masks(mouse,day,tskey, n_perms = 1000, pcnt = 99 ):
             
         thresh = np.nanpercentile(shuff_mat,pcnt, axis=0)
         field_mask = 1*(np.nanmean(trial_mat,axis=0)>thresh)
-        rising_edges, falling_edges, field_widths, num_fields = get_field_stats(field_mask)
+        rising_edges, falling_edges, field_widths = get_field_stats(field_mask)
         return {'field_mask': field_mask, 
                 'rising_edges': rising_edges, 
                 'falling_edges': falling_edges, 
                 'field_widths': field_widths,
-                'num_fields': num_fields}
+                }
+    
+    
+
     
     return {'fam': _run_fields(False), 'nov': _run_fields(True)}
 
@@ -81,10 +128,10 @@ def run_dense_mice():
         print(mouse)
         
         days = np.arange(6)
-        results_list = joblib.Parallel(n_jobs=int(days.shape[0]))(joblib.delayed(field_masks)(mouse, day, 'spks_th') for day in days)
+        results_list = joblib.Parallel(n_jobs=int(days.shape[0]))(joblib.delayed(field_masks)(mouse, day, 'F_dff') for day in days)
         shuffle_results[mouse] = dict(zip(days,results_list))
 
-    with open('/home/mplitt/shuffle_pkls/dense_place_field_spatial_shuffle_spks_th.pkl','wb') as file:
+    with open('/home/mplitt/shuffle_pkls/dense_place_field_spatial_shuffle_F_dff.pkl','wb') as file:
         pickle.dump(shuffle_results, file)
 
 def run_sparse_mice():
@@ -100,15 +147,15 @@ def run_sparse_mice():
         shuffle_results[mouse] = {}
 
         for chan in ('channel_0', 'channel_1'):
-            tskey = f'{chan}_spks'
+            tskey = f'{chan}_spks_th'
             results_list = joblib.Parallel(n_jobs=int(days.shape[0]))(joblib.delayed(field_masks)(mouse, day, tskey) for day in days)
             shuffle_results[mouse][chan] = dict(zip([int(d) for d in days],results_list))
 
-    with open('/home/mplitt/shuffle_pkls/sparse_place_field_spatial_shuffle_F_dff.pkl','wb') as file:
+    with open('/home/mplitt/shuffle_pkls/sparse_place_field_spatial_shuffle_spks_th.pkl','wb') as file:
         pickle.dump(shuffle_results, file)
 
 if __name__ == "__main__":
 
-    run_dense_mice()
-    # run_sparse_mice()
+    # run_dense_mice()
+    run_sparse_mice()
         
