@@ -1,27 +1,18 @@
 import os
 import math
-import dill
 from itertools import permutations
 
 import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
-from sklearn.linear_model import HuberRegressor as hubreg
 import pandas as pd
-import statsmodels.api as sm
-from statsmodels.formula.api import ols
-from pingouin import mixed_anova, anova, pairwise_tukey
-import pingouin as pg
-from statsmodels.regression.mixed_linear_model import MixedLM
-
-
-import suite2p as s2p
 
 import TwoPUtils as tpu
 import STX3KO_analyses as stx
 from STX3KO_analyses import utilities as u
 
+#TODO: change this to use np.corrcoef
 def calc_pv_corr(trials_mat, nanzero=True):
     
     trials_t = np.transpose(trials_mat,axes = (1,0,2)) # positions x trials x cells

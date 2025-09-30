@@ -97,7 +97,7 @@ def run_sparse_mice(tskey):
         
         for day in range(6):
             if mouse == 'SparseKO_09' and day ==2:
-             continue
+                continue
 
             shuff_results[mouse][day] = {}
             

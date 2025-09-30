@@ -28,7 +28,7 @@ ctrl_mice = stx.ymaze_sess_deets.ctrl_mice
 
 class HSE:
     
-    def __init__(self, sess, tskey='F_dff'):
+    def __init__(self, sess, tskey='F_dff_th'):
         
         if isinstance(sess.scan_info,list):
             self.frame_rate = sess.scan_info[0]['frame_rate']
@@ -39,7 +39,10 @@ class HSE:
         
         
         self.spks = sess.timeseries[tskey]
-        self.trial_mat = sess.trial_matrices[tskey]
+        if '_th' in tskey:
+            self.trial_mat = sess.trial_matrices[tskey[:-3]]
+        else:
+            self.trial_mat = sess.trial_matrices[tskey]
         self.speed = sess.timeseries['speed']
         self.lr = sess.timeseries['LR'].ravel()
         self.t = sess.timeseries['t'].ravel()
@@ -59,10 +62,13 @@ class HSE:
         
         
         # threshold spks timeseries to get "significant" transients
-        self.thresh_spks = .2#*np.nanmax(sess.timeseries[tskey], axis=-1, keepdims=True)
+        if '_th' in tskey:
+            self.thresh_spks = 0
+        else:
+            self.thresh_spks = .2#*np.nanmax(sess.timeseries[tskey], axis=-1, keepdims=True)
         self.spks_th = 1.*np.copy(self.spks)
-        # self.spks_th[(self.spks<self.thresh_spks)]=0
-        self.spks_th[(self.spks<.2)]=0
+        self.spks_th[(self.spks<self.thresh_spks)]=0
+        # self.spks_th[(self.spks<.2)]=0
         
         
         

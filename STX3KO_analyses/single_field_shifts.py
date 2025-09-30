@@ -19,15 +19,15 @@ def shifts_to_matrix(shifts, max_trial):
         argmax_mat[i,:last_ind] = shift[:max_trial]
     return argmax_mat
 
-def get_field_shifts(trial_mat,  fields_dict, speed_mat):
+def get_field_shifts(trial_mat,  fields_dict, speed_mat, ttype):
 
     shift, ind, formation_laps, speeds, widths = [], [], [], [],[]
     for i, (rising_edge, falling_edge, width) in enumerate(zip(fields_dict['rising_edges'],
                                                         fields_dict['falling_edges'],
                                                      fields_dict['field_widths'])):
         
-        # if ttype =='novel' and rising_edge[1]<10:
-        #     continue
+        if ttype =='novel' and rising_edge[1]<10:
+            continue
            
         
 
@@ -58,7 +58,7 @@ def get_field_shifts(trial_mat,  fields_dict, speed_mat):
                 if formation_lap<(fieldmat.shape[0]-4): # and formation_lap>0:
 
                     # active on 20% of trials after formation lap
-                    activity_bool = fieldmat_th[formation_lap:].mean()>.2
+                    activity_bool = fieldmat_th[formation_lap:].mean()>.5
 
                     # if activity_bool
                     if activity_bool:
@@ -71,7 +71,7 @@ def get_field_shifts(trial_mat,  fields_dict, speed_mat):
                         # argmax = np.array([sp.ndimage.center_of_mass(fieldmat[l,:]) for l in range(formation_lap,fieldmat.shape[0])]).ravel()
                         # mu_max = np.argmax(fieldmat[formation_lap+1:,:].mean(axis=0))
                         # mu_max = sp.ndimage.center_of_mass(fieldmat[formation_lap+1:,:].mean(axis=0))
-                        shift.append(argmax-argmax.mean())
+                        shift.append(argmax-argmax[1:].mean())
                         # shift.append(argmax-mu_max)
                         ind.append(i)
                         formation_laps.append(formation_lap)
