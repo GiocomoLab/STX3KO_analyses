@@ -1,7 +1,51 @@
 import numpy as np
 import scipy as sp
+from STX3KO_analyses import utilities as u
 
-from TwoPUtils.spatial_analyses import *
+# from TwoPUtils.spatial_analyses import *
+
+
+#TODO: change this to use np.corrcoef
+def calc_pv_corr(trial_mat, nanzero=True):
+    """
+    trial_mat: trials x positions x cells
+    """
+    if nanzero:
+        trial_mat[np.isnan(trial_mat)]=0
+
+    corr_mat = np.zeros((trial_mat.shape[0], trial_mat.shape[0], trial_mat.shape[1]))
+    for pos in range(trial_mat.shape[1]):
+        corr_mat[:, :, pos] = np.corrcoef(trial_mat[:,pos,:])
+
+    return corr_mat.mean(axis=-1)
+    
+def acrossday_pv_corr(concat_sess,date_inds,key='F_dff',fam=True):
+    trials_mat = concat_sess.trial_matrices[key]
+    
+
+    if fam:
+        cell_mask = concat_sess.fam_place_cell_mask()
+        trial_mask = concat_sess.trial_info["LR"]!=concat_sess.novel_arm
+
+    else: 
+        cell_mask = concat_sess.nov_place_cell_mask()
+        trial_mask = concat_sess.trial_info["LR"]==concat_sess.novel_arm
+
+    trials_mat = trials_mat[:,:, cell_mask]
+    day_mat = np.zeros([date_inds.shape[0], *trials_mat.shape[1:]])
+    for j, day in enumerate(date_inds.tolist()):
+        # day mask 
+        day_mask = concat_sess.trial_info['sess_num']==day
+
+        mask = day_mask & trial_mask
+
+        day_mat[j,:,:] = np.nanmean(trials_mat[mask,:,:],axis=0)
+    return calc_pv_corr(day_mat)
+
+def run_acrossday_pv_corr(mouse, date_inds = np.arange(0,6), fam=True, key='F_dff'):
+    concat_sess = u.single_mouse_concat_sessions(mouse,date_inds=date_inds, trial_mat_keys=[key,], timeseries_keys=[key,])
+    return acrossday_pv_corr(concat_sess, date_inds, fam=fam, key=key) 
+ 
 
 
 def field_width(avg_trial_mat):

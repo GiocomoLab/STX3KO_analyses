@@ -12,47 +12,6 @@ import TwoPUtils as tpu
 import STX3KO_analyses as stx
 from STX3KO_analyses import utilities as u
 
-#TODO: change this to use np.corrcoef
-def calc_pv_corr(trials_mat, nanzero=True):
-    
-    trials_t = np.transpose(trials_mat,axes = (1,0,2)) # positions x trials x cells
-    if nanzero:
-        trials_t[np.isnan(trials_t)]=0
-    trials_norm = sp.stats.zscore(trials_t, axis = 2, nan_policy='omit') 
-    if nanzero:
-        trials_norm[np.isnan(trials_norm)]=0 
-    # print(np.isnan(trials_norm).sum(), np.isnan(trials_t).sum()) 
-     
-    denom = trials_t.shape[2] # dof correction
-    return 1./denom*np.matmul(trials_norm, np.transpose(trials_norm, axes=(0,2,1)))
-    
-def acrossday_pv_corr(concat_sess,date_inds,key='F_dff',fam=True):
-    trials_mat = concat_sess.trial_matrices[key]
-    
-
-    if fam:
-        cell_mask = (np.array(concat_sess.field_perm_masks['cell_masks']['fam']).sum(axis=0)==6) 
-        trial_mask = concat_sess.trial_info["LR"]!=concat_sess.novel_arm
-
-    else: 
-        cell_mask = (np.array(concat_sess.field_perm_masks['cell_masks']['nov']).sum(axis=0)==6) 
-        trial_mask = concat_sess.trial_info["LR"]==concat_sess.novel_arm
-
-    trials_mat = trials_mat[:,:, cell_mask]
-    day_mat = np.zeros([date_inds.shape[0], *trials_mat.shape[1:]])
-    for j, day in enumerate(date_inds.tolist()):
-        # day mask 
-        day_mask = concat_sess.trial_info['sess_num']==day
-
-        mask = day_mask & trial_mask
-
-        day_mat[j,:,:] = np.nanmean(trials_mat[mask,:,:],axis=0)
-    return calc_pv_corr(day_mat)
-
-def run_acrossday_pv_corr(mouse, date_inds = np.arange(0,6), fam=True, key='F_dff'):
-    concat_sess = u.single_mouse_concat_sessions(mouse,date_inds=date_inds, trial_mat_keys=[key,], timeseries_keys=[key,])
-    return acrossday_pv_corr(concat_sess, date_inds, fam=fam, key=key) 
- 
 
 def plot_single_trial_place_cells_dense(mouse, day, fam=True):
 
@@ -283,7 +242,7 @@ def plot_crossval_placecells_across_days(mice, max_sess = 6, key = 'F_dff'):
 
         # load data
         concat_sess = u.single_mouse_concat_sessions(mouse,date_inds=np.arange(0,max_sess),
-                                                     trial_mat_keys=[key,], timeseries_keys=[key,], load_stats=False)
+                                                     trial_mat_keys=[key,], timeseries_keys=[key,], load_stats=False, verbose=False)
         
         # for each day that is being used for sorting
         for sort_day in range(max_sess):
