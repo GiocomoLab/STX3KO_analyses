@@ -22,11 +22,12 @@ def plot_cells(trial_mat, cell_inds=None, n_cols=20):
     n_rows = int(np.ceil(cell_inds.shape[0] / n_cols))
     fig = plt.figure(figsize=[30, 3 * n_rows])
     gs = gridspec(n_rows, n_cols)
-    for cell in cell_inds:
-        col = cell % n_cols
-        row = int(cell / n_cols)
+    for i, cell in enumerate(cell_inds):
+        col = i % n_cols
+        row = int(i / n_cols)
         ax = fig.add_subplot(gs[row, col])
         h = ax.imshow(trial_mat[:, :, cell], cmap="magma",aspect='auto')
+        ax.set_title(f'cell {cell}')
 
         if col == 0:
             ax.set_xlabel('pos')

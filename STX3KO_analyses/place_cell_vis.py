@@ -59,7 +59,7 @@ def plot_single_trial_place_cells_dense(mouse, day, fam=True):
     window = slice(start,stop)
     spks = sess.timeseries['F_dff'][pc_mask,:]
     ax_spks = fig.add_subplot(gs[0:2,:11])
-    img = ax_spks.imshow(spks[sort, window], aspect='auto',cmap='Greys', vmax=.4)
+    img = ax_spks.imshow(spks[sort, window], aspect='auto',cmap='Greys', vmin=0, vmax=.4)
     
     ax_clrbr = fig.add_subplot(gs[0,11])
     ax_clrbr.set_yticks([])
@@ -242,7 +242,7 @@ def plot_crossval_placecells_across_days(mice, max_sess = 6, key = 'F_dff'):
 
         # load data
         concat_sess = u.single_mouse_concat_sessions(mouse,date_inds=np.arange(0,max_sess),
-                                                     trial_mat_keys=[key,], timeseries_keys=[key,], load_stats=False, verbose=False)
+                                                     trial_mat_keys=[key,], timeseries_keys=[key,], load_stats=False)
         
         # for each day that is being used for sorting
         for sort_day in range(max_sess):
