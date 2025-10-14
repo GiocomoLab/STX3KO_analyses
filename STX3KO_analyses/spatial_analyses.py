@@ -48,7 +48,7 @@ def run_acrossday_pv_corr(mouse, date_inds = np.arange(0,6), fam=True, key='F_df
  
 
 
-def field_width(avg_trial_mat):
+def field_width(mu_mat):
     '''
     calculate width of largest magnitude field
 
@@ -56,26 +56,48 @@ def field_width(avg_trial_mat):
     :return: fw: field width in position bins [cells,], nan for fields at edge of track
     '''
 
-    # normalize rate map to be 0-1
-    maxnorm = np.copy(avg_trial_mat)
-    _max, _min = np.amax(maxnorm, axis=0, keepdims=True), np.amin(maxnorm, axis=0, keepdims=True)
-    maxnorm = (maxnorm - _min) / (_max - _min + 1E-5)
-    maxinds = np.argmax(maxnorm, axis=0)
+    mu_mat_norm = (mu_mat - mu_mat.min(axis=-1, keepdims=True)) / (mu_mat.max(axis=-1, keepdims=True) - mu_mat.min(axis=-1, keepdims=True) + 1E-5)
+    pad_mu_mat = np.zeros([mu_mat.shape[0]+2, mu_mat.shape[1]])
+    pad_mu_mat[1:-1,:] = mu_mat_norm>.1
+    left_edges = np.argwhere((pad_mu_mat[1:,:]>pad_mu_mat[:-1,:]))
+    right_edges = np.argwhere((pad_mu_mat[:-1,:]>pad_mu_mat[1:,:]))
 
 
-    # find indices of half max
-    half_mask = maxnorm <= .5
-    fw = np.zeros(avg_trial_mat.shape[-1])*np.nan
-    for cell in range(maxnorm.shape[1]):
-        left = np.argwhere(half_mask[:maxinds[cell], cell])
-        right = np.argwhere(half_mask[maxinds[cell]:, cell])
-        if left.shape[0] > 0 and right.shape[0] > 0:
-            ledge, redge = left[-1][0], right[0][0] + maxinds[cell]
-            fw[cell] = redge - ledge
-    return fw
+    widths = right_edges[:,0]-left_edges[:,0]
+
+    # # normalize rate map to be 0-1
+    # maxnorm = np.copy(avg_trial_mat)
+    # _max, _min = np.amax(maxnorm, axis=0, keepdims=True), np.amin(maxnorm, axis=0, keepdims=True)
+    # maxnorm = (maxnorm - _min) / (_max - _min + 1E-5)
+    
+    # thresh_maxnorm = 1.*(maxnorm>.2)
+    
+    # pad_matrix = np.zeros([maxnorm.shape[0]+2, maxnorm.shape[1]])
+    # pad_matrix[1:-1,:] = thresh_maxnorm
+
+    # left_edges = np.argwhere((pad_matrix[1:,:]>pad_matrix[:-1,:]))
+    # right_edges = np.argwhere((pad_matrix[:-1,:]>pad_matrix[1:,:]))
+
+    # widths = []
+    # for ledge, redge in zip(left_edges, right_edges):
+    #     if ledge[1]==redge[1]: # and ledge[0]<redge[0]:
+    #         widths.append(redge[0]-ledge[0])
+            
+        
+
+    # # find indices of half max
+    # half_mask = maxnorm <= .5
+    # fw = np.zeros(avg_trial_mat.shape[-1])*np.nan
+    # for cell in range(maxnorm.shape[1]):
+    #     left = np.argwhere(half_mask[:maxinds[cell], cell])
+    #     right = np.argwhere(half_mask[maxinds[cell]:, cell])
+    #     if left.shape[0] > 0 and right.shape[0] > 0:
+    #         ledge, redge = left[-1][0], right[0][0] + maxinds[cell]
+    #         fw[cell] = redge - ledge
+    return widths
 
 
-def max_counts(avg_trial_mat, mean_norm_thresh = 1):
+def max_counts(mu_mat):
     '''
     get number of local maxima in avg rate map
 
@@ -83,16 +105,28 @@ def max_counts(avg_trial_mat, mean_norm_thresh = 1):
     :param mean_norm_thresh: threshold for finding peaks
     :return: max_counts: [cells,] number of maxima for each cell
     '''
+    mu_mat_norm = (mu_mat - mu_mat.min(axis=-1, keepdims=True)) / (mu_mat.max(axis=-1, keepdims=True) - mu_mat.min(axis=-1, keepdims=True) + 1E-5)
+    pad_mu_mat = np.zeros([mu_mat.shape[0]+2, mu_mat.shape[1]])
+    pad_mu_mat[1:-1,:] = mu_mat_norm>.1
+    left_edges = np.argwhere((pad_mu_mat[1:,:]>pad_mu_mat[:-1,:]))
+    right_edges = np.argwhere((pad_mu_mat[:-1,:]>pad_mu_mat[1:,:]))
 
-    # mean normalize
-    avg_trial_mat /= avg_trial_mat.mean(axis=0, keepdims=True)
-    # find number of maxima
-    max_counts = []
-    for cell in range(avg_trial_mat.shape[-1]):
-        extm, _ = sp.signal.find_peaks(avg_trial_mat[:, cell], height=mean_norm_thresh)
-        max_counts.append(extm.shape[0])
+    return np.bincount(left_edges[:,1])
+    # widths = right_edges[:,0]-left_edges[:,0]
 
-    return np.array(max_counts)
+    # # mean normalize
+    # # avg_trial_mat /= avg_trial_mat.mean(axis=0, keepdims=True)
+    # # avg_trial_mat /= avg_trial_mat.max(axis=0, keepdims=True)
+    # avg_trial_mat = (avg_trial_mat - np.min(avg_trial_mat, axis=0, keepdims=True)) / (np.max(avg_trial_mat, axis=0, keepdims=True) - np.min(avg_trial_mat, axis=0, keepdims=True) + 1E-5)
+    # # find number of maxima
+    # max_counts = []
+    # for cell in range(avg_trial_mat.shape[-1]):
+    #     thresh = avg_trial_mat[:, cell]>mean_norm_thresh
+    #     max_counts.append(np.argwhere(thresh[1:]>thresh[:-1]).shape[0])
+    #     # extm, _ = sp.signal.find_peaks(avg_trial_mat[:, cell], height=mean_norm_thresh)
+    #     # max_counts.append(extm.shape[0])
+
+    # return np.array(max_counts)
 
 
 def spatial_std(avg_trial_mat):

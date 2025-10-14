@@ -60,9 +60,10 @@ class KWTA():
         if weight_dist == 'uniform':
             self.w = self.rng_.random(size=[n_ca1, n_ca3])  #
         elif weight_dist == 'lognormal':
-            self.w = self.rng_.lognormal(sigma=.5, size=[n_ca1, n_ca3])
+            self.w = self.rng_.lognormal(mean=1, sigma=.5, size=[n_ca1, n_ca3])
         else:
             pass
+        self.init_w_norm = np.linalg.norm(self.w, axis=-1, keepdims=True)
 
         if eta_ctrl is not None:  # set position dependent gain in learning rate
             ctrl_x = np.linspace(0, 10, num=np.array(eta_ctrl).shape[0])
@@ -81,8 +82,8 @@ class KWTA():
         ca1 = np.zeros([self.n_ca1, self.n_pos])
         # feedforward linear activations
         activations = np.matmul(self.w,
-                                self.ca3 + self.ca3_sigma_mag * self.rng_.standard_normal(
-                                    size=[self.n_ca3, self.n_pos]))  # noise added to CA3 activity
+                                np.maximum(self.ca3 + self.ca3_sigma_mag * self.rng_.standard_normal(
+                                    size=[self.n_ca3, self.n_pos]),0))  # noise added to CA3 activity
         winners = np.argsort(activations, axis=0)[::-1, :]  # sort by decreasing activation
         for pos_ind in range(self.n_pos):
             ca1[winners[:self.n_winners, pos_ind], pos_ind] = activations[
@@ -97,13 +98,19 @@ class KWTA():
         :return:
         '''
         ca1 = self.winners()  # get CA1 activity
+        # print(ca1.shape)
         # update weights
         self.w += self.eta * np.matmul(np.matmul(ca1, self.eta_gain_mat),
-                                       self.ca3.T) - self.tau + self.w_sigma_mag * self.rng_.standard_normal(
-            size=self.w.shape)
+                                       self.ca3.T) - self.tau*self.w + \
+                                        self.w_sigma_mag * self.rng_.standard_normal(size=self.w.shape) + \
+                                        self.w_norm_decay * (self.init_w_norm - np.linalg.norm(self.w, axis=-1, keepdims=True))
+        
         # decay weights by norm
-        self.w -= self.w_norm_decay * np.linalg.norm(self.w, axis=-1, keepdims=True)
+        # self.w -= self.w_norm_decay * np.linalg.norm(self.w, axis=-1, keepdims=True)
+       
+        # self.w += 
         # bound weights
+        # print(self.w.shape)
         self.w = np.minimum(np.maximum(self.w, self.w_min), self.w_max)
         return ca1.T
 
@@ -127,7 +134,7 @@ class KWTA():
         return np.array(ca1)
 
 
-def plot_cells(ca1, cell_inds=None, n_cols=20):
+def plot_cells(ca1, cell_inds=None, n_cols=20, titles = None):
     '''
 
     :param ca1:
@@ -139,12 +146,12 @@ def plot_cells(ca1, cell_inds=None, n_cols=20):
     if cell_inds is None:
         cell_inds = np.arange(ca1.shape[-1])
 
-    n_rows = int(np.ceil(cell_inds.shape[0] / n_cols))
+    n_rows = int(np.ceil(np.array(cell_inds).shape[0] / n_cols))
     fig = plt.figure(figsize=[30, 3 * n_rows])
     gs = gridspec(n_rows, n_cols)
-    for cell in cell_inds:
-        col = cell % n_cols
-        row = int(cell / n_cols)
+    for i, cell in enumerate(cell_inds):
+        col = i % n_cols
+        row = int(i / n_cols)
         ax = fig.add_subplot(gs[row, col])
         h = ax.imshow(ca1[:, :, cell], cmap="magma")
 
@@ -156,6 +163,10 @@ def plot_cells(ca1, cell_inds=None, n_cols=20):
         else:
             ax.set_xticks([])
             ax.set_yticks([])
+
+        if titles is not None:
+            t = titles[i]
+            ax.set_title(f'{t}')
     fig.subplots_adjust(hspace=.3)
     return fig
 
@@ -174,7 +185,16 @@ def plot_pop_activity(ca1, trials_to_plot=None):
     n_trials = trials_to_plot.shape[0]
 
     fig, ax = plt.subplots(n_trials, n_trials, figsize= [20, 20])
-    sort_vecs = [np.argsort(np.argmax(ca1[trial, :, :], axis=0)) for trial in trials_to_plot]
+
+    sort_vecs = []
+    for trial in trials_to_plot:
+        trial_act = ca1[trial, :, :]
+        max = np.amax(trial_act, axis=0)
+        sort_vec= np.argsort(np.argmax(trial_act, axis=0))
+        sort_vecs.append([i for i in sort_vec if max[i]>0])
+
+    # sort_vecs = [np.argsort(np.argmax(ca1[trial, :, :], axis=0)) for trial in trials_to_plot]
+  
     ca1_z = (ca1 - ca1.mean(axis=1, keepdims=True)) / (np.std(ca1, axis=1, keepdims=True) + 1E-3)
     for row, sort_vec in zip(trials_to_plot, sort_vecs):
 
