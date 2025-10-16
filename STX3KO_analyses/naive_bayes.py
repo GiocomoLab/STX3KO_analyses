@@ -21,9 +21,9 @@ def crossval(sess, n_cells = -1, poisson = True, nov = False, chan=None):
         trial_mask = sess.trial_info['LR']==-1*sess.novel_arm
     
     if chan is None:
-        trial_mat = sess.trial_matrices['F_dff'][trial_mask,:,:]*10
+        trial_mat = sess.trial_matrices['F_dff'][trial_mask,:,:]#*10
     else:
-        trial_mat = sess.trial_matrices[f'{chan}_F_dff'][trial_mask,:,:]*10
+        trial_mat = sess.trial_matrices[f'{chan}_F_dff'][trial_mask,:,:]#*10
     
     trial_mat -= np.nanmin(trial_mat,axis=-1,keepdims=True)
     trial_mat[np.isnan(trial_mat)]=0
