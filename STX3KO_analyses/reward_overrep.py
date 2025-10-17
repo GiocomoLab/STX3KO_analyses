@@ -1,6 +1,5 @@
 from . import session
-from . import utilities as u #uncomment for original code
-from . import utilities_ES as u_es
+from . import utilities as u 
 
 from . import ymaze_sess_deets
 
@@ -52,8 +51,9 @@ class PeriRewardCellFrac_Dense:
         for cond, mice in self.mouse_dict.items():
             for mouse in mice:
                 for day in self.days:
+                    sess = u.load_single_day(mouse, day)
                     for ttype in self.ttypes:
-                        sess = u.load_single_day(mouse, day)
+                        
                         if ttype == 'fam':
                             trial_mask = sess.trial_info['LR']!=sess.novel_arm
                             lr = -1*sess.novel_arm
@@ -338,7 +338,7 @@ class PeriRewardPlaceCellActivity:
 
 
 
-def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = -.25, vmax = 5):
+def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = 0, vmax = 4):
     '''
 
     :param day:
@@ -631,6 +631,11 @@ class RewardCells:
 
             a.set_yticks([0,10,20], labels = ['0', '100', '200'])
             a.set_xticks([0,10,20], labels = ['0', '100', '200'])
+            
+            a.plot([-.5,28.5], [-.5,28.5], 
+                   'k--')
+            a.set_ylim([28.5,-.5])
+            a.set_xlim([-.5, 28.5])
 
         return fig, ax
     
@@ -689,28 +694,29 @@ class RewardCells_Sparse:
             self.right_mats[mouse] = {}
 
             for day in self.days:
+                if (mouse == 'SparseKO_09') and (day==2):
+                    continue
                 sess = u.load_single_day(mouse, day, verbose=False)
-                self.left_mat[mouse][day] = {}
-                self.right_mat[mouse][day] = {}
+                self.left_mats[mouse][day] = {}
+                self.right_mats[mouse][day] = {}
                 for chan in ('channel_0', 'channel_1'):
-                    l_mat, r_mat = self.get_lr_map(sess)
+                    l_mat, r_mat = self.get_lr_map(sess,chan)
                     self.left_mats[mouse][day][chan] = l_mat
                     self.right_mats[mouse][day][chan] = r_mat
 
 
     def get_lr_map(self, sess, chan):
         ts_key = chan + '_' + self.ts_key
-        ##
+        
         left_mask = sess.trial_info['LR']==-1
-        pc_mask = np.zeros([sess.trial_matrices[self.ts_key].shape[-1],])
-        for key in sess.place_cell_info.keys():
-            if len(sess.place_cell_info[key]['masks'].shape)>1:
-                pc_mask += 1*sess.place_cell_info[key]['masks'].sum(axis=0)
-            else:
-                pc_mask += 1*sess.place_cell_info[key]['masks']
+
+        l_cellmask = 1.*sess.place_cell_info[ts_key]['left']['masks']
+        r_cellmask= 1.*sess.place_cell_info[ts_key]['right']['masks']
+        pc_mask = l_cellmask+r_cellmask
+            
         pc_mask = pc_mask>0
         
-        return np.nanmean(sess.trial_matrices[self.ts_key][left_mask,1:-1,:],axis=0)[:,pc_mask], np.nanmean(sess.trial_matrices[self.ts_key][~left_mask,1:-1,:],axis=0)[:,pc_mask]
+        return np.nanmean(sess.trial_matrices[ts_key][left_mask,1:-1,:],axis=0)[:,pc_mask], np.nanmean(sess.trial_matrices[ts_key][~left_mask,1:-1,:],axis=0)[:,pc_mask]
     
     @staticmethod
     def get_smooth_hist(max1, max2,bins = np.arange(0,30)):
@@ -722,13 +728,20 @@ class RewardCells_Sparse:
     
     def plot_heatmaps(self, day):
 
-
+        
         ctrl_hist_sm = 0
-        for mouse in ctrl_mice:
-            ctrl_hist_sm += self.get_smooth_hist(np.argmax(self.left_mats['ctrl'][mouse][day],axis=0), 
-                                                 np.argmax(self.right_mats['ctrl'][mouse][day],axis=0))
-        ctrl_hist_sm /= len(ctrl_mice)
+        ko_hist_sm = 0
+        for mouse in sparse_mice:
+            ctrl_hist_sm += self.get_smooth_hist(np.argmax(self.left_mats[mouse][day]['channel_1'],axis=0), 
+                                                 np.argmax(self.right_mats[mouse][day]['channel_1'],axis=0))
+            
+            ko_hist_sm += self.get_smooth_hist(np.argmax(self.left_mats[mouse][day]['channel_0'],axis=0), 
+                                                 np.argmax(self.right_mats[mouse][day]['channel_0'],axis=0))
+        ctrl_hist_sm /= len(sparse_mice)
         ctrl_hist_sm /= ctrl_hist_sm.ravel().sum()
+
+        ko_hist_sm /= len(sparse_mice)
+        ko_hist_sm /= ko_hist_sm.ravel().sum()
 
         fig,ax = plt.subplots(1,3,figsize=[9,3])
         fig.subplots_adjust(wspace=.5)
@@ -736,15 +749,6 @@ class RewardCells_Sparse:
         ax[0].set_title("Control")
         
         plt.colorbar(h,ax = ax[0],shrink=.5)
-
-
-        ko_hist_sm = 0
-        for mouse in ko_mice:
-            ko_hist_sm += self.get_smooth_hist(np.argmax(self.left_mats['ko'][mouse][day],axis=0), 
-                                                 np.argmax(self.right_mats['ko'][mouse][day],axis=0))
-        ko_hist_sm /= len(ko_mice)
-        ko_hist_sm /= ko_hist_sm.ravel().sum()
-
        
         h = ax[1].imshow(ko_hist_sm,vmin=0,vmax=.005, cmap = 'PuRd')
         ax[1].set_title("KO")
@@ -764,6 +768,11 @@ class RewardCells_Sparse:
             a.set_yticks([0,10,20], labels = ['0', '100', '200'])
             a.set_xticks([0,10,20], labels = ['0', '100', '200'])
 
+            a.plot([-.5,28.5], [-.5,28.5], 
+                   'k--')
+            a.set_ylim([28.5,-.5])
+            a.set_xlim([-.5, 28.5])
+
         return fig, ax
     
 
@@ -771,21 +780,24 @@ class RewardCells_Sparse:
 
 
         df = {'mouse':[],
-                'ko':[],
+                'chan':[],
                 'day':[], 
                 'frac': [], 
                 }
 
-        for ko, mice in zip(('ctrl','ko'), (ctrl_mice,ko_mice)):
-            for mouse in mice:
-                for day in range(6):
-                    _hist = self.get_smooth_hist(np.argmax(self.left_mats[ko][mouse][day],axis=0), 
-                                                 np.argmax(self.right_mats[ko][mouse][day],axis=0))
+        
+        for mouse in sparse_mice:
+            for day in range(6):
+                if mouse == 'SparseKO_09' and day ==2:
+                    continue
+                for chan in ('channel_0', 'channel_1'):
+                    _hist = self.get_smooth_hist(np.argmax(self.left_mats[mouse][day][chan],axis=0), 
+                                                 np.argmax(self.right_mats[mouse][day][chan],axis=0))
                     frac = _hist[self.rz_early[0][0]-5:self.rz_early[0][0],
                                  self.rz_late[0][0]-5:self.rz_late[0][0]].sum(axis=-1).sum(axis=-1)
                     
                     df['mouse'].append(mouse)
-                    df['ko'].append(ko)
+                    df['chan'].append(chan)
                     df['day'].append(day)
                     df['frac'].append(frac)
        

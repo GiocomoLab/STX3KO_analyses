@@ -219,11 +219,6 @@ def load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls/',verbos
         # sess.novel_arm = deets['novel']
         # setattr(sess, 'novel_arm', deets['novel'])
 
-        if mouse == '4467975.1' and day == 0:
-            sess.trial_info['block_number'] += 1
-        if mouse == '4467332.2' and day == 0:
-            sess.trial_info['block_number'] += 2
-
     return sess
 
 
