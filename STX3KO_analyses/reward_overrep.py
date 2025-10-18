@@ -125,7 +125,9 @@ class PeriRewardCellFrac_Sparse:
             'day': [],
             'ttype': [],
             'lr': [],
-            'frac': []
+            'frac': [],
+            'licks': [],
+            'speed': [],
         }
 
         
@@ -156,12 +158,19 @@ class PeriRewardCellFrac_Sparse:
                         antic_zone = [a-first_bin for a in antic_zone]
 
                         avg_mat = np.nanmean(sess.trial_matrices[f'{chan}_{ts_key}'][trial_mask,:,:],axis=0)
+                        lick_mat = np.nanmean(sess.trial_matrices['licks'][trial_mask,:],axis=0).ravel()
+                        speed_mat = np.nanmean(sess.trial_matrices['speed'][trial_mask,:],axis=0).ravel()
+
                         if self.place_cell_only:
                             avg_mat = avg_mat[:, cell_mask]
                         argmax = np.nanargmax(avg_mat,axis=0)
 
                         reward_cells = (argmax>=antic_zone[0]) * (argmax<=antic_zone[1])
                         reward_frac = reward_cells.sum().astype(float)/float(reward_cells.shape[0])
+
+                        antic_zone_inds = [np.floor(antic_zone[0]).astype(int), np.ceil(antic_zone[1]).astype(int)]
+                        reward_licks = np.nanmean(lick_mat[antic_zone_inds[0]:antic_zone_inds[1]+1])
+                        reward_speed = np.nanmean(speed_mat[antic_zone_inds[0]:antic_zone_inds[1]+1])
 
                         
                         df['mouse'].append(mouse)
@@ -170,6 +179,8 @@ class PeriRewardCellFrac_Sparse:
                         df['lr'].append(lr)
                         df['frac'].append(reward_frac)
                         df['chan'].append(chan)
+                        df['licks'].append(reward_licks)
+                        df['speed'].append(reward_speed)
         self.df = pd.DataFrame.from_dict(df)
 
 
