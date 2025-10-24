@@ -159,25 +159,34 @@ class BlockTransitionActivityRate:
                     else:
                         raise ValueError("norm must be one of 'population', 'cell', or None")
                     
-                    rows.append({'condition': cond,
+                    act = {'baseline': base.mean(),
+                           'familiar': fam.mean(),
+                           'novel': nov.mean()}
+                    speed = {'baseline': base_speed.mean(),
+                             'familiar': fam_speed.mean(),
+                             'novel': nov_speed.mean()}
+                    licks = {'baseline': base_licks.mean(),
+                             'familiar': fam_licks.mean(),
+                             'novel': nov_licks.mean()}
+                    for ttype in ('baseline', 'familiar', 'novel'):
+                        
+                        rows.append({'condition': cond,
                                 'mouse': mouse,
                                 'day': day,
-                                'baseline_rate': base.mean(),
-                                'familiar_rate': fam.mean(),
-                                'novel_rate': nov.mean(),
-                                'baseline_speed': base_speed.mean(),
-                                'familiar_speed': fam_speed.mean(),
-                                'novel_speed': nov_speed.mean(),
-                                'baseline_licks': base_licks.mean(),
-                                'familiar_licks': fam_licks.mean(),
-                                'novel_licks': nov_licks.mean()})
+                                'ttype': ttype,
+                                'rate': act[ttype],
+                                'speed': speed[ttype],
+                                'licks': licks[ttype]})
+
+
+                    
     
         self.df = pd.DataFrame(rows)
         return self.df
 
 
     def plot_single_session(self, cond, mouse, day, 
-                            baseline_corr = True,
+                            norm = 'population',
                             vmin=None, vmax=None, cmap='magma'):
         data = self.activity_rates[cond][mouse][day]
         
@@ -190,7 +199,7 @@ class BlockTransitionActivityRate:
 
 
 
-        if baseline_corr:
+        if norm == 'cell': 
 
             b = data['baseline_avg_act']
 
@@ -199,6 +208,12 @@ class BlockTransitionActivityRate:
             fam = np.nanmean(data['block_fam_act']/b, axis=-1)
             nov = np.nanmean(data['block_nov_act']/b, axis=-1)
 
+        elif norm == 'population':
+            base = np.nanmean(np.nanmean(data['baseline_act'],axis=1),axis=-1)
+            
+            comb = np.nanmean(np.concatenate((data['baseline_act'], data['block_act'])),axis=-1)/base.mean()
+            fam = np.nanmean(data['block_fam_act'], axis=-1)/base.mean()
+            nov = np.nanmean(data['block_nov_act'], axis=-1)/base.mean()
         else:
             comb = np.nanmean(np.concatenate((data['baseline_act'], data['block_act'])),axis=-1)
             fam = np.nanmean(data['block_fam_act'], axis=-1)
@@ -217,14 +232,17 @@ class BlockTransitionActivityRate:
         h = ax1.imshow(comb, **kwargs)
 
         
-        h = ax2.imshow(fam, **kwargs)
+        _ = ax2.imshow(fam, **kwargs)
         ax2.set_title('familiar')
 
         
-        h = ax3.imshow(nov, **kwargs)
+        _ = ax3.imshow(nov, **kwargs)
         ax3.set_title('novel')
 
+        plt.colorbar(h, cax=cbar_ax)
+
         fig.suptitle(f"mouse: {mouse}, day: {day}")
+        return fig, (ax1, ax2, ax3, cbar_ax)
 
 
 class BlockTransitionActivityRate_Sparse:
@@ -393,23 +411,15 @@ class BlockTransitionActivityRate_Sparse:
                                     'licks': licks[ttype]})
 
 
-                                    # 'baseline_rate': base.mean(),
-                                    # 'familiar_rate': fam.mean(),
-                                    # 'novel_rate': nov.mean(),
-                                    # 'baseline_speed': base_speed.mean(),
-                                    # 'familiar_speed': fam_speed.mean(),
-                                    # 'novel_speed': nov_speed.mean(),
-                                    # 'baseline_licks': base_licks.mean(),
-                                    # 'familiar_licks': fam_licks.mean(),
-                                    # 'novel_licks': nov_licks.mean()})
+                                  
     
         self.df = pd.DataFrame(rows)
         return self.df
 
 
 
-    def plot_single_session(self, cond, mouse, day, chan,
-                            baseline_corr = True,
+    def plot_single_session(self, mouse, day, chan,
+                            norm= 'population',
                             vmin=None, vmax=None, cmap='magma'):
         data = self.activity_rates[mouse][day][chan]
         
@@ -422,7 +432,7 @@ class BlockTransitionActivityRate_Sparse:
 
 
 
-        if baseline_corr:
+        if norm == 'cell': 
 
             b = data['baseline_avg_act']
 
@@ -431,6 +441,12 @@ class BlockTransitionActivityRate_Sparse:
             fam = np.nanmean(data['block_fam_act']/b, axis=-1)
             nov = np.nanmean(data['block_nov_act']/b, axis=-1)
 
+        elif norm == 'population':
+            base = np.nanmean(np.nanmean(data['baseline_act'],axis=1),axis=-1)
+            
+            comb = np.nanmean(np.concatenate((data['baseline_act'], data['block_act'])),axis=-1)/base.mean()
+            fam = np.nanmean(data['block_fam_act'], axis=-1)/base.mean()
+            nov = np.nanmean(data['block_nov_act'], axis=-1)/base.mean()
         else:
             comb = np.nanmean(np.concatenate((data['baseline_act'], data['block_act'])),axis=-1)
             fam = np.nanmean(data['block_fam_act'], axis=-1)
@@ -456,4 +472,7 @@ class BlockTransitionActivityRate_Sparse:
         h = ax3.imshow(nov, **kwargs)
         ax3.set_title('novel')
 
-        fig.suptitle(f"mouse: {mouse}, day: {day}")
+        plt.colorbar(h, cax=cbar_ax)
+
+        fig.suptitle(f"mouse: {mouse}, day: {day}, {chan}")
+        return fig, (ax1, ax2, ax3, cbar_ax)
