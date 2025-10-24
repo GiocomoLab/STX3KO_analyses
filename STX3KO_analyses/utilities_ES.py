@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 
 import TwoPUtils as tpu
-from . import session, ymaze_sess_deets
+from . import session, ymaze_sess_deets, behavior
 
 def loop_func_over_mice(func, mice):
     return {mouse: func(mouse) for mouse in mice}
@@ -187,7 +187,7 @@ def get_ind_of_exp_day(sess_list, exp_day):
                 index = ind
 
     return index
-    
+
 def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), timeseries_keys = ('licks', 'speed')):
     # pkldir = os.path.join('Z:/giocomo/mplitt/2P_Data/STX3KO/YMaze_VR_Pkls/', mouse)
     if mouse in ["SparseKO_02","SparseKO_03", "SparseKO_05","SparseKO_06","SparseKO_08","SparseKO_09","SparseKO_10","SparseKO_11","SparseKO_13"]:
@@ -217,7 +217,7 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
 
             # print(_deets['date'], _deets['scene'])
             sess_list.append(_sess)
-
+            
         sess = session.ConcatYMazeSession(sess_list, None, day_inds=[0 for i in range(len(deets))],
                                           trial_mat_keys=trial_mat_keys,
                                           timeseries_keys=timeseries_keys,
@@ -233,7 +233,7 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
         # sess.add_pos_binned_trial_matrix('licks')
         # sess.novel_arm = deets['novel']
         # setattr(sess, 'novel_arm', deets['novel'])
-
+        
         if mouse == '4467975.1' and day == 0:
             sess.trial_info['block_number'] += 1
         if mouse == '4467332.2' and day == 0:
@@ -259,21 +259,21 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
 #     return sess
 
 
-def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSessPkls/smooth_spks",verbose = True):
+def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSessPkls/",verbose = True):
     #     mouse = '4467331.2'
     pkldir = os.path.join(pkl_basedir, mouse)
     if mouse in ymaze_sess_deets.KO_sessions.keys():
 
         deets = ymaze_sess_deets.KO_sessions[mouse][day]
-        pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
-        # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
+        # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+        pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
 
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_lickrate", mouse)
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
     elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
         deets = ymaze_sess_deets.CTRL_sessions[mouse][day]
-        # pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
-        pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
+        pkldir = os.path.join("C://Users/esay/data/Stx3/YMazeSessPkls", mouse)
+        # pkldir = os.path.join("Z://giocomo/mplitt/2P_Data/STX3KO/YMazeSessPkls", mouse)
 
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_lickrate", mouse)
         # pkldir = os.path.join("C://Users/esay/data/Stx3/downsample_speed", mouse)
@@ -307,8 +307,7 @@ def load_single_day(mouse, day, pkl_basedir = "C://Users/esay/data/Stx3/YMazeSes
 
         sess = session.ConcatYMazeSession(sess_list, common_roi_mapping, day_inds=[0 for i in range(len(deets))],
                                           trial_mat_keys=('F_dff', 'spks', 'F_dff_norm', 'spks_norm','licks', 'speed'),#, 'spks_nostop''spks_th',),
-                                          timeseries_keys=('F_dff', 'spks',  'F_dff_norm', 'spks_norm','licks', 'speed', 
-                                                           't', 'LR'),#, 'spks_nostop''spks_th','reward',, 'block_number' ),
+                                          timeseries_keys=('F_dff', 'spks',  'F_dff_norm', 'spks_norm','licks', 'speed'),#, 'spks_nostop''spks_th','reward',, 'block_number' 't',, 'LR' ),
                                           run_place_cells=True)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
@@ -566,3 +565,28 @@ def is_putative_interneuron(sess, ts_key='dff', method='speed',
         is_int = np.nanmax(zscored, axis = 1) >=z_thresh
     
     return is_int
+def correct_lick_sensor_error(licks_, trial_starts, trial_ends, correction_thr=0.25):
+    """
+    Find samples where lick detector was putatively stuck at 1, and set to NaN
+
+    :param licks_:
+    :type licks_:
+    :param trial_starts:
+    :type trial_starts:
+    :param trial_ends:
+    :type trial_ends:
+    :param correction_thr:
+    :type correction_thr:
+    :return:
+    :rtype:
+    """
+    licks = np.copy(licks_)
+    error_count = 0
+    for t_start, t_end in zip(trial_starts, trial_ends):
+        # if >50% of samples have a cumulative lick count of >2
+        if sum(licks[t_start:t_end] > 2)/len(licks[t_start:t_end]) > correction_thr:
+            licks[t_start:t_end] = 0
+            # print(f'setting trial {np.where(trial_starts==t_start)[0]} to NaN')
+            error_count += 1
+
+    return licks, error_count

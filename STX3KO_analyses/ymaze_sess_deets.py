@@ -4,7 +4,7 @@ import numpy as np
 ko_mice = ('4467975.1', '4467975.2', '4467975.3', '4467975.4', '4467975.5',
            'Cre7',  'Cre9') #, 'CA3-1')
 ko_vr_mice = ('4467975.1', '4467975.2', '4467975.3', '4467975.4', '4467975.5',
-           'Cre7',  'Cre9', 'CA3-1')
+           'Cre7',  'Cre9')#, 'CA3-1')
 ctrl_mice = ('4467331.1', '4467331.2', '4467332.1', '4467332.2', '4467333.1',
              'mCherry6', 'mCherry7', 'mCherry8', 'mCherry9')
 ctrl_vr_mice = ('4467331.1', '4467331.2', '4467332.1', '4467332.2', '4467333.1',
@@ -143,9 +143,9 @@ SparseKO_sessions = {
 }
 KO_sessions = {
     '4467975.1':   (
-        {'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 6, 'scan': 14, 'novel_arm': -1, 'ravel_ind': 1}, #indexing error
-        #(({'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3, 'novel_arm': -1, 'ravel_ind': 0},
-        #  {'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 6, 'scan': 14, 'novel_arm': -1, 'ravel_ind': 1}),
+        # {'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 6, 'scan': 14, 'novel_arm': -1, 'ravel_ind': 1}, #indexing error
+        ({'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3, 'novel_arm': -1, 'ravel_ind': 0},
+         {'date': '28_09_2020', 'scene': 'YMaze_LNovel', 'session': 6, 'scan': 14, 'novel_arm': -1, 'ravel_ind': 1}),
          {'date': '29_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3, 'novel_arm': -1, 'ravel_ind': 2},
          {'date': '30_09_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 4, 'novel_arm': -1, 'ravel_ind': 3},
          {'date': '01_10_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'ravel_ind': 4},

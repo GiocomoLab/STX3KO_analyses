@@ -599,7 +599,7 @@ class YMazeSession(TwoPUtils.sess.Session):
 
 class ConcatYMazeSession:
 
-    def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'],
+    def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'],#, 'lick_acc'],
                  trial_mat_keys=['F_dff', ],
                  timeseries_keys=(), run_place_cells=True, day_inds=None,
                  load_ops=False, load_stats = False):
