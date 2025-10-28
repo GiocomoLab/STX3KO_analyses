@@ -107,7 +107,7 @@ def plot_single_trial_place_cells_dense(mouse, day, fam=True):
     return fig, (ax_pos, ax_spks)
     
 
-def plot_cell_across_days(sess, cell):
+def plot_cell_across_days(sess, cell, plot_roi=True):
     
     fig = plt.figure(figsize = [25, 5])
     gs = gridspec.GridSpec(6, 7, figure=fig)
@@ -143,88 +143,91 @@ def plot_cell_across_days(sess, cell):
     cbar_ax = fig.add_subplot(gs[2:4,2])
     plt.colorbar(h,ax=cbar_ax)
     
-    day0_com = (sess.s2p_stats[0][cell]['xpix'].mean(), sess.s2p_stats[0][cell]['ypix'].mean())
-    day5_com = (sess.s2p_stats[len(sess.s2p_stats)-1][cell]['xpix'].mean(), sess.s2p_stats[len(sess.s2p_stats)-1][cell]['ypix'].mean())
-    
-    sz = 30
-    day0img = np.zeros([int(sz*2), int(sz*2),3])
-    
+    if plot_roi:
+        day0_com = (sess.s2p_stats[0][cell]['xpix'].mean(), sess.s2p_stats[0][cell]['ypix'].mean())
+        day5_com = (sess.s2p_stats[len(sess.s2p_stats)-1][cell]['xpix'].mean(), sess.s2p_stats[len(sess.s2p_stats)-1][cell]['ypix'].mean())
+        
+        sz = 30
+        day0img = np.zeros([int(sz*2), int(sz*2),3])
+        
 
-    
-    x_edges = (int(day0_com[1]-sz), int(day0_com[1]+sz))
-    y_edges = ( int(day0_com[0]-sz), int(day0_com[0]+sz))
-    g_img = sess.s2p_ops[0]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
-    r_img = sess.s2p_ops[0]['meanImg_chan2'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
-    
-    g_img = np.minimum(g_img/np.percentile(g_img,100),1)
-    r_img = np.minimum(r_img/np.percentile(r_img, 100),1)
-    
-    day0_ax_g = fig.add_subplot(gs[0:3,3])
-    day0_ax_g.imshow(g_img,cmap='Greys_r')
-    day0_ax_g.set_xticks([])
-    day0_ax_g.set_yticks([])
-    
-    day0_ax_r = fig.add_subplot(gs[3:, 3])
-    day0_ax_r.imshow(r_img, cmap='Greys_r')
-    day0_ax_r.set_xticks([])
-    day0_ax_r.set_yticks([])
-    
-    day0img[:,:,1] = g_img
-    day0img[:,:,0] = r_img
-    day0img[:,:,2] = .8*r_img + .2*g_img
-    
-    day0_ax = fig.add_subplot(gs[2:5,4])
-    day0_ax.imshow(day0img,cmap='Greys_r')
-    day0_ax.set_xticks([])
-    day0_ax.set_yticks([])
-    
-    circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
-    day0_ax.add_patch(circle)
-    
-    circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
-    day0_ax_g.add_patch(circle)
-    circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
-    day0_ax_r.add_patch(circle)
-    
-    
-    day5img = np.zeros([int(sz*2), int(sz*2), 3])
+        
+        x_edges = (int(day0_com[1]-sz), int(day0_com[1]+sz))
+        y_edges = ( int(day0_com[0]-sz), int(day0_com[0]+sz))
+        g_img = sess.s2p_ops[0]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+        r_img = sess.s2p_ops[0]['meanImg_chan2'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+        
+        g_img = np.minimum(g_img/np.percentile(g_img,100),1)
+        r_img = np.minimum(r_img/np.percentile(r_img, 100),1)
+        
+        day0_ax_g = fig.add_subplot(gs[0:3,3])
+        day0_ax_g.imshow(g_img,cmap='Greys_r')
+        day0_ax_g.set_xticks([])
+        day0_ax_g.set_yticks([])
+        
+        day0_ax_r = fig.add_subplot(gs[3:, 3])
+        day0_ax_r.imshow(r_img, cmap='Greys_r')
+        day0_ax_r.set_xticks([])
+        day0_ax_r.set_yticks([])
+        
+        day0img[:,:,1] = g_img
+        day0img[:,:,0] = r_img
+        day0img[:,:,2] = .8*r_img + .2*g_img
+        
+        day0_ax = fig.add_subplot(gs[2:5,4])
+        day0_ax.imshow(day0img,cmap='Greys_r')
+        day0_ax.set_xticks([])
+        day0_ax.set_yticks([])
+        
+        circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
+        day0_ax.add_patch(circle)
+        
+        circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
+        day0_ax_g.add_patch(circle)
+        circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
+        day0_ax_r.add_patch(circle)
+        
+        
+        day5img = np.zeros([int(sz*2), int(sz*2), 3])
 
-    x_edges = (int(day5_com[1]-sz), int(day5_com[1]+sz))
-    y_edges = ( int(day5_com[0]-sz), int(day5_com[0]+sz))
-    g_img = sess.s2p_ops[5]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
-    r_img = sess.s2p_ops[5]['meanImg_chan2'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+        x_edges = (int(day5_com[1]-sz), int(day5_com[1]+sz))
+        y_edges = ( int(day5_com[0]-sz), int(day5_com[0]+sz))
+        g_img = sess.s2p_ops[5]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+        r_img = sess.s2p_ops[5]['meanImg_chan2'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+        
+        g_img = np.minimum(g_img/np.percentile(g_img,100),1)
+        r_img = np.minimum(r_img/np.percentile(r_img, 100),1)
+        
+        day5_ax_g = fig.add_subplot(gs[0:3,5])
+        day5_ax_g.imshow(g_img,cmap='Greys_r')
+        day5_ax_g.set_xticks([])
+        day5_ax_g.set_yticks([])
+        
+        day5_ax_r = fig.add_subplot(gs[3:, 5])
+        day5_ax_r.imshow(r_img, cmap='Greys_r')
+        day5_ax_r.set_xticks([])
+        day5_ax_r.set_yticks([])
+        
+        day5img[:,:,1] = 1*g_img
+        day5img[:,:,0] = r_img #.5*(r_img+g_img)
+        day5img[:,:,2] = .8*r_img+.2*g_img
+        
+        day5_ax = fig.add_subplot(gs[2:5,6])
+        day5_ax.imshow(day5img,cmap='Greys_r')
+        day5_ax.set_xticks([])
+        day5_ax.set_yticks([])
+        
+        circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
+        day5_ax.add_patch(circle)
+        
+        circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
+        day5_ax_g.add_patch(circle)
+        circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
+        day5_ax_r.add_patch(circle)
     
-    g_img = np.minimum(g_img/np.percentile(g_img,100),1)
-    r_img = np.minimum(r_img/np.percentile(r_img, 100),1)
-    
-    day5_ax_g = fig.add_subplot(gs[0:3,5])
-    day5_ax_g.imshow(g_img,cmap='Greys_r')
-    day5_ax_g.set_xticks([])
-    day5_ax_g.set_yticks([])
-    
-    day5_ax_r = fig.add_subplot(gs[3:, 5])
-    day5_ax_r.imshow(r_img, cmap='Greys_r')
-    day5_ax_r.set_xticks([])
-    day5_ax_r.set_yticks([])
-    
-    day5img[:,:,1] = 1*g_img
-    day5img[:,:,0] = r_img #.5*(r_img+g_img)
-    day5img[:,:,2] = .8*r_img+.2*g_img
-    
-    day5_ax = fig.add_subplot(gs[2:5,6])
-    day5_ax.imshow(day5img,cmap='Greys_r')
-    day5_ax.set_xticks([])
-    day5_ax.set_yticks([])
-    
-    circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
-    day5_ax.add_patch(circle)
-    
-    circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
-    day5_ax_g.add_patch(circle)
-    circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
-    day5_ax_r.add_patch(circle)
-    
-    return fig, (fam_ax, nov_ax, cbar_ax, day0_ax, day5_ax)
+        return fig, (fam_ax, nov_ax, cbar_ax, day0_ax, day5_ax)
+    else:
+        return fig, (fam_ax, nov_ax, cbar_ax)
 
 
 
