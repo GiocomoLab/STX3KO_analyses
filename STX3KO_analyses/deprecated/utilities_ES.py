@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 
 import TwoPUtils as tpu
-from . import session, ymaze_sess_deets
+from .. import session, ymaze_sess_deets
 
 def loop_func_over_mice(func, mice):
     return {mouse: func(mouse) for mouse in mice}

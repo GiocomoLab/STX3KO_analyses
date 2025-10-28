@@ -16,7 +16,7 @@ import statsmodels.formula.api as smf
 import TwoPUtils as tpu
 import STX3KO_analyses as stx
 from STX3KO_analyses import utilities as u
-from STX3KO_analyses import utilities_ES as u_es
+from STX3KO_analyses.deprecated import utilities_ES as u_es
 from STX3KO_analyses import run_sig_fields_spatial_perm as spatial_perms
 
 

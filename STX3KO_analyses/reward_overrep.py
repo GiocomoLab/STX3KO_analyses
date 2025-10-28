@@ -53,7 +53,7 @@ class PeriRewardCellFrac_Dense:
         for cond, mice in self.mouse_dict.items():
             for mouse in mice:
                 for day in self.days:
-                    sess = u.load_single_day(mouse, day)
+                    sess = u.load_single_day(mouse, day, trial_mat_keys=[ts_key, 'licks', 'speed'])
                     for ttype in self.ttypes:
                         
                         if ttype == 'fam':
@@ -378,7 +378,7 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = 0
         '''
         l_rm_train, l_rm_test, r_rm_train, r_rm_test = [], [], [], []
         for mouse in mice:
-            sess = u.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls')
+            sess = u.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls', trial_mat_keys=[ts_key,])
             if 'left' in sess.place_cell_info.keys():
                 l_cellmask = sess.place_cell_info['left']['masks']
                 r_cellmask= sess.place_cell_info['right']['masks']
@@ -559,12 +559,12 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
 
 class RewardCells:
 
-    def __init__(self, days = np.arange(6), ts_key = 'F_dff'):
+    def __init__(self, days = np.arange(6), ts_key = 'F_dff_nostop'):
 
         self.days = days
         self.ts_key = ts_key
 
-        sess = u.load_single_day(ctrl_mice[0],0, verbose=False)
+        sess = u.load_single_day(ctrl_mice[0],0, verbose=False, trial_mat_keys=[ts_key,])
         self.rz_early = (np.argwhere(sess.trial_matrices['bin_edges'][:-1]>=sess.rzone_early['tfront'])[0], np.argwhere(sess.rzone_early['tback']<=sess.trial_matrices['bin_edges'][1:])[0] )
         self.rz_late = (np.argwhere(sess.trial_matrices['bin_edges'][:-1]>=sess.rzone_late['tfront'])[0], 29 )
 
@@ -587,7 +587,7 @@ class RewardCells:
                 self.right_mats[ko][mouse] = {}
 
                 for day in self.days:
-                    l_mat, r_mat = self.get_lr_map(u.load_single_day(mouse,day,verbose=False))
+                    l_mat, r_mat = self.get_lr_map(u.load_single_day(mouse,day,verbose=False, trial_mat_keys=[self.ts_key,]))
                     self.left_mats[ko][mouse][day] = l_mat
                     self.right_mats[ko][mouse][day] = r_mat
 

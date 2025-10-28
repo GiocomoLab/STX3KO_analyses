@@ -95,6 +95,82 @@ def common_rois(roi_matches, inds):
 
     return common_roi_mapping.astype(int)
 
+
+def get_cell_orders(mouse, session_deets, days, match_inds):
+    if mouse in ymaze_sess_deets.ctrl_mice:
+        cond_key='ctrl'
+    else:
+        cond_key='cre'
+            
+    
+    cell_order = []
+    for day in days:
+        deets = session_deets[day]
+        if isinstance(deets,tuple):
+            roi_inds = []
+            for _deets in deets:
+                roi_inds.append(_deets['ravel_ind'])
+            print(roi_inds)
+            mapping = common_rois(match_inds, roi_inds)
+            
+            cell_order.append(mapping[0,:].tolist())
+        else:
+            cell_order.append([])
+    return cell_order
+
+def common_rois_adjust(mouse, days):
+    if mouse in ymaze_sess_deets.ctrl_mice:
+        session_deets = ymaze_sess_deets.CTRL_sessions[mouse]
+    else:
+        session_deets = ymaze_sess_deets.KO_sessions[mouse]
+    
+    
+    ravel_inds = []
+    day_inds = []
+    for day in days:
+        deets = session_deets[day]
+        if isinstance(deets, tuple):
+            for _deets in deets:
+                ravel_inds.append(_deets['ravel_ind'])
+                day_inds.append(day)
+        else:
+            ravel_inds.append(deets['ravel_ind'])
+            day_inds.append(day)
+
+    pkldir = os.path.join('/home/mplitt/YMazeSessPkls/', mouse)
+    with open(os.path.join(pkldir, "roi_aligner_results.pkl"), 'rb') as file:
+        match_inds = dill.load(file)
+    
+
+    common_roi_mapping = common_rois(match_inds, ravel_inds)
+    c_rows = []
+    for i, d in enumerate(day_inds):
+        if d != day_inds[i-1]:
+            c_rows.append(i)
+    
+    common_roi_mapping = common_roi_mapping[c_rows,:]
+    cell_order = get_cell_orders(mouse,session_deets, days, match_inds)
+
+    roi_mapping_adj = np.zeros(common_roi_mapping.shape)
+    c_cols = []
+    for row, order in enumerate(cell_order):
+        croi = common_roi_mapping[row,:]
+
+        if len(order)==0:
+            roi_mapping_adj[row,:] = croi
+        else:
+            for col, _c in enumerate(croi):
+                match = np.argwhere(order==_c)
+                if len(match)>0:
+                    c_cols.append(col)
+                    roi_mapping_adj[row,col]=match[0][0]
+                    
+                    
+    if len(c_cols) !=0:
+        roi_mapping_adj = roi_mapping_adj[:,c_cols]
+    return roi_mapping_adj.astype(int)
+
+
 def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), timeseries_keys = ('licks', 'speed')):
     pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
     if mouse in ymaze_sess_deets.KO_behavior_sessions.keys():
@@ -341,4 +417,6 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
                                              timeseries_keys=timeseries_keys,
                                              load_ops=load_ops, load_stats = load_stats)
     return concat_sess
+
+
  
