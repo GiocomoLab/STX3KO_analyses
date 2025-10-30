@@ -54,6 +54,7 @@ def acrossday_corr(concat_sess,date_inds,key='F_dff',fam=True, method='pv'):
         mask = day_mask & trial_mask
 
         day_mat[j,:,:] = np.nanmean(trials_mat[mask,:,:],axis=0)
+        
     if method == 'pv':
         return calc_pv_corr(day_mat)
     elif method == 'cell':
