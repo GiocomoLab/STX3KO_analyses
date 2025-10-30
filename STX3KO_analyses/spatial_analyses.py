@@ -6,6 +6,20 @@ from STX3KO_analyses import utilities as u
 
 
 #TODO: change this to use np.corrcoef
+def calc_cell_corr(trial_mat, nanzero=True, mean=False):
+
+    if nanzero:
+        trial_mat[np.isnan(trial_mat)]=0
+
+    corr_mat = np.zeros((trial_mat.shape[0], trial_mat.shape[0], trial_mat.shape[-1]))
+    for cell in range(trial_mat.shape[-1]):
+        corr_mat[:, :, cell] = np.corrcoef(trial_mat[:,:,cell])
+
+    if mean:
+        return corr_mat.mean(axis=-1)
+    else: 
+        return corr_mat
+
 def calc_pv_corr(trial_mat, nanzero=True):
     """
     trial_mat: trials x positions x cells
@@ -19,7 +33,7 @@ def calc_pv_corr(trial_mat, nanzero=True):
 
     return corr_mat.mean(axis=-1)
     
-def acrossday_pv_corr(concat_sess,date_inds,key='F_dff',fam=True):
+def acrossday_corr(concat_sess,date_inds,key='F_dff',fam=True, method='pv'):
     trials_mat = concat_sess.trial_matrices[key]
     
 
@@ -40,11 +54,16 @@ def acrossday_pv_corr(concat_sess,date_inds,key='F_dff',fam=True):
         mask = day_mask & trial_mask
 
         day_mat[j,:,:] = np.nanmean(trials_mat[mask,:,:],axis=0)
-    return calc_pv_corr(day_mat)
+    if method == 'pv':
+        return calc_pv_corr(day_mat)
+    elif method == 'cell':
+        return calc_cell_corr(day_mat)
+    else:
+        return None
 
-def run_acrossday_pv_corr(mouse, date_inds = np.arange(0,6), fam=True, key='F_dff'):
+def run_acrossday_corr(mouse, date_inds = np.arange(0,6), fam=True, key='F_dff', method='pv'):
     concat_sess = u.single_mouse_concat_sessions(mouse,date_inds=date_inds, trial_mat_keys=[key,], timeseries_keys=[key,])
-    return acrossday_pv_corr(concat_sess, date_inds, fam=fam, key=key) 
+    return acrossday_corr(concat_sess, date_inds, fam=fam, key=key, method=method) 
  
 
 
