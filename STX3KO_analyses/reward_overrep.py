@@ -19,6 +19,11 @@ sparse_mice = ymaze_sess_deets.sparse_mice
 
 
 
+def pos_to_rad(pos, n_spatial_bins=30):
+    '''assuming position is in integer bins form 0 to n_spatial_bins-1'''
+    rad = np.linspace(-np.pi, np.pi, num=n_spatial_bins+1)
+
+    return pos/(n_spatial_bins+1)*2*np.pi
 
 
 class PeriRewardCellFrac_Dense:
