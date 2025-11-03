@@ -171,8 +171,8 @@ def common_rois_adjust(mouse, days):
     return roi_mapping_adj.astype(int)
 
 
-def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), timeseries_keys = ('licks', 'speed')):
-    pkldir = os.path.join('/home/mplitt/YMaze_VR_Pkls/', mouse)
+def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), timeseries_keys = ('licks', 'speed'), pkldir = '/home/mplitt/YMaze_VR_Pkls/'):
+    pkldir = os.path.join(pkldir, mouse)
     if mouse in ymaze_sess_deets.KO_behavior_sessions.keys():
 
         deets = ymaze_sess_deets.KO_behavior_sessions[mouse][day]
@@ -197,7 +197,7 @@ def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), t
         sess = session.ConcatYMazeSession(sess_list, None, day_inds=[0 for i in range(len(deets))],
                                           trial_mat_keys=trial_mat_keys,
                                           timeseries_keys=timeseries_keys,
-                                          run_place_cells=False)
+                                          run_place_cells=False, run_field_perm_masks=False)
         if mouse in ['4467332.2'] and day == 0:
             mask = sess.trial_info['sess_num_ravel'] > 0
             sess.trial_info['block_number'][mask] -= 1
