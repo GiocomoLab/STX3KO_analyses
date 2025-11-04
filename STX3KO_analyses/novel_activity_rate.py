@@ -262,6 +262,7 @@ class BlockTransitionActivityRate_Sparse:
         self.activity_rates = {}
         self.get_activity()
         self.df = None
+        self.shuff_df = None
 
 
     def get_activity(self):
@@ -401,7 +402,7 @@ class BlockTransitionActivityRate_Sparse:
                              'familiar': fam_licks.mean(),
                              'novel': nov_licks.mean()}
                     for ttype in ('baseline', 'familiar', 'novel'):
-                        
+                
                         rows.append({'channel': chan,
                                     'mouse': mouse,
                                     'day': day,
@@ -414,7 +415,59 @@ class BlockTransitionActivityRate_Sparse:
                                   
     
         self.df = pd.DataFrame(rows)
-        return self.df
+        return self.df.copy()
+
+    def build_dataframe_for_shuffles(self, max_trial = 5):
+
+        rows = []
+        
+        for mouse in self.mice:
+            for day in self.days:
+                for chan in ('channel_0', 'channel_1'):
+                    if mouse == 'SparseKO_09' and day ==2:
+                        continue
+                    data = self.activity_rates[mouse][day][chan]
+
+                    base = np.nanmean(data['baseline_act'],axis=1)
+                    fam = np.nanmean(data['block_fam_act'],axis=1)[:max_trial]
+                    nov = np.nanmean(data['block_nov_act'],axis=1)[:max_trial]
+
+                    base_speed = np.nanmean(data['baseline_speed'],axis=1)
+                    fam_speed = np.nanmean(data['block_fam_speed'],axis=1)[:max_trial]
+                    nov_speed = np.nanmean(data['block_nov_speed'], axis=1)[:max_trial]
+
+                    base_licks = np.nanmean(data['baseline_licks'],axis=1)
+                    fam_licks = np.nanmean(data['block_fam_licks'],axis=1)[:max_trial]
+                    nov_licks = np.nanmean(data['block_nov_licks'], axis=1)[:max_trial]
+
+                    
+                    act = {'baseline': base.mean(axis=0),
+                           'familiar': fam.mean(axis=0),
+                           'novel': nov.mean(axis=0)}
+                    speed = {'baseline': base_speed.mean(),
+                             'familiar': fam_speed.mean(),
+                             'novel': nov_speed.mean()}
+                    licks = {'baseline': base_licks.mean(),
+                             'familiar': fam_licks.mean(),
+                             'novel': nov_licks.mean()}
+                    for ttype in ('baseline', 'familiar', 'novel'):
+                        
+                        _act = act[ttype]
+                        for cell, a in enumerate(_act):
+                            rows.append({'channel': chan,
+                                        'mouse': mouse,
+                                        'day': day,
+                                        'ttype': ttype,
+                                        'cell': cell,
+                                        'rate': a,
+                                        'speed': speed[ttype],
+                                        'licks': licks[ttype]})
+
+
+                                  
+    
+        self.shuff_df = pd.DataFrame(rows)
+        return self.shuff_df.copy()
 
 
 
