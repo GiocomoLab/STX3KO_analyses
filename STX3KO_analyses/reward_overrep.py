@@ -382,8 +382,16 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = 0
         :return:
         '''
         l_rm_train, l_rm_test, r_rm_train, r_rm_test = [], [], [], []
+        l_rzone, r_rzone = None, None
         for mouse in mice:
             sess = u.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls', trial_mat_keys=[ts_key,])
+            first_bin = sess.trial_matrices['bin_centers'][0]
+            if l_rzone is None:
+                l_rzone = (sess.rzone_early['tfront']-first_bin, sess.rzone_early['tback']-first_bin)
+            if r_rzone is None:
+                r_rzone = (sess.rzone_late['tfront']-first_bin, sess.rzone_late['tback']-first_bin)
+            
+
             if 'left' in sess.place_cell_info.keys():
                 l_cellmask = sess.place_cell_info['left']['masks']
                 r_cellmask= sess.place_cell_info['right']['masks']
@@ -409,7 +417,8 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = 0
             r_rm_test.append(np.nanmean(r_trialmat[1::2, :, :], axis=0))
 
         return np.concatenate(l_rm_train, axis=-1), np.concatenate(l_rm_test, axis=-1), \
-               np.concatenate(r_rm_train, axis=-1), np.concatenate(r_rm_test, axis=-1)
+               np.concatenate(r_rm_train, axis=-1), np.concatenate(r_rm_test, axis=-1), \
+               l_rzone, r_rzone
 
     def sort_norm(rm_train, rm_test):
         mu, std = np.nanmean(rm_train, axis=0, keepdims=True), np.nanstd(rm_train, axis=0, keepdims=True)
@@ -419,14 +428,16 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = 0
 
         return rm_test[:, sortvec]
 
-    ko_l_train, ko_l_test, ko_r_train, ko_r_test = lr_ratemaps(ymaze_sess_deets.ko_mice)
-    ctrl_l_train, ctrl_l_test, ctrl_r_train, ctrl_r_test = lr_ratemaps(ymaze_sess_deets.ctrl_mice)
+    ko_l_train, ko_l_test, ko_r_train, ko_r_test, l_rzone, r_rzone = lr_ratemaps(ymaze_sess_deets.ko_mice)
+    ctrl_l_train, ctrl_l_test, ctrl_r_train, ctrl_r_test, l_rzone, r_rzone = lr_ratemaps(ymaze_sess_deets.ctrl_mice)
 
     
 
     fig, ax = plt.subplots(2,2, figsize= [10,10])
     ax[0,0].imshow(sort_norm(ctrl_l_train, ctrl_l_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
     ax[0,1].imshow(sort_norm(ctrl_r_train, ctrl_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
+    ax[0,0].fill_betweenx([-.5, ctrl_l_test.shape[1]-.5], l_rzone[0], l_rzone[1], color='blue', alpha=.4)
+    ax[0,1].fill_betweenx([-.5, ctrl_r_test.shape[1]-.5], r_rzone[0], r_rzone[1], color='green', alpha=.4)
 
     ax[0,0].plot([-.5, ctrl_l_train.shape[0]- .5], [-.5, ctrl_l_train.shape[1]-.5], color='blue')
     ax[0,1].plot([-.5, ctrl_r_train.shape[0] - .5], [-.5, ctrl_r_train.shape[1] - .5], color='blue')
@@ -439,15 +450,21 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = 0
     ax[1, 0].plot([-.5, ko_l_train.shape[0]- .5], [-.5, ko_l_train.shape[1]-.5], color='blue')
     ax[1, 0].set_title(f"Cre: Left, N cells {ko_l_test.shape[1]}")
 
+
     ax[1, 1].imshow(sort_norm(ko_r_train, ko_r_test).T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
     ax[1, 1].plot([-.5, ko_r_train.shape[0]- .5], [-.5, ko_r_train.shape[1]-.5], color='blue')
     ax[1, 1].set_title(f"Cre: Right, N cells {ko_r_test.shape[1]}")
+
+    ax[1,0].fill_betweenx([-.5, ko_l_test.shape[1]-.5], l_rzone[0], l_rzone[1], color='blue', alpha=.4)
+    ax[1,1].fill_betweenx([-.5, ko_r_test.shape[1]-.5], r_rzone[0], r_rzone[1], color='green', alpha=.4)
+
 
     for row in [0,1]:
         for col in [0,1]:
             ax[row,col].set_yticks([])
             ax[row,col].set_ylabel('Cells')
             ax[row, col].set_xlabel('Pos')
+            ax[row, col].set_xlim([-.5,29.5])
 
     fig.subplots_adjust(hspace=.25, wspace=.5)
     fig.suptitle('Day %d' % day)
@@ -474,10 +491,18 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
         test_mats = {'channel_0': {'left': [], 'right': []},
                       'channel_1': {'left': [], 'right': []}}
      
+        l_rzone, r_rzone = None, None
         for mouse in mice:
             if mouse == 'SparseKO_09' and day==2:
                 continue
             sess = u.load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls')
+
+            first_bin = sess.trial_matrices['bin_centers'][0]
+            if l_rzone is None:
+                l_rzone = (sess.rzone_early['tfront']-first_bin, sess.rzone_early['tback']-first_bin)
+            if r_rzone is None:
+                r_rzone = (sess.rzone_late['tfront']-first_bin, sess.rzone_late['tback']-first_bin)
+            
 
             for chan in ('channel_0', 'channel_1'):
                 key = chan + '_' + ts_key
@@ -514,7 +539,7 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
             
 
 
-        return train_mats, test_mats
+        return train_mats, test_mats, l_rzone, r_rzone
 
     def sort_norm(rm_train, rm_test):
         mu, std = np.nanmean(rm_train, axis=0, keepdims=True), np.nanstd(rm_train, axis=0, keepdims=True)
@@ -524,29 +549,33 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
 
         return rm_test[:, sortvec]
 
-    train_mats, test_mats = lr_ratemaps(ymaze_sess_deets.sparse_mice)
+    train_mats, test_mats, l_rzone, r_rzone = lr_ratemaps(ymaze_sess_deets.sparse_mice)
     
 
     fig, ax = plt.subplots(2,2, figsize= [10,10])
     plot_mat = sort_norm(train_mats['channel_1']['left'], test_mats['channel_1']['left'])
     im0 = ax[0,0].imshow(plot_mat.T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)
     ax[0,0].plot([-.5, plot_mat.shape[0]- .5], [-.5, plot_mat.shape[1]-.5], color='blue')
+    ax[0,0].fill_betweenx([-.5, plot_mat.shape[1]-.5], l_rzone[0], l_rzone[1], color='blue', alpha=.4)
     ax[0, 0].set_title("RGECO: Left, N cells %d" % plot_mat.shape[1])
 
     plot_mat = sort_norm(train_mats['channel_1']['right'], test_mats['channel_1']['right'])
     ax[0,1].imshow(plot_mat.T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)    
     ax[0,1].plot([-.5, plot_mat.shape[0] - .5], [-.5, plot_mat.shape[1] - .5], color='blue')
+    ax[0,1].fill_betweenx([-.5, plot_mat.shape[1]-.5], r_rzone[0], r_rzone[1], color='green', alpha=.4)
     ax[0, 1].set_title("RGECO: Right, N cells %d" % plot_mat.shape[1])
 
 
     plot_mat = sort_norm(train_mats['channel_0']['left'], test_mats['channel_0']['left'])
     ax[1, 0].imshow(plot_mat.T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)    
     ax[1, 0].plot([-.5, plot_mat.shape[0] - .5], [-.5, plot_mat.shape[1] - .5], color='blue')
+    ax[1, 0].fill_betweenx([-.5, plot_mat.shape[1]-.5], l_rzone[0], l_rzone[1], color='blue', alpha=.4)
     ax[1, 0].set_title("GCaMP: Left, N cells %d" % plot_mat.shape[1])
 
     plot_mat = sort_norm(train_mats['channel_0']['right'], test_mats['channel_0']['right'])
     ax[1, 1].imshow(plot_mat.T, cmap='pink', aspect='auto', vmin=vmin, vmax=vmax)    
     ax[1, 1].plot([-.5, plot_mat.shape[0] - .5], [-.5, plot_mat.shape[1] - .5], color='blue')
+    ax[1, 1].fill_betweenx([-.5, plot_mat.shape[1]-.5], r_rzone[0], r_rzone[1], color='green', alpha=.4)
     ax[1, 1].set_title("GCaMP: Right, N cells %d" % plot_mat.shape[1])
    
     
@@ -555,6 +584,7 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
         a.set_yticks([])
         a.set_ylabel('Cells')
         a.set_xlabel('Pos')
+        a.set_xlim([-.5,29.5])
     # cbar = fig.colorbar(im0, ax = ax.ravel().tolist())
 
     fig.subplots_adjust(hspace=.25, wspace=.5)
@@ -564,7 +594,7 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
 
 class RewardCells:
 
-    def __init__(self, days = np.arange(6), ts_key = 'F_dff_nostop'):
+    def __init__(self, days = np.arange(6), ts_key = 'F_dff'):
 
         self.days = days
         self.ts_key = ts_key
@@ -611,9 +641,12 @@ class RewardCells:
         return np.nanmean(sess.trial_matrices[self.ts_key][left_mask,1:-1,:],axis=0)[:,pc_mask], np.nanmean(sess.trial_matrices[self.ts_key][~left_mask,1:-1,:],axis=0)[:,pc_mask]
     
     @staticmethod
-    def get_smooth_hist(max1, max2,bins = np.arange(0,30)):
+    def get_smooth_hist(max1, max2,bins = np.arange(0,30), smooth=True):
         hist, xedges, yedges = np.histogram2d(max1,max2, bins = [bins, bins], density = True)
-        hist_sm = sp.ndimage.gaussian_filter(hist, (1,1))
+        if smooth:
+            hist_sm = sp.ndimage.gaussian_filter(hist, (1,1))
+        else:
+            hist_sm = hist
         hist_sm /= hist_sm.ravel().sum()
         return hist_sm
     
@@ -683,7 +716,7 @@ class RewardCells:
             for mouse in mice:
                 for day in range(6):
                     _hist = self.get_smooth_hist(np.argmax(self.left_mats[ko][mouse][day],axis=0), 
-                                                 np.argmax(self.right_mats[ko][mouse][day],axis=0))
+                                                 np.argmax(self.right_mats[ko][mouse][day],axis=0), smooth=False)
                     frac = _hist[self.rz_early[0][0]-5:self.rz_early[0][0],
                                  self.rz_late[0][0]-5:self.rz_late[0][0]].sum(axis=-1).sum(axis=-1)
                     
@@ -749,14 +782,17 @@ class RewardCells_Sparse:
         return np.nanmean(sess.trial_matrices[ts_key][left_mask,1:-1,:],axis=0)[:,pc_mask], np.nanmean(sess.trial_matrices[ts_key][~left_mask,1:-1,:],axis=0)[:,pc_mask]
     
     @staticmethod
-    def get_smooth_hist(max1, max2,bins = np.arange(0,30)):
+    def get_smooth_hist(max1, max2,bins = np.arange(0,30), smooth=True):
         hist, xedges, yedges = np.histogram2d(max1,max2, bins = [bins, bins], density = True)
-        hist_sm = sp.ndimage.gaussian_filter(hist, (1,1))
+        if smooth:
+            hist_sm = sp.ndimage.gaussian_filter(hist, (1,1))
+        else:
+            hist_sm = hist
         hist_sm /= hist_sm.ravel().sum()
         return hist_sm
     
     
-    def plot_heatmaps(self, day):
+    def plot_heatmaps(self, day, vmax = .005, diff_max=.002):
 
         
         ctrl_hist_sm = 0
@@ -775,18 +811,18 @@ class RewardCells_Sparse:
 
         fig,ax = plt.subplots(1,3,figsize=[9,3])
         fig.subplots_adjust(wspace=.5)
-        h = ax[0].imshow(ctrl_hist_sm,vmin=0,vmax=.005, cmap = 'PuRd')
+        h = ax[0].imshow(ctrl_hist_sm,vmin=0,vmax=vmax, cmap = 'PuRd')
         ax[0].set_title("Control")
         
         plt.colorbar(h,ax = ax[0],shrink=.5)
        
-        h = ax[1].imshow(ko_hist_sm,vmin=0,vmax=.005, cmap = 'PuRd')
+        h = ax[1].imshow(ko_hist_sm,vmin=0,vmax=vmax, cmap = 'PuRd')
         ax[1].set_title("KO")
         
         plt.colorbar(h,ax = ax[1], shrink=.5)
 
         
-        h = ax[2].imshow(ctrl_hist_sm-ko_hist_sm,cmap='RdGy', vmin= -.002, vmax = .002)
+        h = ax[2].imshow(ctrl_hist_sm-ko_hist_sm,cmap='RdGy', vmin= -1*diff_max, vmax = diff_max)
         plt.colorbar(h,ax = ax[2], shrink=.5)
 
         for a in ax.flatten():
@@ -822,7 +858,7 @@ class RewardCells_Sparse:
                     continue
                 for chan in ('channel_0', 'channel_1'):
                     _hist = self.get_smooth_hist(np.argmax(self.left_mats[mouse][day][chan],axis=0), 
-                                                 np.argmax(self.right_mats[mouse][day][chan],axis=0))
+                                                 np.argmax(self.right_mats[mouse][day][chan],axis=0), smooth=False)
                     frac = _hist[self.rz_early[0][0]-5:self.rz_early[0][0],
                                  self.rz_late[0][0]-5:self.rz_late[0][0]].sum(axis=-1).sum(axis=-1)
                     
