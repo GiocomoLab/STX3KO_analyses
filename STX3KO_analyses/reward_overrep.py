@@ -108,7 +108,7 @@ class PeriRewardCellFrac_Dense:
 
 class PeriRewardCellFrac_Sparse:
 
-    def __init__(self, mice, days, ts_key='F_dff', place_cell_only=True):
+    def __init__(self, mice, days, ts_key='F_dff', place_cell_only=True, for_shuffs=False):
         '''
         mouse_dict : e.g. {'ctrl': ctrl_mice, 'ko':ko_mice}
         '''
@@ -117,9 +117,13 @@ class PeriRewardCellFrac_Sparse:
         self.days = days
 
         self.df = None
+        self.df_shuff = None
         self.ttypes = ('fam', 'nov')
         self.place_cell_only = place_cell_only
-        self.fill_df(ts_key)
+        if not for_shuffs:
+            self.fill_df(ts_key)
+        else:
+            self.fill_df_for_shuffles(ts_key)
         
 
 
@@ -172,6 +176,8 @@ class PeriRewardCellFrac_Sparse:
 
                         reward_cells = (argmax>=antic_zone[0]) * (argmax<=antic_zone[1])
                         reward_frac = reward_cells.sum().astype(float)/float(reward_cells.shape[0])
+                        if np.isnan(reward_frac):
+                            reward_frac = 0
 
                         antic_zone_inds = [np.floor(antic_zone[0]).astype(int), np.ceil(antic_zone[1]).astype(int)]
                         reward_licks = np.nanmean(lick_mat[antic_zone_inds[0]:antic_zone_inds[1]+1])
@@ -187,6 +193,66 @@ class PeriRewardCellFrac_Sparse:
                         df['licks'].append(reward_licks)
                         df['speed'].append(reward_speed)
         self.df = pd.DataFrame.from_dict(df)
+
+
+    def fill_df_for_shuffles(self, ts_key):
+        df = {
+            'mouse':[],
+            'chan': [],
+            'day': [],
+            'ttype': [],
+            'lr': [],
+            'cell': [],
+            'rzone_bool': [],
+        }
+
+        
+        for mouse in self.mice:
+            for day in self.days:
+
+                if (mouse == 'SparseKO_09') and (day==2):
+                    continue
+                sess = u.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls')
+                for ttype in self.ttypes:
+          
+                    for chan in ('channel_0','channel_1'):
+                        if ttype == 'fam':
+                            trial_mask = sess.trial_info['LR']!=sess.novel_arm
+                            lr = -1*sess.novel_arm
+                            cell_mask = sess.fam_place_cell_mask(mux=True, chan=chan)
+                        else:
+                            trial_mask = sess.trial_info['LR']==sess.novel_arm
+                            lr = sess.novel_arm
+                            cell_mask = sess.nov_place_cell_mask(mux=True, chan=chan)
+
+                            
+
+
+                        first_bin = sess.trial_matrices['bin_centers'][0]
+                        if lr == -1:
+                            antic_zone = (sess.rzone_early['tfront']-5, sess.rzone_early['tfront']-1)
+                        else:
+                            antic_zone = (sess.rzone_late['tfront']-5, sess.rzone_late['tfront']-1)
+                        antic_zone = [a-first_bin for a in antic_zone]
+
+                        avg_mat = np.nanmean(sess.trial_matrices[f'{chan}_{ts_key}'][trial_mask,:,:],axis=0)
+                        if self.place_cell_only:
+                            avg_mat = avg_mat[:, cell_mask]
+                        argmax = np.nanargmax(avg_mat,axis=0)
+
+                        reward_cells = (argmax>=antic_zone[0]) * (argmax<=antic_zone[1])
+                        
+                        for i, rzbool in enumerate(reward_cells):
+                            df['mouse'].append(mouse)
+                            df['chan'].append(chan)
+                            df['day'].append(day)
+                            df['ttype'].append(ttype)
+                            df['lr'].append(lr)
+                            df['cell'].append(i)
+                            df['rzone_bool'].append(rzbool)
+        self.df_shuff = pd.DataFrame.from_dict(df)
+
+        return self.df_shuff.copy()
 
 
 
@@ -689,8 +755,8 @@ class RewardCells:
         for a in ax.flatten():
             a.set_ylabel("Left Position (cm)")
             a.set_xlabel("Right Position (cm)")
-            a.fill_between(np.linspace(-.5,28.5), self.rz_early[0], self.rz_early[1]-.5,  alpha=.3, color='blue')
-            a.fill_betweenx(np.linspace(-.5,28.5), self.rz_late[0], self.rz_late[1]-.5,  alpha=.3, color='green')
+            a.fill_between(np.linspace(-.5,28.5), self.rz_early[0]-1, self.rz_early[1]-.5,  alpha=.3, color='blue')
+            a.fill_betweenx(np.linspace(-.5,28.5), self.rz_late[0]-1, self.rz_late[1]-.5,  alpha=.3, color='green')
 
             a.set_yticks([0,10,20], labels = ['0', '100', '200'])
             a.set_xticks([0,10,20], labels = ['0', '100', '200'])
@@ -717,8 +783,8 @@ class RewardCells:
                 for day in range(6):
                     _hist = self.get_smooth_hist(np.argmax(self.left_mats[ko][mouse][day],axis=0), 
                                                  np.argmax(self.right_mats[ko][mouse][day],axis=0), smooth=False)
-                    frac = _hist[self.rz_early[0][0]-5:self.rz_early[0][0],
-                                 self.rz_late[0][0]-5:self.rz_late[0][0]].sum(axis=-1).sum(axis=-1)
+                    frac = _hist[self.rz_early[0][0]-6:self.rz_early[0][0]-1,
+                                 self.rz_late[0][0]-6:self.rz_late[0][0]-1].sum(axis=-1).sum(axis=-1)
                     
                     df['mouse'].append(mouse)
                     df['ko'].append(ko)
@@ -828,8 +894,8 @@ class RewardCells_Sparse:
         for a in ax.flatten():
             a.set_ylabel("Left Position (cm)")
             a.set_xlabel("Right Position (cm)")
-            a.fill_between(np.linspace(-.5,28.5), self.rz_early[0], self.rz_early[1]-.5,  alpha=.3, color='blue')
-            a.fill_betweenx(np.linspace(-.5,28.5), self.rz_late[0], self.rz_late[1]-.5,  alpha=.3, color='green')
+            a.fill_between(np.linspace(-.5,28.5), self.rz_early[0]-1, self.rz_early[1]-.5,  alpha=.3, color='blue')
+            a.fill_betweenx(np.linspace(-.5,28.5), self.rz_late[0]-1, self.rz_late[1]-.5,  alpha=.3, color='green')
 
             a.set_yticks([0,10,20], labels = ['0', '100', '200'])
             a.set_xticks([0,10,20], labels = ['0', '100', '200'])
@@ -859,8 +925,8 @@ class RewardCells_Sparse:
                 for chan in ('channel_0', 'channel_1'):
                     _hist = self.get_smooth_hist(np.argmax(self.left_mats[mouse][day][chan],axis=0), 
                                                  np.argmax(self.right_mats[mouse][day][chan],axis=0), smooth=False)
-                    frac = _hist[self.rz_early[0][0]-5:self.rz_early[0][0],
-                                 self.rz_late[0][0]-5:self.rz_late[0][0]].sum(axis=-1).sum(axis=-1)
+                    frac = _hist[self.rz_early[0][0]-6:self.rz_early[0][0]-1,
+                                 self.rz_late[0][0]-6:self.rz_late[0][0]-1].sum(axis=-1).sum(axis=-1)
                     
                     df['mouse'].append(mouse)
                     df['chan'].append(chan)
@@ -868,3 +934,31 @@ class RewardCells_Sparse:
                     df['frac'].append(frac)
        
         self.summary_df = pd.DataFrame.from_dict(df)
+
+    def build_summary_df_for_shuffles(self):
+        df = {'mouse': [],
+              'chan': [],
+              'day': [],
+              'cell': [],
+              'rzone_bool': []}
+
+        for mouse in sparse_mice:
+            for day in range(6):
+                if mouse =='SparseKO_09' and day==2:
+                    continue
+                for chan in ('channel_0', 'channel_1'):
+
+                    l_max = np.argmax(self.left_mats[mouse][day][chan],axis=0)
+                    r_max = np.argmax(self.right_mats[mouse][day][chan],axis=0)
+
+                    l_reward_cells = (l_max>=(self.rz_early[0][0]-6)) * (l_max<=self.rz_early[0][0]-1)
+                    r_reward_cells = (r_max>=(self.rz_late[0][0]-6)) * (r_max<=self.rz_late[0][0]-1)
+                    reward_cells = l_reward_cells*r_reward_cells
+
+                    for i, rzbool in enumerate(reward_cells):
+                        df['mouse'].append(mouse)
+                        df['chan'].append(chan)
+                        df['day'].append(day)
+                        df['cell'].append(i)
+                        df['rzone_bool'].append(rzbool)
+        return pd.DataFrame.from_dict(df)
