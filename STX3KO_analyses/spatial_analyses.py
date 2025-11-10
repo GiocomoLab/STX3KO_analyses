@@ -31,7 +31,7 @@ def calc_pv_corr(trial_mat, nanzero=True):
     for pos in range(trial_mat.shape[1]):
         corr_mat[:, :, pos] = np.corrcoef(trial_mat[:,pos,:])
 
-    return corr_mat.mean(axis=-1)
+    return np.nanmean(corr_mat, axis=-1)
     
 def acrossday_corr(concat_sess,date_inds,key='F_dff',fam=True, method='pv'):
     trials_mat = concat_sess.trial_matrices[key]
@@ -78,7 +78,7 @@ def field_width(mu_mat):
 
     mu_mat_norm = (mu_mat - mu_mat.min(axis=-1, keepdims=True)) / (mu_mat.max(axis=-1, keepdims=True) - mu_mat.min(axis=-1, keepdims=True) + 1E-5)
     pad_mu_mat = np.zeros([mu_mat.shape[0]+2, mu_mat.shape[1]])
-    pad_mu_mat[1:-1,:] = mu_mat_norm>.1
+    pad_mu_mat[1:-1,:] = mu_mat_norm>.2
     left_edges = np.argwhere((pad_mu_mat[1:,:]>pad_mu_mat[:-1,:]))
     right_edges = np.argwhere((pad_mu_mat[:-1,:]>pad_mu_mat[1:,:]))
 
