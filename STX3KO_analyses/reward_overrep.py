@@ -53,6 +53,7 @@ class PeriRewardCellFrac_Dense:
             'frac': [],
             'licks': [],
             'speed': [],
+            'peaks_rz_centered': [], 
         }
 
         for cond, mice in self.mouse_dict.items():
@@ -76,7 +77,7 @@ class PeriRewardCellFrac_Dense:
                             antic_zone = (sess.rzone_early['tfront']-5, sess.rzone_early['tfront']-1)
                         else:
                             antic_zone = (sess.rzone_late['tfront']-5, sess.rzone_late['tfront']-1)
-                        antic_zone = [a-first_bin for a in antic_zone]
+                        antic_zone = [int(np.floor(a-first_bin)) for a in antic_zone]
 
                         avg_mat = np.nanmean(sess.trial_matrices[ts_key][trial_mask,:,:],axis=0)
                         lick_mat = np.nanmean(sess.trial_matrices['licks'][trial_mask,:],axis=0).ravel()
@@ -102,7 +103,9 @@ class PeriRewardCellFrac_Dense:
                         df['frac'].append(reward_frac)
                         df['licks'].append(reward_licks)
                         df['speed'].append(reward_speed)
+                        df['peaks_rz_centered'].append(argmax-antic_zone[1]-1)
         self.df = pd.DataFrame.from_dict(df)
+
 
  
 
@@ -137,6 +140,7 @@ class PeriRewardCellFrac_Sparse:
             'frac': [],
             'licks': [],
             'speed': [],
+            'peaks_rz_centered': [],
         }
 
         
@@ -192,6 +196,7 @@ class PeriRewardCellFrac_Sparse:
                         df['chan'].append(chan)
                         df['licks'].append(reward_licks)
                         df['speed'].append(reward_speed)
+                        df['peaks_rz_centered'].append(argmax - antic_zone[1]-1)
         self.df = pd.DataFrame.from_dict(df)
 
 
