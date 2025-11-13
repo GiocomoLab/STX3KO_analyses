@@ -174,10 +174,11 @@ def common_rois_adjust(mouse, days):
 def load_vr_day(mouse,day, verbose = True, trial_mat_keys = ('licks','speed'), timeseries_keys = ('licks', 'speed'), pkldir = '/home/mplitt/YMaze_VR_Pkls/'):
     pkldir = os.path.join(pkldir, mouse)
     if mouse in ymaze_sess_deets.KO_behavior_sessions.keys():
-
         deets = ymaze_sess_deets.KO_behavior_sessions[mouse][day]
     elif mouse in ymaze_sess_deets.CTRL_behavior_sessions.keys():
         deets = ymaze_sess_deets.CTRL_behavior_sessions[mouse][day]
+    elif mouse in ymaze_sess_deets.SparseKO_behavior_sessions.keys():
+        deets = ymaze_sess_deets.SparseKO_behavior_sessions[mouse][day]
     else:
         raise Exception("invalid mouse name")
 
