@@ -529,3 +529,138 @@ class BlockTransitionActivityRate_Sparse:
 
         fig.suptitle(f"mouse: {mouse}, day: {day}, {chan}")
         return fig, (ax1, ax2, ax3, cbar_ax)
+    
+
+class BlockTransitionBehavior:
+
+    def __init__(self, 
+                mouse_dict={'ctrl': ctrl_mice, 'ko':ko_mice}, 
+                days=np.arange(6),  block = 5):
+        '''
+        
+        '''
+
+        self.mouse_dict = mouse_dict
+        self.days = days
+      
+        self.block = block
+
+        self.activity_rates = {}
+        self.get_activity()
+        self.df = None
+
+
+    def get_activity(self):
+
+
+
+        for cond, mice, in self.mouse_dict.items():
+            self.activity_rates[cond] = {}
+            for mouse in mice:
+                print(mouse)
+                self.activity_rates[cond][mouse] = {}
+                for day in self.days:
+
+                    d = {}
+                
+                    sess = u.load_vr_day(mouse, day,verbose=False, pkldir='/mnt/BigDisk/YMaze_VR_Pkls')
+                    
+                    speed_mat = sess.trial_matrices['speed']
+                    lick_mat = sess.trial_matrices['licks']
+                    
+                    try:
+                        block_start_trial_num = np.argwhere(sess.trial_info['block_number']==self.block)[0][0]
+                    except:
+                        continue
+
+
+                    baseline_trials = slice(block_start_trial_num-10, block_start_trial_num)
+
+                    block_mask = sess.trial_info['block_number']==self.block
+                    block_fam_mask = block_mask * (sess.trial_info['LR']==-1*sess.novel_arm)
+                    block_nov_mask = block_mask * (sess.trial_info['LR']==sess.novel_arm)
+
+
+                    d['baseline_speed'] = speed_mat[baseline_trials, :]
+                    d['block_speed'] = speed_mat[block_mask, :]
+                    d['block_fam_speed'] = speed_mat[block_fam_mask, :]
+                    d['block_nov_speed'] = speed_mat[block_nov_mask, :]
+
+                    d['baseline_licks'] = lick_mat[baseline_trials, :]
+                    d['block_licks'] = lick_mat[block_mask, :]
+                    d['block_fam_licks'] = lick_mat[block_fam_mask, :]
+                    d['block_nov_licks'] = lick_mat[block_nov_mask, :]
+
+
+
+                    self.activity_rates[cond][mouse][day] = d
+
+    def build_dataframe(self, norm = 'population', norm_behavior=True, max_trial = 5):
+
+        rows = []
+        for cond, mice, in self.mouse_dict.items():
+            for mouse in mice:
+                for day in self.days:
+                    data = self.activity_rates[cond][mouse][day]
+
+                    
+
+                    if norm == 'population':
+                        
+
+                        base_speed = np.nanmean(data['baseline_speed'],axis=1)
+                        fam_speed = np.nanmean(data['block_fam_speed'],axis=1)[:max_trial]
+                        nov_speed = np.nanmean(data['block_nov_speed'], axis=-1)[:max_trial]
+
+                        base_licks = np.nanmean(data['baseline_licks'],axis=1)
+                        fam_licks = np.nanmean(data['block_fam_licks'],axis=1)[:max_trial]
+                        nov_licks = np.nanmean(data['block_nov_licks'], axis=-1)[:max_trial]
+
+                        
+                        fam_speed = fam_speed/base_speed.mean()
+                        nov_speed = nov_speed/base_speed.mean()
+
+                        fam_licks = fam_licks/base_licks.mean()
+                        nov_licks = nov_licks/base_licks.mean()
+
+
+                    
+                    elif norm is None:
+                        
+
+                        base_speed = np.nanmean(data['baseline_speed'],axis=1)
+                        fam_speed = np.nanmean(data['block_fam_speed'],axis=1)[:max_trial]
+                        nov_speed = np.nanmean(data['block_nov_speed'], axis=-1)[:max_trial]
+
+                        base_licks = np.nanmean(data['baseline_licks'],axis=1)
+                        fam_licks = np.nanmean(data['block_fam_licks'],axis=1)[:max_trial]
+                        nov_licks = np.nanmean(data['block_nov_licks'], axis=-1)[:max_trial]
+                        
+                    else:
+                        raise ValueError("norm must be one of 'population', 'cell', or None")
+                    
+                    
+                    speed = {'baseline': base_speed.mean(),
+                            'familiar': fam_speed.mean(),
+                            'novel': nov_speed.mean()}
+                    licks = {'baseline': base_licks.mean(),
+                            'familiar': fam_licks.mean(),
+                            'novel': nov_licks.mean()}
+                    for ttype in ('baseline', 'familiar', 'novel'):
+                        
+                        rows.append({'condition': cond,
+                                'mouse': mouse,
+                                'day': day,
+                                'ttype': ttype,
+                                
+                                'speed': speed[ttype],
+                                'licks': licks[ttype]})
+
+
+                    
+    
+        self.df = pd.DataFrame(rows)
+        return self.df
+
+
+    
