@@ -57,8 +57,10 @@ class BlockTransitionActivityRate:
                     if trial_mat.ndim ==2:
                         trial_mat = trial_mat[:,:, np.newaxis]
 
-
-                    block_start_trial_num = np.argwhere(sess.trial_info['block_number']==self.block)[0][0]
+                    try:
+                        block_start_trial_num = np.argwhere(sess.trial_info['block_number']==self.block)[0][0]
+                    except: 
+                        continue
 
 
                     baseline_trials = slice(block_start_trial_num-10, block_start_trial_num)
@@ -96,7 +98,10 @@ class BlockTransitionActivityRate:
         for cond, mice, in self.mouse_dict.items():
             for mouse in mice:
                 for day in self.days:
-                    data = self.activity_rates[cond][mouse][day]
+                    try:
+                        data = self.activity_rates[cond][mouse][day]
+                    except:
+                        continue
 
                     
 
@@ -534,7 +539,7 @@ class BlockTransitionActivityRate_Sparse:
 class BlockTransitionBehavior:
 
     def __init__(self, 
-                mouse_dict={'ctrl': ctrl_mice, 'ko':ko_mice}, 
+                mouse_dict={'ctrl': ctrl_mice, 'ko':ko_mice, 'sparse': sparse_mice}, 
                 days=np.arange(6),  block = 5):
         '''
         
@@ -548,6 +553,7 @@ class BlockTransitionBehavior:
         self.activity_rates = {}
         self.get_activity()
         self.df = None
+        self.build_dataframe()
 
 
     def get_activity(self):
@@ -560,6 +566,8 @@ class BlockTransitionBehavior:
                 print(mouse)
                 self.activity_rates[cond][mouse] = {}
                 for day in self.days:
+                    if mouse == 'SparseKO_09' and day==2:
+                        continue
 
                     d = {}
                 
@@ -601,7 +609,10 @@ class BlockTransitionBehavior:
         for cond, mice, in self.mouse_dict.items():
             for mouse in mice:
                 for day in self.days:
-                    data = self.activity_rates[cond][mouse][day]
+                    try:
+                        data = self.activity_rates[cond][mouse][day]
+                    except:
+                        continue
 
                     
 
