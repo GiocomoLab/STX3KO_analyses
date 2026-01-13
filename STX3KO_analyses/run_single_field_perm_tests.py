@@ -151,6 +151,6 @@ def run_sparse_mice(tskey):
             pickle.dump(shuff_results,file)
 
 if __name__ == "__main__":
-    tskey = 'F_dff'
+    tskey = 'spks'
     run_dense_mice(tskey)
     run_sparse_mice(tskey)

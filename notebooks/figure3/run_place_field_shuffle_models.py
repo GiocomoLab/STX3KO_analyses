@@ -36,7 +36,7 @@ def run_model(df_perm, all_mice, ctrl_mice, stat_column):
     df_perm["cre"] = df_perm["mouse"].map(genotype_map)
     df_perm["cre"] = df_perm["cre"].astype("category")
 
-    md_perm = smf.mixedlm(f"{stat_column} ~ cre * day * nov", df_perm, groups=df_perm["mouse"])
+    md_perm = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df_perm, groups=df_perm["mouse"])
     try:
         res_perm = md_perm.fit()
         return res_perm.fe_params["cre[T.ko]"]
@@ -53,11 +53,17 @@ def run_n_fields_dense():
     with open('/home/mplitt/shuffle_pkls/dense_place_field_spatial_shuffle_F_dff.pkl','rb') as file:
         shuff_results = pickle.load(file)
 
-    df = {'cre': [], 'mouse': [], 'day': [], 'nov': [], 'n_fields': []}
+    df = {'cre': [], 'mouse': [], 'day': [], 'nov': [], 'n_fields': [], 'speed': [], 'licks': []}
     for key, mice in zip(('ctrl', 'ko'),(ctrl_mice, ko_mice)):
         for mouse in mice:
             for day in range(6):
+                sess = u.load_vr_day(mouse,day, pkldir='/mnt/BigDisk/YMaze_VR_Pkls')
                 for nov in ( 'fam', 'nov'):
+                    if nov=='fam':
+                        trial_mask = sess.trial_info['LR']!=sess.novel_arm
+                    else:
+                        trial_mask = sess.trial_info['LR']==sess.novel_arm
+
 
                     rising_edges = shuff_results[mouse][day][nov]['rising_edges']
                     falling_edges = shuff_results[mouse][day][nov]['falling_edges']
@@ -66,6 +72,9 @@ def run_n_fields_dense():
                     mask = (width>1) * (width<25) 
                     n_fields = np.bincount(rising_edges[mask,0])
                     
+
+                    mu_speed = np.nanmean(sess.trial_matrices['speed'][trial_mask,:].ravel())
+                    mu_licks = np.nanmean(sess.trial_matrices['licks'][trial_mask,:].ravel())
 
                     # widths = shuff_resu
             
@@ -77,6 +86,8 @@ def run_n_fields_dense():
                         df['day'].append(day)
                         df['nov'].append(nov)
                         df['n_fields'].append(n)
+                        df['speed'].append(mu_speed)
+                        df['licks'].append(mu_licks)
 
     df = pd.DataFrame.from_dict(df)
 
@@ -86,13 +97,15 @@ def run_n_fields_dense():
     df["day"] = df["day"].astype("category")
     df["nov"] = df["nov"].astype("category")
     df["rank_n_fields"] = df["n_fields"].rank()
+    df['speed_z'] = sp.stats.zscore(df['speed'])
+    df['licks_z'] = sp.stats.zscore(df['licks'])
 
     result_dict = {}
     for stat_column in ('n_fields', 'rank_n_fields'):
         
 
         # Fit a mixed model on ranks
-        model = smf.mixedlm(f"{stat_column} ~ cre * day * nov", df, groups=df["mouse"])
+        model = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df, groups=df["mouse"])
         model_result = model.fit()
 
         # run genotype shuffles
@@ -119,11 +132,16 @@ def run_width_dense():
     with open('/home/mplitt/shuffle_pkls/dense_place_field_spatial_shuffle_F_dff.pkl','rb') as file:
         shuff_results = pickle.load(file)
 
-    df = {'cre': [], 'mouse': [], 'day': [], 'nov': [], 'width': []}
+    df = {'cre': [], 'mouse': [], 'day': [], 'nov': [], 'width': [], 'speed': [], 'licks': []}
     for key, mice in zip(('ctrl', 'ko'),(ctrl_mice, ko_mice)):
         for mouse in mice:
             for day in range(6):
+                sess = u.load_vr_day(mouse,day, pkldir='/mnt/BigDisk/YMaze_VR_Pkls')
                 for nov in ( 'fam', 'nov'):
+                    if nov=='fam':
+                        trial_mask = sess.trial_info['LR']!=sess.novel_arm
+                    else:
+                        trial_mask = sess.trial_info['LR']==sess.novel_arm
 
                     rising_edges = shuff_results[mouse][day][nov]['rising_edges']
                     falling_edges = shuff_results[mouse][day][nov]['falling_edges']
@@ -131,6 +149,9 @@ def run_width_dense():
                 
                     mask = (widths>1) * (widths<25) * (rising_edges[:,1]>0) * (falling_edges[:,1]<29)
                     widths = widths[mask]
+
+                    mu_speed = np.nanmean(sess.trial_matrices['speed'][trial_mask,:].ravel())
+                    mu_licks = np.nanmean(sess.trial_matrices['licks'][trial_mask,:].ravel())
                     
 
                     for w in widths:
@@ -140,6 +161,8 @@ def run_width_dense():
                         df['nov'].append(nov)
                 
                         df['width'].append(w*10)
+                        df['speed'].append(mu_speed)
+                        df['licks'].append(mu_licks)
 
     df = pd.DataFrame.from_dict(df)
 
@@ -149,13 +172,15 @@ def run_width_dense():
     df["day"] = df["day"].astype("category")
     df["nov"] = df["nov"].astype("category")
     df["rank_width"] = df["width"].rank()
+    df['speed_z'] = sp.stats.zscore(df['speed'])
+    df['licks_z'] = sp.stats.zscore(df['licks'])
 
     result_dict = {}
     for stat_column in ('width', 'rank_width'):
         
 
         # Fit a mixed model on ranks
-        model = smf.mixedlm(f"{stat_column} ~ cre * day * nov", df, groups=df["mouse"])
+        model = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df, groups=df["mouse"])
         model_result = model.fit()
 
         # run genotype shuffles
@@ -177,9 +202,9 @@ def run_width_dense():
 if __name__ == "__main__":
 
     result_dict = run_n_fields_dense()
-    with open('/home/mplitt/shuffle_pkls/dense_n_fields_mixedlm_shuffle.pkl', 'wb') as file:
+    with open('/mnt/BigDisk/shuffle_pkls/dense_n_fields_mixedlm_shuffle.pkl', 'wb') as file:
         pickle.dump(result_dict, file)
 
     result_dict = run_width_dense()
-    with open('/home/mplitt/shuffle_pkls/dense_width_mixedlm_shuffle.pkl', 'wb') as file:
+    with open('/mnt/BigDisk/shuffle_pkls/dense_width_mixedlm_shuffle.pkl', 'wb') as file:
         pickle.dump(result_dict, file)
