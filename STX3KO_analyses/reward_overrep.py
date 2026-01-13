@@ -542,7 +542,7 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = 0
     return fig, ax
 
 
-def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', vmin = -.25, vmax = 5):
+def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', vmin = -.25, vmax = 5, all_cells=False):
     '''
 
     :param day:
@@ -567,6 +567,7 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
             if mouse == 'SparseKO_09' and day==2:
                 continue
             sess = u.load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls')
+            print(mouse)
 
             first_bin = sess.trial_matrices['bin_centers'][0]
             if l_rzone is None:
@@ -577,10 +578,14 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
 
             for chan in ('channel_0', 'channel_1'):
                 key = chan + '_' + ts_key
+
+                if all_cells:
+                    l_cellmask = np.ones(sess.place_cell_info[key]['left']['masks'].shape, dtype=bool)
+                    r_cellmask = np.ones(sess.place_cell_info[key]['right']['masks'].shape, dtype=bool)
+                else:
+                    l_cellmask = sess.place_cell_info[key]['left']['masks']
+                    r_cellmask= sess.place_cell_info[key]['right']['masks']
             
-                l_cellmask = sess.place_cell_info[key]['left']['masks']
-                r_cellmask= sess.place_cell_info[key]['right']['masks']
-           
                 trial_mat = sess.trial_matrices[key]
                 
 

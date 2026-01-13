@@ -22,23 +22,42 @@ def load_single_sess(mouse, deets, pkl_basedir = '/home/mplitt/YMazeSessPkls'):
     return sess
 
 if __name__=="__main__":
-    for session_dict in (stx.ymaze_sess_deets.CTRL_sessions, stx.ymaze_sess_deets.KO_sessions):
+    # for session_dict in (stx.ymaze_sess_deets.CTRL_sessions, stx.ymaze_sess_deets.KO_sessions):
 
-        for mouse, sessions in session_dict.items():
-            print(mouse)
-            for deets in sessions:
-                if isinstance(deets,tuple):
-                    for _deets in deets:
-                        print(_deets)
+    #     for mouse, sessions in session_dict.items():
+    #         print(mouse)
+    #         for deets in sessions:
+    #             if isinstance(deets,tuple):
+    #                 for _deets in deets:
+    #                     print(_deets)
                         
-                        sess.place_cells_calc_pop(Fkey='F_dff', nperms=100, shuffle_method='population', p_thr=.05)
-                        sess._abc_impl = None
-                        tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
+    #                     sess.place_cells_calc_pop(Fkey='F_dff', nperms=100, shuffle_method='population', p_thr=.05)
+    #                     sess._abc_impl = None
+    #                     tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
                         
-                else:
-                    print(deets)
-                    sess = load_single_sess(mouse,deets)
+    #             else:
+    #                 print(deets)
+    #                 sess = load_single_sess(mouse,deets)
                     
-                    sess.place_cells_calc_pop(Fkey='F_dff', nperms=100, shuffle_method='population', p_thr=.05)
-                    sess._abc_impl = None
-                    tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
+    #                 sess.place_cells_calc_pop(Fkey='F_dff', nperms=100, shuffle_method='population', p_thr=.05)
+    #                 sess._abc_impl = None
+    #                 tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
+
+
+    
+
+    for m, (mouse, sessions) in enumerate(stx.ymaze_sess_deets.SparseKO_sessions.items()):
+        print(mouse)
+        
+        for i, deets in enumerate(sessions):
+            if mouse == 'SparseKO_09' and i==2:
+                continue
+
+            if deets is not None:
+                sess = load_single_sess(mouse,deets)
+                
+                sess.place_cells_calc_pop(Fkey='channel_0_F_dff', out_key='channel_0_F_dff', nperms=100, shuffle_method='population', p_thr=.05)
+                sess.place_cells_calc_pop(Fkey='channel_1_F_dff', out_key='channel_1_F_dff', nperms=100, shuffle_method='population', p_thr=.05)
+            
+                sess._abc_impl = None
+                tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')

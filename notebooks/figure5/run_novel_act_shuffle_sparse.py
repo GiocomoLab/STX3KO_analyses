@@ -83,7 +83,7 @@ def reduce_shuff_df(df):
 def run_novel_activity_sparse(n_perms=1000):
 
 
-    block_rate = stx.novel_activity_rate.BlockTransitionActivityRate_Sparse(ts_key='F_dff')
+    block_rate = stx.novel_activity_rate.BlockTransitionActivityRate_Sparse(ts_key='spks')
     df = block_rate.build_dataframe_for_shuffles(max_trial=5)
 
     red_df = reduce_shuff_df(df)
@@ -137,7 +137,7 @@ def run_novel_activity_sparse(n_perms=1000):
 if __name__ == "__main__":
 
     result_dict = run_novel_activity_sparse()
-    with open('/home/mplitt/shuffle_pkls/sparse_novel_activity_mixedlm_shuffle.pkl', 'wb') as file:
+    with open('/home/mplitt/shuffle_pkls/sparse_novel_activity_mixedlm_shuffle_spks.pkl', 'wb') as file:
         pickle.dump(result_dict, file)
 
     

@@ -313,61 +313,61 @@ class YMazeSession(TwoPUtils.sess.Session):
         self.add_pos_binned_trial_matrix(key_out)
         self.add_pos_binned_trial_matrix(spks_key)
         
-    def neuropil_corrected_dff_ES(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, chan_mask=None, **dff_kwargs):
-        """
-        Neuropil-corrected dF/F calculation with an optional channel mask.
-        """
-        if key_out is None:
-            key_out = Fkey + '_dff'
-        if tau is None:
-            tau = self.s2p_ops['tau']['channel_0']['tau'] if self.n_channels > 1 else self.s2p_ops['tau']
-        if spks_key is None:
-            spks_key = 'spks'
+    # def neuropil_corrected_dff_ES(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, chan_mask=None, **dff_kwargs):
+    #     """
+    #     Neuropil-corrected dF/F calculation with an optional channel mask.
+    #     """
+    #     if key_out is None:
+    #         key_out = Fkey + '_dff'
+    #     if tau is None:
+    #         tau = self.s2p_ops['tau']['channel_0']['tau'] if self.n_channels > 1 else self.s2p_ops['tau']
+    #     if spks_key is None:
+    #         spks_key = 'spks'
             
-        # Initialize arrays filled with NaN
-        Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
-        dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
-        spks = np.zeros(self.timeseries[Fkey].shape) * np.nan
+    #     # Initialize arrays filled with NaN
+    #     Freg = np.zeros(self.timeseries[Fkey].shape) * np.nan
+    #     dff = np.zeros(self.timeseries[Fkey].shape) * np.nan
+    #     spks = np.zeros(self.timeseries[Fkey].shape) * np.nan
         
-        for block in np.unique(self.trial_info['block_number']).tolist():
-            start_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0]
-            stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
-            print(start_ind, stop_ind)
+    #     for block in np.unique(self.trial_info['block_number']).tolist():
+    #         start_ind = self.trial_start_inds[self.trial_info['block_number'] == block][0]
+    #         stop_ind = self.teleport_inds[self.trial_info['block_number'] == block][-1]
+    #         print(start_ind, stop_ind)
             
-            if chan_mask is not None:
-                # Ensure mask is the correct length
-                if len(chan_mask) != self.timeseries[Fkey].shape[1]:
-                    raise ValueError("chan_mask length does not match time series length")
-                mask_range = chan_mask[start_ind:stop_ind]  # Mask within this range
-            else:
-                mask_range = np.ones(stop_ind - start_ind, dtype=bool)  # Default to all True
+    #         if chan_mask is not None:
+    #             # Ensure mask is the correct length
+    #             if len(chan_mask) != self.timeseries[Fkey].shape[1]:
+    #                 raise ValueError("chan_mask length does not match time series length")
+    #             mask_range = chan_mask[start_ind:stop_ind]  # Mask within this range
+    #         else:
+    #             mask_range = np.ones(stop_ind - start_ind, dtype=bool)  # Default to all True
                 
-            if not np.any(mask_range):
-                continue
+    #         if not np.any(mask_range):
+    #             continue
 
                 
-            curr_idx = np.arange(start_ind, stop_ind)
+    #         curr_idx = np.arange(start_ind, stop_ind)
             
-            # Extract masked segment
-            if chan_mask is not None:
-                curr_idx = curr_idx[chan_mask[curr_idx]]
-                print(curr_idx)
-            if len(curr_idx) == 0:
-                continue
+    #         # Extract masked segment
+    #         if chan_mask is not None:
+    #             curr_idx = curr_idx[chan_mask[curr_idx]]
+    #             print(curr_idx)
+    #         if len(curr_idx) == 0:
+    #             continue
             
-            # Apply Neuropil correction only where mask is True
-            Freg[:, curr_idx] = self.timeseries[Fkey][:, curr_idx] - Fneu_coef * self.timeseries[Fneukey][:, curr_idx] \
-                                + Fneu_coef * np.nanmin(self.timeseries[Fneukey][:, curr_idx], axis=1, keepdims=True)
+    #         # Apply Neuropil correction only where mask is True
+    #         Freg[:, curr_idx] = self.timeseries[Fkey][:, curr_idx] - Fneu_coef * self.timeseries[Fneukey][:, curr_idx] \
+    #                             + Fneu_coef * np.nanmin(self.timeseries[Fneukey][:, curr_idx], axis=1, keepdims=True)
 
-            Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
-            dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx], **dff_kwargs)
-            spks[:, curr_idx] = dcnv.oasis(dff[:, curr_idx], 2000, tau, self.scan_info['frame_rate'])
+    #         Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
+    #         dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx], **dff_kwargs)
+    #         spks[:, curr_idx] = dcnv.oasis(dff[:, curr_idx], 2000, tau, self.scan_info['frame_rate'])
             
-        # Add processed data back to time series while preserving NaNs
-        #changed to muxing version 
-        self.add_timeseries(**{key_out: dff, spks_key: spks})
-        self.add_pos_binned_trial_matrix(key_out)
-        self.add_pos_binned_trial_matrix(spks_key)
+    #     # Add processed data back to time series while preserving NaNs
+    #     #changed to muxing version 
+    #     self.add_timeseries(**{key_out: dff, spks_key: spks})
+    #     self.add_pos_binned_trial_matrix(key_out)
+    #     self.add_pos_binned_trial_matrix(spks_key)
 
     
     def neuropil_corrected_dff_mux(self, Fkey_='F', Fneukey_='Fneu', spks_key_='spks', Fneu_coef=.7, tau=None, key_out=None, channels=None, **dff_kwargs):
@@ -490,7 +490,8 @@ class YMazeSession(TwoPUtils.sess.Session):
             tmp_output_shuffle = False
 
         if trial_mask is None:
-            trial_mask = np.ones(self.trial_start_inds.shape) > 0
+            trial_mask = 1
+            # trial_mask = np.ones(self.trial_start_inds.shape) > 0
 
         if lr_split:
 
