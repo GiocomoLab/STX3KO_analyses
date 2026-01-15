@@ -22,26 +22,26 @@ def load_single_sess(mouse, deets, pkl_basedir = '/home/mplitt/YMazeSessPkls'):
     return sess
 
 if __name__=="__main__":
-    # for session_dict in (stx.ymaze_sess_deets.CTRL_sessions, stx.ymaze_sess_deets.KO_sessions):
+    for session_dict in (stx.ymaze_sess_deets.CTRL_sessions, stx.ymaze_sess_deets.KO_sessions):
 
-    #     for mouse, sessions in session_dict.items():
-    #         print(mouse)
-    #         for deets in sessions:
-    #             if isinstance(deets,tuple):
-    #                 for _deets in deets:
-    #                     print(_deets)
+        for mouse, sessions in session_dict.items():
+            print(mouse)
+            for deets in sessions:
+                if isinstance(deets,tuple):
+                    for _deets in deets:
+                        print(_deets)
                         
-    #                     sess.place_cells_calc_pop(Fkey='F_dff', nperms=100, shuffle_method='population', p_thr=.05)
-    #                     sess._abc_impl = None
-    #                     tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
+                        sess.place_cells_calc(Fkey='F_dff', nperms=1000, use_tank_method=True)
+                        sess._abc_impl = None
+                        tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
                         
-    #             else:
-    #                 print(deets)
-    #                 sess = load_single_sess(mouse,deets)
+                else:
+                    print(deets)
+                    sess = load_single_sess(mouse,deets)
                     
-    #                 sess.place_cells_calc_pop(Fkey='F_dff', nperms=100, shuffle_method='population', p_thr=.05)
-    #                 sess._abc_impl = None
-    #                 tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
+                    sess.place_cells_calc(Fkey='F_dff', nperms=1000, use_tank_method=True)
+                    sess._abc_impl = None
+                    tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
 
 
     
@@ -56,8 +56,8 @@ if __name__=="__main__":
             if deets is not None:
                 sess = load_single_sess(mouse,deets)
                 
-                sess.place_cells_calc_pop(Fkey='channel_0_F_dff', out_key='channel_0_F_dff', nperms=100, shuffle_method='population', p_thr=.05)
-                sess.place_cells_calc_pop(Fkey='channel_1_F_dff', out_key='channel_1_F_dff', nperms=100, shuffle_method='population', p_thr=.05)
+                sess.place_cells_calc(Fkey='channel_0_F_dff', out_key='channel_0_F_dff', nperms=1000, mux=True, use_tank_method=True)
+                sess.place_cells_calc(Fkey='channel_1_F_dff', out_key='channel_1_F_dff', nperms=1000, mux=True, use_tank_method=True)
             
                 sess._abc_impl = None
                 tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')

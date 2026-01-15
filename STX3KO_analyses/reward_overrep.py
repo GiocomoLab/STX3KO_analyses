@@ -123,6 +123,7 @@ class PeriRewardCellFrac_Sparse:
         self.df_shuff = None
         self.ttypes = ('fam', 'nov')
         self.place_cell_only = place_cell_only
+
         if not for_shuffs:
             self.fill_df(ts_key)
         else:
@@ -147,6 +148,7 @@ class PeriRewardCellFrac_Sparse:
         for mouse in self.mice:
             for day in self.days:
 
+              
                 if (mouse == 'SparseKO_09') and (day==2):
                     continue
                 sess = u.load_single_day(mouse, day,pkl_basedir='/home/mplitt/YMazeSessPkls')
@@ -542,7 +544,7 @@ def plot_leftright_crossval_placecells_withinday(day, ts_key = 'F_dff', vmin = 0
     return fig, ax
 
 
-def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', vmin = -.25, vmax = 5, all_cells=False):
+def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', vmin = -.25, vmax = 5, all_cells=False, remove_9=False):
     '''
 
     :param day:
@@ -564,6 +566,8 @@ def plot_leftright_crossval_placecells_withinday_sparse(day, ts_key = 'F_dff', v
      
         l_rzone, r_rzone = None, None
         for mouse in mice:
+            if mouse=='SparseKO_09' and remove_9:
+                continue
             if mouse == 'SparseKO_09' and day==2:
                 continue
             sess = u.load_single_day(mouse, day, pkl_basedir='/home/mplitt/YMazeSessPkls')
@@ -807,10 +811,11 @@ class RewardCells:
 
 class RewardCells_Sparse:
 
-    def __init__(self, days = np.arange(6), ts_key = 'F_dff'):
+    def __init__(self, days = np.arange(6), ts_key = 'F_dff', place_cell_only=False):
 
         self.days = days
         self.ts_key = ts_key
+        self.place_cell_only=place_cell_only
 
         sess = u.load_single_day(sparse_mice[0],0, verbose=False)
         self.rz_early = (np.argwhere(sess.trial_matrices['bin_edges'][:-1]>=sess.rzone_early['tfront'])[0], np.argwhere(sess.rzone_early['tback']<=sess.trial_matrices['bin_edges'][1:])[0] )
@@ -849,11 +854,14 @@ class RewardCells_Sparse:
         
         left_mask = sess.trial_info['LR']==-1
 
-        l_cellmask = 1.*sess.place_cell_info[ts_key]['left']['masks']
-        r_cellmask= 1.*sess.place_cell_info[ts_key]['right']['masks']
-        pc_mask = l_cellmask+r_cellmask
-            
-        pc_mask = pc_mask>0
+        if self.place_cell_only:
+            l_cellmask = 1.*sess.place_cell_info[ts_key]['left']['masks']
+            r_cellmask= 1.*sess.place_cell_info[ts_key]['right']['masks']
+            pc_mask = l_cellmask+r_cellmask
+                
+            pc_mask = pc_mask>0
+        else:
+            pc_mask = np.ones((sess.trial_matrices[ts_key].shape[-1],), dtype=bool)
         
         return np.nanmean(sess.trial_matrices[ts_key][left_mask,1:-1,:],axis=0)[:,pc_mask], np.nanmean(sess.trial_matrices[ts_key][~left_mask,1:-1,:],axis=0)[:,pc_mask]
     

@@ -124,13 +124,13 @@ def run_rr_frac_sparse(n_perms=10000):
 
 if __name__ == "__main__":
 
-    # result_dict = run_pc_frac_sparse(n_perms=10000)
-    # with open('/home/mplitt/shuffle_pkls/sparse_pc_frac_mixedlm_shuffle.pkl', 'wb') as file:
-    #     pickle.dump(result_dict, file)
+    result_dict = run_pc_frac_sparse(n_perms=1000)
+    with open('/home/mplitt/shuffle_pkls/sparse_pc_frac_mixedlm_shuffle.pkl', 'wb') as file:
+        pickle.dump(result_dict, file)
 
     
 
-    result_dict = run_rr_frac_sparse(n_perms=10000)
+    result_dict = run_rr_frac_sparse(n_perms=1000)
     with open('/home/mplitt/shuffle_pkls/sparse_rewardcell_mixedlm_shuffle.pkl', 'wb') as file:
         pickle.dump(result_dict, file)
 
