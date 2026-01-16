@@ -147,11 +147,14 @@ def run_sparse_mice():
         shuffle_results[mouse] = {}
 
         for chan in ('channel_0', 'channel_1'):
-            tskey = f'{chan}_spks'
+            if chan == 'channel_0':
+                tskey = f'{chan}_spks'
+            else:
+                tskey = f'{chan}_spks_tau1.2'
             results_list = joblib.Parallel(n_jobs=int(days.shape[0]))(joblib.delayed(field_masks)(mouse, day, tskey) for day in days)
             shuffle_results[mouse][chan] = dict(zip([int(d) for d in days],results_list))
 
-    with open('/home/mplitt/shuffle_pkls/sparse_place_field_spatial_shuffle_spks.pkl','wb') as file:
+    with open('/home/mplitt/shuffle_pkls/sparse_place_field_spatial_shuffle_spks_tau1.2.pkl','wb') as file:
         pickle.dump(shuffle_results, file)
 
 if __name__ == "__main__":

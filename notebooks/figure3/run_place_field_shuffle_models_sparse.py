@@ -34,7 +34,7 @@ def run_n_fields_sparse(n_perms=1000):
 
 
 
-    with open('/home/mplitt/shuffle_pkls/sparse_place_field_spatial_shuffle_F_dff.pkl','rb') as file:
+    with open('/home/mplitt/shuffle_pkls/sparse_place_field_spatial_shuffle_spks_tau1.5.pkl','rb') as file:
         shuff_results = pickle.load(file)
 
 
@@ -102,7 +102,7 @@ def run_width_sparse(n_perms=1000):
 
 
 
-    with open('/home/mplitt/shuffle_pkls/sparse_place_field_spatial_shuffle_F_dff.pkl','rb') as file:
+    with open('/home/mplitt/shuffle_pkls/sparse_place_field_spatial_shuffle_spks_tau1.pkl','rb') as file:
         shuff_results = pickle.load(file)
 
 
@@ -163,11 +163,11 @@ def run_width_sparse(n_perms=1000):
 if __name__ == "__main__":
 
     result_dict = run_n_fields_sparse(n_perms=1000)
-    with open('/home/mplitt/shuffle_pkls/sparse_n_fields_mixedlm_shuffle.pkl', 'wb') as file:
+    with open('/mnt/BigDisk/shuffle_pkls/sparse_n_fields_mixedlm_shuffle_spks_tau1.pkl', 'wb') as file:
         pickle.dump(result_dict, file)
 
     result_dict = run_width_sparse(n_perms=1000)
-    with open('/home/mplitt/shuffle_pkls/sparse_width_mixedlm_shuffle.pkl', 'wb') as file:
+    with open('/mnt/BigDisk/shuffle_pkls/sparse_width_mixedlm_shuffle_spks_tau1.pkl', 'wb') as file:
         pickle.dump(result_dict, file)
 
 

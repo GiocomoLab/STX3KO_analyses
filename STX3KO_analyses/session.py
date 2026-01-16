@@ -379,7 +379,8 @@ class YMazeSession(TwoPUtils.sess.Session):
             print(chan)
             Fkey = chan + '_' + Fkey_
             Fneukey = chan + '_' + Fneukey_
-            tau = self.s2p_ops[chan]['tau']
+            if tau is None:
+                tau = self.s2p_ops[chan]['tau']
             spks_key = chan + '_' + spks_key_
 
             key_out = chan + '_' + Fkey_ + '_dff'
@@ -744,6 +745,197 @@ class ConcatYMazeSession:
 
         if run_field_perm_masks:
             attrs['field_perm_masks'] = field_perm_masks
+
+        return attrs
+    
+    def fam_place_cell_mask(self):
+        '''
+
+        :return:
+        '''
+        if self.novel_arm == -1:
+            if 'right' in self.place_cell_info.keys():
+                return self.place_cell_info['right']['masks']
+            else:
+                return self.place_cell_info[1]['masks'].sum(axis=0) > 0
+        else:
+            if 'left' in self.place_cell_info.keys():
+                return self.place_cell_info['left']['masks']
+            else:
+                return self.place_cell_info[-1]['masks'].sum(axis=0) > 0
+
+    def nov_place_cell_mask(self):
+        '''
+
+        :return:
+        '''
+        if self.novel_arm == 1:
+            if 'right' in self.place_cell_info.keys():
+                return self.place_cell_info['right']['masks']
+            else:
+                return self.place_cell_info[1]['masks'].sum(axis=0) > 0
+        else:
+            if 'left' in self.place_cell_info.keys():
+                return self.place_cell_info['left']['masks']
+            else:
+                return self.place_cell_info[-1]['masks'].sum(axis=0) > 0
+
+class ConcatYMazeSession_Sparse:
+
+    def __init__(self, sess_list, common_roi_mapping, trial_info_keys=['LR', 'block_number'],
+                 trial_mat_keys=['F_dff', ], channels = ('channel_0','channel_1'),
+                 timeseries_keys=(), run_place_cells=True, place_cell_ts='F_dff', day_inds=None,
+                 load_ops=False, load_stats = False, run_field_perm_masks=True):
+        
+        self.channels = channels
+        attrs = self.concat(sess_list, channels, common_roi_mapping, trial_info_keys, trial_mat_keys,
+                            timeseries_keys, run_place_cells, day_inds, place_cell_ts, load_ops, load_stats, run_field_perm_masks)
+        
+
+        self.__dict__.update(attrs)
+        trial_info_keys = []
+
+    @staticmethod
+    def concat(_sess_list, channels, common_roi_mapping, t_info_keys, t_mat_keys,
+               timeseries_keys, run_place_cells,  day_inds, place_cell_ts, load_ops, load_stats, run_field_perm_masks):
+        attrs = {}
+        attrs['day_inds'] = day_inds
+        # same info
+        #         same_attrs = ['mouse', 'novel_arm','rzone_early', 'rzone_late']
+        attrs.update({'mouse': _sess_list[0].mouse,
+                      'novel_arm': _sess_list[0].novel_arm,
+                      'rzone_early': _sess_list[0].rzone_early,
+                      'rzone_late': _sess_list[0].rzone_late
+                      })
+        if attrs['novel_arm'] == -1:
+            attrs.update({'rzone_nov': attrs['rzone_early'],
+                          'rzone_fam': attrs['rzone_late']})
+        elif attrs['novel_arm'] == 1:
+            attrs.update({'rzone_fam': attrs['rzone_early'],
+                          'rzone_nov': attrs['rzone_late']})
+
+        # print(t_info_keys)
+
+        # concat basic info
+        basic_info_attrs = ['date', 'scan', 'scan_info', 'scene', 'session', 'teleport_inds', 'trial_start_inds', 'trial_ends', 'trial_starts']
+        attrs.update({k: [] for k in basic_info_attrs})
+
+        if 'sess_num_ravel' not in t_info_keys:
+            t_info_keys.append('sess_num_ravel')
+        # if 'sess_num' not in t_info_keys and day_inds is not None:
+        #     t_info_keys.append('sess_num')
+
+        trial_info = {k: [] for k in t_info_keys}
+
+        trial_mat = {k: [] for k in t_mat_keys}
+        trial_mat['bin_edges'] = _sess_list[0].trial_matrices['bin_edges']
+        trial_mat['bin_centers'] = _sess_list[0].trial_matrices['bin_centers']
+
+        timeseries = {k: [] for k in timeseries_keys}
+
+        if run_place_cells:
+            place_cells = {}
+            for chan in channels:
+                place_cells[chan] = {-1: {'masks': [], 'SI': [], 'p': []}, 1: {'masks': [], 'SI': [], 'p': []}}
+
+
+        cell_info_attrs= ['s2p_stats', 's2p_ops']
+        attrs.update({k:{'channel_0':[], 'channel_1':[]} for k in cell_info_attrs})
+        last_block = 0
+        cum_frames = 0
+        for ind, _sess in enumerate(_sess_list):
+            for chan in channels:
+                if load_ops:
+                    attrs['s2p_ops'][chan].append(_sess.s2p_ops[chan])
+                if load_stats:
+                    attrs['s2p_stats'][chan].append(_sess.s2p_stats[chan][common_roi_mapping[chan][ind,:]])
+                for k in basic_info_attrs:
+                    if k in ('teleport_inds', 'trial_start_inds'):
+                        attrs[k].append(getattr(_sess, k) + cum_frames)
+                    else:
+                        attrs[k].append(getattr(_sess, k))
+
+
+            for k in t_info_keys:
+
+                if k == 'sess_num_ravel':
+                    trial_info[k].append(np.zeros([_sess.trial_info['LR'].shape[0], ]) + ind)
+                # elif k == 'sess_num' and day_inds is not None:
+                #     trial_info[k].append(np.zeros([_sess.trial_info['LR'].shape[0], ]) + day_inds[ind])
+
+                elif k == 'block_number' and day_inds is not None and ind > 0:
+                    if _sess.trial_info[k][0] == 0 and day_inds[ind - 1] == day_inds[ind]:
+                        trial_info[k].append(_sess.trial_info[k] + _sess_list[ind - 1].trial_info[k][-1] + 1)
+                    else:
+                        trial_info[k].append(_sess.trial_info[k])
+                else:
+                    trial_info[k].append(_sess.trial_info[k])
+
+            for k in t_mat_keys:
+                if 'channel_0' in k:
+                    chan='channel_0'
+                elif 'channel_1' in k:
+                    chan = 'channel_1'
+                else:
+                    pass
+
+                if len(_sess.trial_matrices[k].shape) == 3:
+                    trial_mat[k].append(_sess.trial_matrices[k][:, :, common_roi_mapping[chan][ind, :]])
+                else:
+                    trial_mat[k].append(_sess.trial_matrices[k])
+
+            for k in timeseries_keys:
+                if 'channel_0' in k:
+                    chan='channel_0'
+                elif 'channel_1' in k:
+                    chan = 'channel_1'
+                else:
+                    pass
+            
+                if len(_sess.timeseries[k].shape) == 2 and _sess.timeseries[k].shape[0] > 1:
+                    # if _sess.timeseries[k].shape[0] > 1:
+                    timeseries[k].append(_sess.timeseries[k][common_roi_mapping[chan][ind, :], :])
+                elif len(_sess.timeseries[k].shape) == 2 and _sess.timeseries[k].shape[0] == 1:
+                    timeseries[k].append(_sess.timeseries[k])
+                else:
+                    timeseries[k].append(_sess.timeseries[k][np.newaxis, :])
+
+            if run_place_cells:
+                for chan in channels:
+                    for lr, _lr in [[-1, 'left'], [1, 'right']]:
+                        for k in ['masks', 'SI', 'p']:
+                            # print(chan)
+                            # print(place_cell_ts)
+                            place_cells[chan][lr][k].append(_sess.place_cell_info[f'{chan}_{place_cell_ts}'][_lr][k][common_roi_mapping[chan][ind, :]])
+
+          
+                    
+
+            cum_frames += _sess.timeseries['licks'].shape[1]
+        # print(t_info_keys)
+        for k in ['trial_start_inds', 'teleport_inds']:
+            attrs[k] = np.concatenate(attrs[k])
+
+        for k in t_info_keys:
+            # print(k)
+            trial_info[k] = np.concatenate(trial_info[k])
+        attrs['trial_info'] = trial_info
+
+        for k in t_mat_keys:
+            trial_mat[k] = np.concatenate(trial_mat[k], axis=0)
+        attrs['trial_matrices'] = trial_mat
+
+        for k in timeseries_keys:
+            timeseries[k] = np.concatenate(timeseries[k], axis=-1)
+        attrs['timeseries'] = timeseries
+
+        if run_place_cells:
+            for chan in channels:
+                for lr in [-1, 1]:
+                    for k in ['masks', 'SI', 'p']:
+                        place_cells[chan][lr][k] = np.array(place_cells[chan][lr][k])
+            attrs['place_cell_info'] = place_cells
+
 
         return attrs
     

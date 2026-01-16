@@ -367,6 +367,8 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
         sessions_deets = ymaze_sess_deets.KO_sessions[mouse]
     elif mouse in ymaze_sess_deets.CTRL_sessions.keys():
         sessions_deets = ymaze_sess_deets.CTRL_sessions[mouse]
+    elif mouse in ymaze_sess_deets.SparseKO_sessions.keys():
+        sessions_deets = ymaze_sess_deets.SparseKO_sessions[mouse]
     else:
         print("mouse ID typo")
         print("shenanigans")

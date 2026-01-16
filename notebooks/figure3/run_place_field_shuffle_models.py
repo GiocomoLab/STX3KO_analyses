@@ -149,20 +149,22 @@ def run_width_dense():
                 
                     mask = (widths>1) * (widths<25) * (rising_edges[:,1]>0) * (falling_edges[:,1]<29)
                     widths = widths[mask]
+                    rising_edges, falling_edges = rising_edges[mask,:], falling_edges[mask,:]
 
-                    mu_speed = np.nanmean(sess.trial_matrices['speed'][trial_mask,:].ravel())
-                    mu_licks = np.nanmean(sess.trial_matrices['licks'][trial_mask,:].ravel())
+                    mu_speed = np.nanmean(sess.trial_matrices['speed'][trial_mask,:], axis=0)
+                    mu_licks = np.nanmean(sess.trial_matrices['licks'][trial_mask,:], axis=0)
                     
 
-                    for w in widths:
+                    for w, l, r in zip(widths, rising_edges[:,1], falling_edges[:,1]):
                         df['cre'].append(key)
                         df['mouse'].append(mouse)
                         df['day'].append(day)
                         df['nov'].append(nov)
-                
+                        
+                        # print(w,l,r)
                         df['width'].append(w*10)
-                        df['speed'].append(mu_speed)
-                        df['licks'].append(mu_licks)
+                        df['speed'].append(np.nanmean(mu_speed[l:r]))
+                        df['licks'].append(np.nanmean(mu_licks[l:r]))
 
     df = pd.DataFrame.from_dict(df)
 
@@ -201,9 +203,9 @@ def run_width_dense():
 
 if __name__ == "__main__":
 
-    result_dict = run_n_fields_dense()
-    with open('/mnt/BigDisk/shuffle_pkls/dense_n_fields_mixedlm_shuffle.pkl', 'wb') as file:
-        pickle.dump(result_dict, file)
+    # result_dict = run_n_fields_dense()
+    # with open('/mnt/BigDisk/shuffle_pkls/dense_n_fields_mixedlm_shuffle.pkl', 'wb') as file:
+    #     pickle.dump(result_dict, file)
 
     result_dict = run_width_dense()
     with open('/mnt/BigDisk/shuffle_pkls/dense_width_mixedlm_shuffle.pkl', 'wb') as file:
