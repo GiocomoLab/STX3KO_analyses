@@ -82,8 +82,8 @@ SparseKO_sessions = {
     
     'SparseKO_09': (
                     # {'date': '24_05_2025', 'scene': 'TrainingYMaze', 'session': 2, 'scan': 20, 'exp_day': '0_mux'},
-                    {'date': '25_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'exp_day': 1, 'ravel_ind': 1},
-                    {'date': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 14, 'novel_arm': -1, 'exp_day': 2, 'ravel_ind': 2},
+                    {'date': '25_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'exp_day': 1, 'ravel_ind': 0},
+                    {'date': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 14, 'novel_arm': -1, 'exp_day': 2, 'ravel_ind': 1},
                     None,
                     # {'date': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 3, 'scan': 1, 'novel_arm': -1, 'exp_day': 3}, # ran out of disk space while scanning
         

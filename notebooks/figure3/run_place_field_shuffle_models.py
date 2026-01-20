@@ -174,8 +174,10 @@ def run_width_dense():
     df["day"] = df["day"].astype("category")
     df["nov"] = df["nov"].astype("category")
     df["rank_width"] = df["width"].rank()
-    df['speed_z'] = sp.stats.zscore(df['speed'])
-    df['licks_z'] = sp.stats.zscore(df['licks'])
+    # df['speed_z'] = sp.stats.zscore(df['speed'])
+    # df['licks_z'] = sp.stats.zscore(df['licks'])
+    df['speed_z'] = df['speed'].rank()
+    df['licks_z'] = df['licks'].rank()
 
     result_dict = {}
     for stat_column in ('width', 'rank_width'):

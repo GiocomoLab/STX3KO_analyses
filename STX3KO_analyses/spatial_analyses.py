@@ -44,7 +44,7 @@ def acrossday_corr(concat_sess,date_inds,key='F_dff',fam=True, method='pv'):
     else: 
         cell_mask = concat_sess.nov_place_cell_mask()
         trial_mask = concat_sess.trial_info["LR"]==concat_sess.novel_arm
-
+ 
     trials_mat = trials_mat[:,:, cell_mask]
     day_mat = np.zeros([date_inds.shape[0], *trials_mat.shape[1:]])
     for j, day in enumerate(date_inds.tolist()):

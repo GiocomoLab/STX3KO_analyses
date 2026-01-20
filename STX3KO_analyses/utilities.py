@@ -422,4 +422,49 @@ def single_mouse_concat_sessions(mouse, date_inds=None, load_ops = False, load_s
     return concat_sess
 
 
- 
+def sparse_concat_sessions(mouse, date_inds=None, load_ops = False, load_stats = True,
+                                trial_mat_keys=['channel_0_F_dff', 'channel_1_F_dff'],
+                            ):
+                                # timeseries_keys=('F_dff', 'spks', 'spks_th', 'F_dff_norm', 'F_dff_th', 'F_dff_bin',
+                                                # 'spks_norm','licks', 'speed', 
+                                                # 't', 'LR', 'reward', 'block_number', 'spks_nostop'),):
+    pkldir = os.path.join('/home/mplitt/YMazeSessPkls/', mouse)
+
+    match_inds = {}
+    for chan in ('channel_0', 'channel_1'):
+        with open(os.path.join(pkldir, f"roi_aligner_results_{chan}.pkl"), 'rb') as file:
+            match_inds[chan] = dill.load(file)
+    
+    if mouse in ymaze_sess_deets.SparseKO_sessions.keys():
+        sessions_deets = ymaze_sess_deets.SparseKO_sessions[mouse]
+    else:
+        print("mouse ID typo")
+        print("shenanigans")
+    if date_inds is None:
+        date_inds = np.arange(len(sessions_deets)).tolist()
+
+    date_inds_ravel = []
+    roi_inds = []
+    sess_list = []
+    for date_ind in date_inds:
+        deets = sessions_deets[date_ind]
+        
+        sess = session.YMazeSession.from_file(
+            os.path.join(pkldir, deets['date'], "%s_%d.pkl" % (deets['scene'], deets['session'])),
+            verbose=False)
+        sess.add_timeseries(licks=sess.vr_data['lick']._values)
+        sess.add_pos_binned_trial_matrix('licks')
+        sess.novel_arm = deets['novel_arm']
+        sess_list.append(sess)
+        date_inds_ravel.append(date_ind)
+        roi_inds.append(deets['ravel_ind'])
+        print(deets['date'], deets['scene'])
+
+    
+    common_roi_mapping = {'channel_0': common_rois(match_inds['channel_0'], roi_inds),
+                          'channel_1': common_rois(match_inds['channel_1'], roi_inds)}
+    concat_sess = session.ConcatYMazeSession_Sparse(sess_list, common_roi_mapping, day_inds=date_inds_ravel,
+                                             trial_mat_keys=trial_mat_keys,
+                                             timeseries_keys=[],
+                                             load_ops=load_ops, load_stats = load_stats)
+    return concat_sess

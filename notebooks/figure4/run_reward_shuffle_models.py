@@ -151,9 +151,9 @@ def run_rr_frac_dense():
 
 if __name__ == "__main__":
 
-    # result_dict = run_pc_frac_dense()
-    # with open('/home/mplitt/shuffle_pkls/dense_pc_frac_mixedlm_shuffle.pkl', 'wb') as file:
-    #     pickle.dump(result_dict, file)
+    result_dict = run_pc_frac_dense()
+    with open('/home/mplitt/shuffle_pkls/dense_pc_frac_mixedlm_shuffle.pkl', 'wb') as file:
+        pickle.dump(result_dict, file)
 
     result_dict = run_rr_frac_dense()
     with open('/home/mplitt/shuffle_pkls/dense_rewardcell_mixedlm_shuffle.pkl', 'wb') as file:

@@ -230,6 +230,93 @@ def plot_cell_across_days(sess, cell, plot_roi=True):
         return fig, (fam_ax, nov_ax, cbar_ax)
 
 
+def plot_cell_across_days_sparse(sess, cell, channel, days, plot_roi=True):
+    
+    fig = plt.figure(figsize = [25, 5])
+    gs = gridspec.GridSpec(6, 7, figure=fig)
+    mean = np.nanmean(sess.trial_matrices[f'{channel}_F_dff'][:,:,cell].ravel())
+    for day in days:
+        fam_mask = (sess.trial_info['sess_num']==day) & (sess.trial_info['LR']==-1*sess.novel_arm)
+        nov_mask = (sess.trial_info['sess_num']==day) & (sess.trial_info['LR']==sess.novel_arm)
+        fam_trialmat = sess.trial_matrices[f'{channel}_F_dff'][fam_mask,:,:][:,:,cell]
+        nov_trialmat = sess.trial_matrices[f'{channel}_F_dff'][nov_mask,:,:][:,:,cell]
+        
+    
+        fam_trialmat[np.isnan(fam_trialmat)]=1E-3
+        nov_trialmat[np.isnan(nov_trialmat)]=1E-3
+        
+        day_inds = sess.trial_info['sess_num'][sess.trial_info['LR']==-1*sess.novel_arm]==day
+        fam_ax = fig.add_subplot(gs[day,0])
+        h = fam_ax.imshow(fam_trialmat/mean, cmap = 'magma', aspect='auto', vmin = 0, vmax=5)
+        
+        nov_ax = fig.add_subplot(gs[day,1])
+        nov_ax.imshow(nov_trialmat/mean, cmap = 'magma', aspect='auto', vmin = 0, vmax=5)
+        
+        if days[-1]:
+            fam_ax.set_xticks([])
+            nov_ax.set_xticks([])
+        else:
+            fam_ax.set_xticks((-.5, 9.5, 19.5, 29.5))
+            fam_ax.set_xticklabels((0,100,200,300))
+            
+            nov_ax.set_xticks((-.5, 9.5, 19.5, 29.5))
+            nov_ax.set_xticklabels((0,100,200,300))
+    
+    
+    cbar_ax = fig.add_subplot(gs[2:4,2])
+    plt.colorbar(h,ax=cbar_ax)
+    
+    if plot_roi:
+        day0_com = (sess.s2p_stats[0][cell]['xpix'].mean(), sess.s2p_stats[0][cell]['ypix'].mean())
+        day5_com = (sess.s2p_stats[len(sess.s2p_stats)-1][cell]['xpix'].mean(), sess.s2p_stats[len(sess.s2p_stats)-1][cell]['ypix'].mean())
+        
+        sz = 30
+        day0img = np.zeros([int(sz*2), int(sz*2),3])
+        
+
+        
+        x_edges = (int(day0_com[1]-sz), int(day0_com[1]+sz))
+        y_edges = ( int(day0_com[0]-sz), int(day0_com[0]+sz))
+        img = sess.s2p_ops[0]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+       
+        img = np.minimum(img/np.percentile(img,100),1)
+        
+        day0_ax = fig.add_subplot(gs[1:5,3])
+        day0_ax.imshow(img,cmap='Greys_r')
+        day0_ax.set_xticks([])
+        day0_ax.set_yticks([])
+        
+       
+        circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
+        day0_ax.add_patch(circle)
+        
+        dayNimg = np.zeros([int(sz*2), int(sz*2), 3])
+
+        x_edges = (int(day5_com[1]-sz), int(day5_com[1]+sz))
+        y_edges = ( int(day5_com[0]-sz), int(day5_com[0]+sz))
+        img = sess.s2p_ops[-1]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+        
+        img = np.minimum(img/np.percentile(img,100),1)
+        
+        dayN_ax = fig.add_subplot(gs[1:5,5])
+        dayN_ax.imshow(img,cmap='Greys_r')
+        dayN_ax.set_xticks([])
+        dayN_ax.set_yticks([])
+        
+       
+        
+        day5_ax = fig.add_subplot(gs[2:5,6])
+        day5_ax.imshow(day5img,cmap='Greys_r')
+        day5_ax.set_xticks([])
+        day5_ax.set_yticks([])
+        
+        circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
+        dayN_ax.add_patch(circle)
+
+        return fig, (fam_ax, nov_ax, cbar_ax, day0_ax, dayN_ax)
+    else:
+        return fig, (fam_ax, nov_ax, cbar_ax)
+
 
 def plot_crossval_placecells_across_days(mice, max_sess = 6, key = 'F_dff'):
     '''
