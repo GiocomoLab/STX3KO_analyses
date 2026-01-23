@@ -36,7 +36,7 @@ def run_pc_model(df_perm, all_mice, ctrl_mice, stat_column):
     df_perm["cond"] = df_perm["mouse"].map(genotype_map)
 
 
-    md_perm = smf.mixedlm(f"{stat_column} ~ C(cond)*C(ttype)*C(day) + speed + licks", df_perm, groups=df_perm["mouse"])
+    md_perm = smf.mixedlm(f"{stat_column} ~  C(cond) + C(ttype) + C(day) + C(lr) + rank_speed + rank_licks", df_perm, groups=df_perm["mouse"])
     try:
         res_perm = md_perm.fit()
         if res_perm.converged:
@@ -54,15 +54,18 @@ def run_pc_frac_dense():
                         {'ctrl': ctrl_mice, 'ko': ko_mice},
                         np.arange(6), place_cell_only=True, ts_key='F_dff')
     df = frac_cls.df.copy()
+    print(df.columns)
 
     df['rank_frac'] = df['frac'].rank()
+    df['rank_speed'] = df['speed'].rank()
+    df['rank_licks'] = df['licks'].rank()
 
     result_dict = {}
-    for stat_column in ('frac', 'rank_frac'):
+    for stat_column in ('frac','rank_frac'):
         
 
         # Fit a mixed model on ranks
-        model = smf.mixedlm(f"{stat_column} ~ C(cond)*C(ttype)*C(day) + speed + licks", df, groups=df["mouse"])
+        model = smf.mixedlm(f"{stat_column} ~ C(cond) + C(ttype) + C(day) + C(lr) + rank_speed + rank_licks", df, groups=df["mouse"])
         model_result = model.fit()
 
         # run genotype shuffles
@@ -99,15 +102,7 @@ def run_rr_model(df_perm, all_mice, ctrl_mice, stat_column):
     return aov.loc[aov['Source']=='ko','F'].values
 
 
-    # md_perm = smf.mixedlm(f"{stat_column} ~ C(ko) + C(day)", df_perm, groups=df_perm["mouse"])
-    # try:
-    #     res_perm = md_perm.fit()
-    #     if res_perm.converged:
-    #         return res_perm.fe_params["C(ko)[T.ko]"]
-    #     else:
-    #         return np.nan
-    # except:
-    #     return np.nan  # skip failed fits (rare)
+    
 
 def run_rr_frac_dense():
 
@@ -118,7 +113,7 @@ def run_rr_frac_dense():
     df['rank_frac'] = df['frac'].rank()
  
     result_dict = {}
-    for stat_column in ('frac', 'rank_frac'):
+    for stat_column in ('rank_frac',):
         
 
         # Fit a mixed model on ranks
@@ -127,9 +122,7 @@ def run_rr_frac_dense():
                      within='day',
                      between='ko',
                      subject='mouse')
-        # model = smf.mixedlm(f"{stat_column} ~ C(ko) + C(day)", df, groups=df["mouse"])
-        # model_result = model.fit()
-
+        
         # run genotype shuffles
         shuff_coefs = np.array(joblib.Parallel(n_jobs=16)(joblib.delayed(run_rr_model)(df.copy(), 
                                                                                     ctrl_mice+ko_mice, 

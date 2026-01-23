@@ -267,7 +267,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             self.trial_matrices['bin_edges'] = np.arange(min_pos, max_pos + bin_size, bin_size)
             self.trial_matrices['bin_centers'] = self.trial_matrices['bin_edges'][:-1] + bin_size / 2
 
-    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, chan_mask = None, **dff_kwargs):
+    def neuropil_corrected_dff(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, chan_mask = None, update_dff=True, **dff_kwargs):
         """
 
         :return:
@@ -298,7 +298,7 @@ class YMazeSession(TwoPUtils.sess.Session):
             
             Freg[:, start_ind:stop_ind] = self.timeseries[Fkey][:, start_ind:stop_ind] - Fneu_coef * self.timeseries[
                                                                                                          Fneukey][:,
-                                                                                                     start_ind:stop_ind] + Fneu_coef * np.amin(
+                                                                                                     start_ind:stop_ind] + Fneu_coef * np.nanmin(
                 self.timeseries[Fneukey][:, start_ind:stop_ind], axis=1, keepdims=True)
 
             Freg[:, start_ind:stop_ind] = sp.ndimage.median_filter(Freg[:, start_ind:stop_ind], size=(1, 7))
@@ -308,9 +308,12 @@ class YMazeSession(TwoPUtils.sess.Session):
             spks[:, start_ind:stop_ind] = dcnv.oasis(dff[:, start_ind:stop_ind], 2000, tau,
                                                         self.scan_info['frame_rate'])
 
-        
-        self.add_timeseries(**{key_out: dff, spks_key: spks})
-        self.add_pos_binned_trial_matrix(key_out)
+        if update_dff:
+            self.add_timeseries(**{key_out: dff, spks_key: spks})
+            self.add_pos_binned_trial_matrix(key_out)
+        else:
+            self.add_timeseries(**{spks_key: spks})
+
         self.add_pos_binned_trial_matrix(spks_key)
         
     # def neuropil_corrected_dff_ES(self, Fkey='F', Fneukey='Fneu', spks_key=None, Fneu_coef=.7, tau=None, key_out=None, chan_mask=None, **dff_kwargs):
@@ -396,13 +399,15 @@ class YMazeSession(TwoPUtils.sess.Session):
             for block in np.unique(self.trial_info['block_number']).tolist():
                 start_ind = start_inds[self.trial_info['block_number'] == block][0]
                 stop_ind = end_inds[self.trial_info['block_number'] == block][-1]
-                print(start_ind, stop_ind)
+                # print(start_ind, stop_ind)
 
                 curr_idx = np.arange(start_ind, stop_ind)
     
                 Freg[:, curr_idx] = self.timeseries[Fkey][:, curr_idx] - Fneu_coef * self.timeseries[Fneukey][:, curr_idx] \
                                     + Fneu_coef * np.nanmin(self.timeseries[Fneukey][:, curr_idx], axis=1, keepdims=True)
-    
+                print('F nans', np.isnan(self.timeseries[Fkey][:, curr_idx]).sum())
+                print('Freg nans', np.isnan(Freg[:, curr_idx]).sum())
+
                 Freg[:, curr_idx] = sp.ndimage.median_filter(Freg[:, curr_idx], size=(1, 7))
                 dff[:, curr_idx] = TwoPUtils.utilities.dff(Freg[:, curr_idx], **dff_kwargs)
 

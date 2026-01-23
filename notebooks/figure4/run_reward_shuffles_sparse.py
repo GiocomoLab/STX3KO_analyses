@@ -24,7 +24,7 @@ def run_model(df_perm, stat_column):
     red_df = df_perm.groupby(['mouse', 'chan', 'day', 'ttype']).mean().reset_index()
     red_df['rank_frac'] = red_df['rzone_bool'].rank()
 
-    md_perm = smf.mixedlm(f"{stat_column} ~ C(chan) * C(day) * C(ttype)", red_df, groups=red_df["mouse"])
+    md_perm = smf.mixedlm(f"{stat_column} ~ C(chan) + C(day) + C(ttype) + C(lr)", red_df, groups=red_df["mouse"])
     try:
         res_perm = md_perm.fit()
         if res_perm.converged:
@@ -54,7 +54,7 @@ def run_pc_frac_sparse(n_perms=10000):
     for stat_column in ('rzone_bool', 'rank_frac'):
 
         # Fit a mixed model on ranks
-        model = smf.mixedlm(f"{stat_column} ~ C(chan) * C(day) * C(ttype)", red_df, groups=red_df["mouse"])
+        model = smf.mixedlm(f"{stat_column} ~ C(chan) + C(day) + C(ttype) + C(lr)", red_df, groups=red_df["mouse"])
         model_result = model.fit()
 
         # run genotype shuffles

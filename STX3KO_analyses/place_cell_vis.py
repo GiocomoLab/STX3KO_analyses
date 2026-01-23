@@ -236,8 +236,8 @@ def plot_cell_across_days_sparse(sess, cell, channel, days, plot_roi=True):
     gs = gridspec.GridSpec(6, 7, figure=fig)
     mean = np.nanmean(sess.trial_matrices[f'{channel}_F_dff'][:,:,cell].ravel())
     for day in days:
-        fam_mask = (sess.trial_info['sess_num']==day) & (sess.trial_info['LR']==-1*sess.novel_arm)
-        nov_mask = (sess.trial_info['sess_num']==day) & (sess.trial_info['LR']==sess.novel_arm)
+        fam_mask = (sess.trial_info['sess_num_ravel']==day) & (sess.trial_info['LR']==-1*sess.novel_arm)
+        nov_mask = (sess.trial_info['sess_num_ravel']==day) & (sess.trial_info['LR']==sess.novel_arm)
         fam_trialmat = sess.trial_matrices[f'{channel}_F_dff'][fam_mask,:,:][:,:,cell]
         nov_trialmat = sess.trial_matrices[f'{channel}_F_dff'][nov_mask,:,:][:,:,cell]
         
@@ -245,14 +245,14 @@ def plot_cell_across_days_sparse(sess, cell, channel, days, plot_roi=True):
         fam_trialmat[np.isnan(fam_trialmat)]=1E-3
         nov_trialmat[np.isnan(nov_trialmat)]=1E-3
         
-        day_inds = sess.trial_info['sess_num'][sess.trial_info['LR']==-1*sess.novel_arm]==day
+        day_inds = sess.trial_info['sess_num_ravel'][sess.trial_info['LR']==-1*sess.novel_arm]==day
         fam_ax = fig.add_subplot(gs[day,0])
         h = fam_ax.imshow(fam_trialmat/mean, cmap = 'magma', aspect='auto', vmin = 0, vmax=5)
         
         nov_ax = fig.add_subplot(gs[day,1])
         nov_ax.imshow(nov_trialmat/mean, cmap = 'magma', aspect='auto', vmin = 0, vmax=5)
         
-        if days[-1]:
+        if day < days[-1]:
             fam_ax.set_xticks([])
             nov_ax.set_xticks([])
         else:
@@ -267,17 +267,19 @@ def plot_cell_across_days_sparse(sess, cell, channel, days, plot_roi=True):
     plt.colorbar(h,ax=cbar_ax)
     
     if plot_roi:
-        day0_com = (sess.s2p_stats[0][cell]['xpix'].mean(), sess.s2p_stats[0][cell]['ypix'].mean())
-        day5_com = (sess.s2p_stats[len(sess.s2p_stats)-1][cell]['xpix'].mean(), sess.s2p_stats[len(sess.s2p_stats)-1][cell]['ypix'].mean())
+        day0_com = (sess.s2p_stats[channel][0][cell]['xpix'].mean(), 
+                    sess.s2p_stats[channel][0][cell]['ypix'].mean())
+        dayN_com = (sess.s2p_stats[channel][len(sess.s2p_stats[channel])-1][cell]['xpix'].mean(), 
+                    sess.s2p_stats[channel][len(sess.s2p_stats[channel])-1][cell]['ypix'].mean())
         
         sz = 30
-        day0img = np.zeros([int(sz*2), int(sz*2),3])
+        
         
 
         
         x_edges = (int(day0_com[1]-sz), int(day0_com[1]+sz))
         y_edges = ( int(day0_com[0]-sz), int(day0_com[0]+sz))
-        img = sess.s2p_ops[0]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+        img = sess.s2p_ops[channel][0]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
        
         img = np.minimum(img/np.percentile(img,100),1)
         
@@ -290,11 +292,11 @@ def plot_cell_across_days_sparse(sess, cell, channel, days, plot_roi=True):
         circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
         day0_ax.add_patch(circle)
         
-        dayNimg = np.zeros([int(sz*2), int(sz*2), 3])
+       
 
-        x_edges = (int(day5_com[1]-sz), int(day5_com[1]+sz))
-        y_edges = ( int(day5_com[0]-sz), int(day5_com[0]+sz))
-        img = sess.s2p_ops[-1]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
+        x_edges = (int(dayN_com[1]-sz), int(dayN_com[1]+sz))
+        y_edges = ( int(dayN_com[0]-sz), int(dayN_com[0]+sz))
+        img = sess.s2p_ops[channel][-1]['meanImg'][x_edges[0]:x_edges[1], y_edges[0]:y_edges[1]]
         
         img = np.minimum(img/np.percentile(img,100),1)
         
@@ -305,13 +307,10 @@ def plot_cell_across_days_sparse(sess, cell, channel, days, plot_roi=True):
         
        
         
-        day5_ax = fig.add_subplot(gs[2:5,6])
-        day5_ax.imshow(day5img,cmap='Greys_r')
-        day5_ax.set_xticks([])
-        day5_ax.set_yticks([])
-        
         circle = plt.Circle((sz, sz), 7, fill=False, color='blue',linewidth=3)
         dayN_ax.add_patch(circle)
+
+        fig.suptitle(f'Cell {cell}, channel {channel}')
 
         return fig, (fam_ax, nov_ax, cbar_ax, day0_ax, dayN_ax)
     else:

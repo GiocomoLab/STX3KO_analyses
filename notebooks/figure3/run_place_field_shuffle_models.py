@@ -36,7 +36,8 @@ def run_model(df_perm, all_mice, ctrl_mice, stat_column):
     df_perm["cre"] = df_perm["mouse"].map(genotype_map)
     df_perm["cre"] = df_perm["cre"].astype("category")
 
-    md_perm = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df_perm, groups=df_perm["mouse"])
+    # md_perm = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df_perm, groups=df_perm["mouse"])
+    md_perm = smf.mixedlm(f"{stat_column} ~ cre * day * nov ", df_perm, groups=df_perm["mouse"])
     try:
         res_perm = md_perm.fit()
         return res_perm.fe_params["cre[T.ko]"]
@@ -97,6 +98,7 @@ def run_n_fields_dense():
     df["day"] = df["day"].astype("category")
     df["nov"] = df["nov"].astype("category")
     df["rank_n_fields"] = df["n_fields"].rank()
+
     df['speed_z'] = sp.stats.zscore(df['speed'])
     df['licks_z'] = sp.stats.zscore(df['licks'])
 
@@ -105,7 +107,8 @@ def run_n_fields_dense():
         
 
         # Fit a mixed model on ranks
-        model = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df, groups=df["mouse"])
+        # model = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df, groups=df["mouse"])
+        model = smf.mixedlm(f"{stat_column} ~ cre * day * nov ", df, groups=df["mouse"])
         model_result = model.fit()
 
         # run genotype shuffles
@@ -151,8 +154,8 @@ def run_width_dense():
                     widths = widths[mask]
                     rising_edges, falling_edges = rising_edges[mask,:], falling_edges[mask,:]
 
-                    mu_speed = np.nanmean(sess.trial_matrices['speed'][trial_mask,:], axis=0)
-                    mu_licks = np.nanmean(sess.trial_matrices['licks'][trial_mask,:], axis=0)
+                    mu_speed = np.nanmean(sess.trial_matrices['speed'][trial_mask,:].ravel())
+                    mu_licks = np.nanmean(sess.trial_matrices['licks'][trial_mask,:].ravel())
                     
 
                     for w, l, r in zip(widths, rising_edges[:,1], falling_edges[:,1]):
@@ -163,8 +166,8 @@ def run_width_dense():
                         
                         # print(w,l,r)
                         df['width'].append(w*10)
-                        df['speed'].append(np.nanmean(mu_speed[l:r]))
-                        df['licks'].append(np.nanmean(mu_licks[l:r]))
+                        df['speed'].append(np.nanmean(mu_speed))
+                        df['licks'].append(np.nanmean(mu_licks))
 
     df = pd.DataFrame.from_dict(df)
 
@@ -174,17 +177,18 @@ def run_width_dense():
     df["day"] = df["day"].astype("category")
     df["nov"] = df["nov"].astype("category")
     df["rank_width"] = df["width"].rank()
-    # df['speed_z'] = sp.stats.zscore(df['speed'])
-    # df['licks_z'] = sp.stats.zscore(df['licks'])
-    df['speed_z'] = df['speed'].rank()
-    df['licks_z'] = df['licks'].rank()
+    df['speed_z'] = sp.stats.zscore(df['speed'])
+    df['licks_z'] = sp.stats.zscore(df['licks'])
+    # df['speed_z'] = df['speed'].rank()
+    # df['licks_z'] = df['licks'].rank()
 
     result_dict = {}
     for stat_column in ('width', 'rank_width'):
         
 
         # Fit a mixed model on ranks
-        model = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df, groups=df["mouse"])
+        # model = smf.mixedlm(f"{stat_column} ~ cre * day * nov + speed_z + licks_z", df, groups=df["mouse"])
+        model = smf.mixedlm(f"{stat_column} ~ cre * day * nov", df, groups=df["mouse"])
         model_result = model.fit()
 
         # run genotype shuffles
@@ -205,9 +209,9 @@ def run_width_dense():
 
 if __name__ == "__main__":
 
-    # result_dict = run_n_fields_dense()
-    # with open('/mnt/BigDisk/shuffle_pkls/dense_n_fields_mixedlm_shuffle.pkl', 'wb') as file:
-    #     pickle.dump(result_dict, file)
+    result_dict = run_n_fields_dense()
+    with open('/mnt/BigDisk/shuffle_pkls/dense_n_fields_mixedlm_shuffle.pkl', 'wb') as file:
+        pickle.dump(result_dict, file)
 
     result_dict = run_width_dense()
     with open('/mnt/BigDisk/shuffle_pkls/dense_width_mixedlm_shuffle.pkl', 'wb') as file:

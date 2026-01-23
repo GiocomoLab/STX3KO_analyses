@@ -61,3 +61,13 @@ if __name__=="__main__":
             
                 sess._abc_impl = None
                 tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
+
+    # for mouse in ['SparseKO_09',]:
+    #     for days in range(4,6):
+    #         sess = u.load_single_day(mouse,days, pkl_basedir='/home/mplitt/YMazeSessPkls')
+            
+    #         sess.place_cells_calc(Fkey='channel_0_F_dff', out_key='channel_0_F_dff', nperms=1000, mux=True, use_tank_method=False)
+    #         sess.place_cells_calc(Fkey='channel_1_F_dff', out_key='channel_1_F_dff', nperms=1000, mux=True, use_tank_method=False)
+        
+    #         sess._abc_impl = None
+    #         tpu.sess.save_session(sess,'/home/mplitt/YMazeSessPkls')
