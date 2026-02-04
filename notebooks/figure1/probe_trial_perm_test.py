@@ -32,7 +32,7 @@ def run_model(df_perm, all_mice, ctrl_mice, stat_column):
     df_perm["cond"] = df_perm["mouse"].map(genotype_map)
 
 
-    md_perm = smf.mixedlm(f"{stat_column} ~  C(ttype) + C(day) + C(cond) + rzone_speed_rank", df_perm, groups=df_perm["mouse"])
+    md_perm = smf.mixedlm(f"{stat_column} ~  C(ttype) * C(day) * C(cond) + rzone_speed_rank", df_perm, groups=df_perm["mouse"])
 
     try:
         res_perm = md_perm.fit()
@@ -99,7 +99,7 @@ def run_licks():
     for stat_column in ('rzone_licks', 'rzone_licks_rank'):
 
         # Fit a mixed model on ranks
-        model = smf.mixedlm(f"{stat_column} ~  C(ttype) + C(day) + C(cond) + rzone_speed_rank", df, groups=df["mouse"])
+        model = smf.mixedlm(f"{stat_column} ~  C(ttype) * C(day) * C(cond) + rzone_speed_rank", df, groups=df["mouse"])
         model_result = model.fit()
 
         # run genotype shuffles

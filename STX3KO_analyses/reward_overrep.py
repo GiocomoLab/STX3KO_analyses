@@ -1,3 +1,4 @@
+from copyreg import pickle
 from . import session
 from . import utilities as u 
 
@@ -144,6 +145,8 @@ class PeriRewardCellFrac_Sparse:
             'peaks_rz_centered': [],
         }
 
+        with open('/home/mplitt/shuffle_pkls/dense_place_field_spatial_shuffle_F_dff.pkl','rb') as file:
+            shuff_results = pickle.load(file)
         
         for mouse in self.mice:
             for day in self.days:
@@ -158,10 +161,16 @@ class PeriRewardCellFrac_Sparse:
                         if ttype == 'fam':
                             trial_mask = sess.trial_info['LR']!=sess.novel_arm
                             lr = -1*sess.novel_arm
+                            widths = shuff_results[mouse][day]['fam']['field_widths']
+                            # cell_mask = widths>1
+                            # field_mask = shuff_results[mouse][day]['fam']['field_masks']>0
                             cell_mask = sess.fam_place_cell_mask(mux=True, chan=chan)
                         else:
                             trial_mask = sess.trial_info['LR']==sess.novel_arm
                             lr = sess.novel_arm
+                            widths = shuff_results[mouse][day]['nov']['field_widths']
+                            # cell_mask = widths>1
+                            # field_mask = shuff_results[mouse][day]['nov']['field_masks']>0
                             cell_mask = sess.nov_place_cell_mask(mux=True, chan=chan)
 
 
