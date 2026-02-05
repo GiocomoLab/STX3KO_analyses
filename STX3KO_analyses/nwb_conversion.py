@@ -8,10 +8,7 @@ import numpy as np
 import scipy
 from natsort import natsorted
 import pynwb
-# from .. import run_s2p
-# from ..detection.stats import roi_stats
-# from . import utils
-# from .. import run_s2p, default_ops
+
 
 
 from pynwb import NWBHDF5IO, NWBFile
@@ -24,6 +21,8 @@ from pynwb.ophys import (
     RoiResponseSeries,
     TwoPhotonSeries,
 )
+
+
 
 def save_nwb(save_folder):
     """convert folder with plane folders to NWB format"""
@@ -38,11 +37,6 @@ def save_nwb(save_folder):
     ]
     nchannels = min([ops["nchannels"] for ops in ops1])
 
-    
-    if len(ops1) > 1:
-        multiplane = True
-    else:
-        multiplane = False
 
     ops = ops1[0]
     if "date_proc" in ops:
@@ -81,7 +75,7 @@ def save_nwb(save_folder):
         excitation_lambda=920.0,
         indicator="GCaMP7f",
         location="CA1",
-        grid_spacing=([2.0, 2.0, 30.0] if multiplane else [2.0, 2.0]),
+        grid_spacing=([2.0, 2.0]),
         grid_spacing_unit="microns",
     )
     # link to external data
@@ -187,7 +181,7 @@ def save_nwb(save_folder):
                 ))
 
     # FLUORESCENCE (all are required)
-    name_strs = ["Fluorescence", "Neuropil", "Deconvolved"]
+    name_strs = ["Fluorescence", "Neuropil"]
     name_strs_chan2 = ["Fluorescence_chan2", "Neuropil_chan2"]
 
     for i, (fstr, nstr) in enumerate(zip(file_strs, name_strs)):
