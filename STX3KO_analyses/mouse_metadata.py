@@ -22,6 +22,7 @@ ctrl_sessions = {
             {'date_str': '01_12_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 4, 'novel_arm': -1, 'ravel_ind': 2},
             {'date_str': '02_12_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3, 'novel_arm': -1, 'ravel_ind': 3},
             {'date_str': '03_12_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 8, 'novel_arm': -1, 'ravel_ind': 4},
+            {'date_str': '04_12_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'ravel_ind': 5},
             ),
         },
     '4467331.2': {
@@ -296,7 +297,8 @@ sparse_sessions = {
         'imaging_lambda': (920., 1040.),
         'functional_indicator': ('AAV8-CreON/FlpOFF-2.0-GCaMP6f', 'AAV8-Ef1a-FlpON/CreOFF-sRGECO'),
         'recombinase_viruses': ('AAV8-Ef1a-Cre-WPRE', 'AAV8-Ef1a-FLPo-WPRE'),
-        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames',
+        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames. \n \
+            ROI timeseries and aligned VR data are de-multiplexed',
         'sessions': (
             {'date_str': '16_11_2024', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 14, 'novel_arm': -1, 'exp_day': 1, 'ravel_ind': 0},
             {'date_str': '17_11_2024', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 25, 'novel_arm': -1, 'exp_day': 2, 'ravel_ind': 1},
@@ -314,7 +316,8 @@ sparse_sessions = {
         'imaging_lambda': (920., 1040.),
         'functional_indicator': ('AAV8-CreON/FlpOFF-2.0-GCaMP6f', 'AAV8-Ef1a-FlpON/CreOFF-sRGECO'),
         'recombinase_viruses': ('AAV8-Ef1a-Cre-WPRE', 'AAV8-Ef1a-FLPo-WPRE'),
-        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames',
+        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames. \n \
+            ROI timeseries and aligned VR data are de-multiplexed',
         'sessions': (
             {'date_str': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 7, 'novel_arm': 1, 'exp_day': 1, 'ravel_ind': 0},
             {'date_str': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 23, 'novel_arm': 1, 'exp_day': 2, 'ravel_ind': 1},
@@ -332,7 +335,8 @@ sparse_sessions = {
         'imaging_lambda': (920., 1040.),
         'functional_indicator': ('AAV8-CreON/FlpOFF-2.0-GCaMP6f', 'AAV8-Ef1a-FlpON/CreOFF-sRGECO'),
         'recombinase_viruses': ('AAV8-Ef1a-Cre-WPRE', 'AAV8-Ef1a-FLPo-WPRE'),
-        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames',
+        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames. \n \
+            ROI timeseries and aligned VR data are de-multiplexed',
         'sessions': (
             {'date_str': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 11, 'novel_arm': -1, 'exp_day': 1, 'ravel_ind': 0},
             {'date_str': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 26, 'novel_arm': -1, 'exp_day': 2, 'ravel_ind': 1},
@@ -350,7 +354,8 @@ sparse_sessions = {
         'imaging_lambda': (920., 1040.),
         'functional_indicator': ('AAV8-CreON/FlpOFF-2.0-GCaMP6f', 'AAV8-Ef1a-FlpON/CreOFF-sRGECO'),
         'recombinase_viruses': ('AAV8-Ef1a-Cre-WPRE', 'AAV8-Ef1a-FLPo-WPRE'),
-        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames \n \
+        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames. \n \
+            ROI timeseries and aligned VR data are de-multiplexed \n \
             Session 3 (27_05_2025) data lost due to disk space issue.',
         'sessions': (
             {'date_str': '25_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 2, 'novel_arm': -1, 'exp_day': 1, 'ravel_ind': 0},
@@ -369,7 +374,8 @@ sparse_sessions = {
         'imaging_lambda': (920., 1040.),
         'functional_indicator': ('AAV8-CreON/FlpOFF-2.0-GCaMP6f', 'AAV8-Ef1a-FlpON/CreOFF-sRGECO'),
         'recombinase_viruses': ('AAV8-Ef1a-Cre-WPRE', 'AAV8-Ef1a-FLPo-WPRE'),
-        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames',
+        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames. \n \
+            ROI timeseries and aligned VR data are de-multiplexed',
         'sessions': (
             {'date_str': '26_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 17, 'novel_arm': 1, 'exp_day': 1, 'ravel_ind': 0},
             {'date_str': '27_05_2025', 'scene': 'YMaze_LNovel', 'session': 7, 'scan': 19, 'novel_arm': 1, 'exp_day': 2, 'ravel_ind': 1},
@@ -387,7 +393,8 @@ sparse_sessions = {
         'imaging_lambda': (920., 1040.),
         'functional_indicator': ('AAV8-CreON/FlpOFF-2.0-GCaMP6f', 'AAV8-Ef1a-FlpON/CreOFF-sRGECO'),
         'recombinase_viruses': ('AAV8-Ef1a-Cre-WPRE', 'AAV8-Ef1a-FLPo-WPRE'),
-        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames',
+        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames. \n \
+            ROI timeseries and aligned VR data are de-multiplexed',
         'sessions': (
             {'date_str': '29_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 23, 'novel_arm': -1, 'exp_day': 1, 'ravel_ind': 0},
             {'date_str': '30_05_2025', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 12, 'novel_arm': -1, 'exp_day': 2, 'ravel_ind': 1},
@@ -405,7 +412,8 @@ sparse_sessions = {
         'imaging_lambda': (920., 1040.),
         'functional_indicator': ('AAV8-CreON/FlpOFF-2.0-GCaMP6f', 'AAV8-Ef1a-FlpON/CreOFF-sRGECO'),
         'recombinase_viruses': ('AAV8-Ef1a-Cre-WPRE', 'AAV8-Ef1a-FLPo-WPRE'),
-        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames',
+        'notes': 'multiplexed imaging: 920nm laser power high on odd frames & low on even frames; 1040nm laser power low on odd frames & high on even frames. \n \
+            ROI timeseries and aligned VR data are de-multiplexed',
         'sessions': (
             {'date_str': '24_05_2025', 'scene': 'YMaze_LNovel', 'session': 4, 'scan': 27, 'novel_arm': 1, 'exp_day': 1, 'ravel_ind': 0},
             {'date_str': '25_05_2025', 'scene': 'YMaze_LNovel', 'session': 2, 'scan': 8, 'novel_arm': 1, 'exp_day': 2, 'ravel_ind': 1},
