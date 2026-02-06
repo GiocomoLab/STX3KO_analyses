@@ -2,7 +2,7 @@ import STX3KO_analyses as stx
 
 
 def run_single_sess(mouse, metadata, session, day, oak_pwd,
-                    scan=1, sub_notes=''):
+                    scan=0, sub_notes=''):
     
     nwb_maker = stx.nwb_conversion.SessNWBConverter_Dense(
         mouse, 

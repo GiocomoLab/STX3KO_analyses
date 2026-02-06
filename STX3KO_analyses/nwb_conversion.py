@@ -45,7 +45,7 @@ SBXMATPATH = pathlib.Path("/mnt/BigDisk/2P_scratch")
 
 class SessNWBConverter_Dense:
     
-    def __init__(self, mouse, metadata, session, day, oak_pwd, scan=1, sub_notes=''):
+    def __init__(self, mouse, metadata, session, day, oak_pwd, scan=0, sub_notes=''):
 
         self.mouse = mouse
         if mouse in stx.mouse_metadata.ctrl_sessions.keys():
@@ -61,6 +61,7 @@ class SessNWBConverter_Dense:
         self.metadata = metadata
         self._oak_pwd = oak_pwd
         self.day = day
+        self.scan = scan
         self.sub_notes = sub_notes
 
         self.sess_path = SESSPATH / mouse / session.get('date_str') / f"{session.get('scene')}_{session.get('session')}.pkl" 
@@ -71,8 +72,8 @@ class SessNWBConverter_Dense:
         
         self.sbx_mat_path = SBXMATPATH / mouse / session.get('date_str') / \
             f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.mat"
-        self.sbx_path = SBXMATPATH / mouse / session.get('date_str') / \
-            f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.sbx"
+        # self.sbx_path = SBXMATPATH / mouse / session.get('date_str') / \
+        #     f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.sbx"
         self.sbx_mat_path.parent.mkdir(exist_ok=True, parents=True)
         self.sbx_mat = None
         
@@ -107,27 +108,11 @@ class SessNWBConverter_Dense:
         except subprocess.CalledProcessError as e:
             print(f"Rsync failed with error: {e}")
             
-        sbx_filename = f"{self.session.get('scene')}_{self.session.get('session'):03}_{self.session.get('scan'):03}.sbx"
-        sbx_path = str(session_dir / sbx_filename)
-
-        cmd = [
-            "sshpass", "-p", self._oak_pwd,
-            "rsync", "-rlt", "--progress", 
-            f"{remote_user}@{remote_host}:{sbx_path}",
-            str(self.sbx_path) 
-        ]
-        
-        try:
-            subprocess.run(cmd, check=True)
-            print("Rsync completed successfully.")
-        except subprocess.CalledProcessError as e:
-            raise Exception(f"Rsync failed with error: {e}")
-            
             
             
     def _load_sbx_mat(self):
         
-        if self.sbx_mat_path.is_file() and self.sbx_path.is_file():
+        if self.sbx_mat_path.is_file(): # and self.sbx_path.is_file():
             self.sbx_mat = tpu.scanner_tools.sbx_utils.loadmat(str(self.sbx_mat_path))
         else:
             self._sbx_rsync()
@@ -164,10 +149,11 @@ class SessNWBConverter_Dense:
         self.nwb_file = NWBFile(
             session_description = "Preprocessed 2P and VR Data",
             session_start_time = datetime.datetime.now().astimezone(),
-            identifier=str(uuid4()),  # required
+            identifier=f"day{self.day}_scan{self.scan}",  # required
             experimenter = ['Plitt, Mark'],
             lab="Lisa Giocomo",
             institution="Stanford University",
+            session_id=f"ymaze_day{self.day}_scan{self.scan}_novel_arm{self.session.get('novel_arm')}",
             experiment_description =  f"YMaze day {self.day}. Novel arm = {self.session.get('novel_arm')}." + self.sub_notes,
             related_publications='https://doi.org/10.1101/2023.11.20.567978 ',
             keywords=["two photon", "hipppocampus", "CA1", "syntaxin3"]
@@ -593,7 +579,7 @@ class SessNWBConverter_Dense:
             
     def remove_sbx_data(self):
         self.sbx_mat_path.unlink(missing_ok=True)
-        self.sbx_path.unlink(missing_ok=True)
+        # self.sbx_path.unlink(missing_ok=True)
         
     
 
@@ -641,46 +627,7 @@ class SessNWBConverter_Sparse:
 
         self.out_path = OUTPATH / mouse / f"ymaze_day{day}_scan{scan}_ophys_behav.nwb"
         self.out_path.parent.mkdir(parents=True, exist_ok=True)
-        
-    def _sbx_rsync(self):
-        remote_user = "mplitt"
-        remote_host = "dtn.sherlock.stanford.edu"
-        remote_base_path = pathlib.Path("/oak/stanford/groups/giocomo/mplitt/2P_Data/STX3KO/")
-        
-        session_dir = remote_base_path / self.mouse / self.session.get("date_str") / self.session.get("scene")
-        sbx_mat_filename = f"{self.session.get('scene')}_{self.session.get('session'):03}_{self.session.get('scan'):03}.mat"
-        sbx_mat_path = str(session_dir / sbx_mat_filename)
-
-        cmd = [
-            "sshpass", "-p", self._oak_pwd,
-            "rsync", "-rlt", "--progress", 
-            f"{remote_user}@{remote_host}:{sbx_mat_path}",
-            str(self.sbx_mat_path) 
-        ]
-        
-        try:
-            subprocess.run(cmd, check=True)
-            print("Rsync completed successfully.")
-        except subprocess.CalledProcessError as e:
-            print(f"Rsync failed with error: {e}")
-            
-        sbx_filename = f"{self.session.get('scene')}_{self.session.get('session'):03}_{self.session.get('scan'):03}.sbx"
-        sbx_path = str(session_dir / sbx_filename)
-
-        cmd = [
-            "sshpass", "-p", self._oak_pwd,
-            "rsync", "-rlt", "--progress", 
-            f"{remote_user}@{remote_host}:{sbx_path}",
-            str(self.sbx_path) 
-        ]
-        
-        try:
-            subprocess.run(cmd, check=True)
-            print("Rsync completed successfully.")
-        except subprocess.CalledProcessError as e:
-            raise Exception(f"Rsync failed with error: {e}")
-            
-            
+                    
             
     def _load_sbx_mat(self):
         

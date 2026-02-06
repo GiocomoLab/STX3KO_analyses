@@ -205,7 +205,7 @@ cre_sessions = {
         'sex': 'M',
         'date_of_birth': datetime.datetime(2020,3,12),
         'genotype': 'Stx3 flox/flox',
-        'imaging_lambda': 980,
+        'imaging_lambda': 980.,
         'functional_indicator': 'AAV1-hSyn-jGCaMP7f',
         'static_indicator': 'AAVDJ-CaMKII-mCherry-IRES-cre',
         'sessions': (
