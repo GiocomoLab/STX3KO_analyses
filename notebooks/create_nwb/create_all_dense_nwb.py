@@ -16,7 +16,7 @@ def run_single_sess(mouse, metadata, session, day, oak_pwd,
     if not nwb_maker.out_path.is_file():
         nwb_maker.build_file()
         nwb_maker.write_file()
-        nwb_maker.remove_sbx_data()
+        # nwb_maker.remove_sbx_data()
 
 
 def loop_sessions(mice_dict):

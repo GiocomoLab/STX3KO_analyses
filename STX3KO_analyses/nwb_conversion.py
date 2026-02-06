@@ -149,7 +149,7 @@ class SessNWBConverter_Dense:
         self.nwb_file = NWBFile(
             session_description = "Preprocessed 2P and VR Data",
             session_start_time = datetime.datetime.now().astimezone(),
-            identifier=f"day{self.day}_scan{self.scan}",  # required
+            identifier=str(uuid4()),  # required
             experimenter = ['Plitt, Mark'],
             lab="Lisa Giocomo",
             institution="Stanford University",
@@ -586,7 +586,7 @@ class SessNWBConverter_Dense:
 class SessNWBConverter_Sparse:
     
     
-    def __init__(self, mouse, metadata, session, day, oak_pwd, scan=1, sub_notes=''):
+    def __init__(self, mouse, metadata, session, day, scan=1, sub_notes=''):
 
         self.mouse = mouse
         if mouse in stx.mouse_metadata.sparse_sessions.keys():
@@ -601,8 +601,8 @@ class SessNWBConverter_Sparse:
         
         self.session = session
         self.metadata = metadata
-        self._oak_pwd = oak_pwd
         self.day = day
+        self.scan = scan
         self.sub_notes = sub_notes
 
         self.sess_path = SESSPATH / mouse / session.get('date_str') / f"{session.get('scene')}_{session.get('session')}.pkl" 
@@ -611,10 +611,8 @@ class SessNWBConverter_Sparse:
         self.vr_sess_path = VRSESSPATH / mouse / session.get('date_str') / f"{session.get('scene')}_{session.get('session')}.pkl"
         self.vr_sess = stx.session.YMazeSession.from_file(self.vr_sess_path, novel_arm = session.get('novel_arm'))
         
-        self.sbx_mat_path = SBXMATPATH / mouse / session.get('date_str') / \
-            f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.mat"
-        self.sbx_path = SBXMATPATH / mouse / session.get('date_str') / \
-            f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.sbx"
+        self.sbx_mat_path = SBXMATPATH / mouse / session.get('date_str') / session.get('scene') / \
+             f"{session.get('scene')}_{session.get('session'):03}_{session.get('scan'):03}.mat"
         self.sbx_mat_path.parent.mkdir(exist_ok=True, parents=True)
         self.sbx_mat = None
         
@@ -631,11 +629,10 @@ class SessNWBConverter_Sparse:
             
     def _load_sbx_mat(self):
         
-        if self.sbx_mat_path.is_file() and self.sbx_path.is_file():
-            self.sbx_mat = tpu.scanner_tools.sbx_utils.loadmat(str(self.sbx_mat_path))
+        if self.sbx_mat_path.is_file():
+            self.sbx_mat = tpu.scanner_tools.sbx_utils.loadmat(str(self.sbx_mat_path), sbx_version=3)
         else:
-            self._sbx_rsync()
-            self._load_sbx_mat()
+            raise Exception("missing sbx mat file")
         
     def _get_ttl_times(self):
         if self.sbx_mat is None:
@@ -672,7 +669,8 @@ class SessNWBConverter_Sparse:
             experimenter = ['Plitt, Mark'],
             lab="Lisa Giocomo",
             institution="Stanford University",
-            notes=self.metadata.notes,
+            notes=self.metadata.get('notes'),
+            session_id=f"ymaze_day{self.day}_scan{self.scan}_novel_arm{self.session.get('novel_arm')}",
             experiment_description =  f"YMaze day {self.day}. Novel arm = {self.session.get('novel_arm')}." + self.sub_notes,
             related_publications='https://doi.org/10.1101/2023.11.20.567978 ',
             keywords=["two photon", "hipppocampus", "CA1", "syntaxin3"]
@@ -721,8 +719,6 @@ class SessNWBConverter_Sparse:
                     Track starts at a value of 13 and ends at 43. \n \
                     Points less than 13 correspond to when the mouse is \
                     in the grey hallway prior to trial start ",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         
         # posx 
@@ -732,8 +728,6 @@ class SessNWBConverter_Sparse:
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Unity units x position on 2D plane",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         
         # posz
@@ -766,8 +760,6 @@ class SessNWBConverter_Sparse:
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Boolean. Trial start time",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         # teleport
         ts_cntnr.create_timeseries(
@@ -776,8 +768,6 @@ class SessNWBConverter_Sparse:
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Boolean. Trial end/teleport time",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         
         # LR
@@ -798,8 +788,6 @@ class SessNWBConverter_Sparse:
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Boolean. Manually delivered reward, typically for solenoid failure or to unclog line",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         
         # vr_timeseries 
@@ -810,8 +798,6 @@ class SessNWBConverter_Sparse:
             unit = '10 cm/s',
             timestamps = time_stamps,
             description = "Speed along Y maze",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         
         # block
@@ -833,8 +819,6 @@ class SessNWBConverter_Sparse:
             timestamps = time_stamps,
             description = "Licks outside of reward consumption. Note this may contain artifacts from periods when \n \
                 there is excess liquid on the capacitive sensor",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         
         ts_cntnr.create_timeseries(
@@ -843,8 +827,6 @@ class SessNWBConverter_Sparse:
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Licks during reward consumption",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         
         # reward
@@ -854,8 +836,6 @@ class SessNWBConverter_Sparse:
             unit = 'arbitrary',
             timestamps = time_stamps,
             description = "Reward delivery times.",
-            comments = "Timestamps do not correspond to 2P imaging time. \n \
-                Cannot be used for alignment to 2P Data"
         )
         
         
@@ -864,13 +844,17 @@ class SessNWBConverter_Sparse:
     def _single_channel_add_vr_data(self, chan):
         ts_cntnr = BehavioralTimeSeries(name = f'2P-aligned behavior {chan}')
         
-        vr_timeseries = self.sess.timeseries
+      
         if chan == 'channel_0':
-            vr_data = self.sess.vr_data_chan0
+            vr_data = self.sess.vr_data_chan0.reset_index()
         elif chan == 'channel_1':
-            vr_data = self.sess.vr_data_chan1
+            vr_data = self.sess.vr_data_chan1.reset_index()
             
-        tstarts, tstops = self.trial_starts[chan], self.trial_ends[chan]
+        tstarts, tstops = self.sess.trial_starts[chan], self.sess.trial_ends[chan]
+        vr_data['tstart']=0
+        vr_data['teleport']=0
+        if tstops[-1]>(vr_data.shape[0]-1):
+            tstops[-1] = vr_data.shape[0]-1
         vr_data.loc[tstarts,'tstart']=1
         vr_data.loc[tstops, 'teleport']=1
             
@@ -878,8 +862,8 @@ class SessNWBConverter_Sparse:
         rate = self.sess.s2p_ops[chan]['fs']/2
         
         block = np.nan*np.zeros_like(time_stamps)
-        for i, (start, stop) in enumerate(zip(tstarts[chan], tstops[chan])):
-            block[start:stop] = self.sess.trial_info['block_number']
+        for i, (start, stop) in enumerate(zip(tstarts, tstops)):
+            block[start:stop] = self.sess.trial_info['block_number'][i]
         
         # vr_data info
         
@@ -978,7 +962,7 @@ class SessNWBConverter_Sparse:
 
     def add_vr_data_aligned(self):
         for chan in ('channel_0', 'channel_1'):
-            self._single_channel_add_vr_data()
+            self._single_channel_add_vr_data(chan)
         
         
         
@@ -1027,15 +1011,15 @@ class SessNWBConverter_Sparse:
         )
         
         
-        img_seg_channel0 = ImageSegmentation()
+        img_seg_channel0 = ImageSegmentation(name='ImageSegmentationChannel0')
         ps_channel0 = img_seg_channel0.create_plane_segmentation(
             name="PlaneSegmentationChannel0",
             description="Suite2P output",
             imaging_plane=imaging_plane_channel0,
         )
         
-        img_seg_channel1 = ImageSegmentation()
-        ps_channel1 = img_seg_channel0.create_plane_segmentation(
+        img_seg_channel1 = ImageSegmentation(name='ImageSegmentationChannel1')
+        ps_channel1 = img_seg_channel1.create_plane_segmentation(
             name="PlaneSegmentationChannel1",
             description="Suite2P output",
             imaging_plane=imaging_plane_channel1,
@@ -1072,7 +1056,7 @@ class SessNWBConverter_Sparse:
             description="sRGECO ROIs"
         )
         
-        ####
+     
         
         
         images = Images("Backgrounds", description='motion aligned average images')
@@ -1089,44 +1073,156 @@ class SessNWBConverter_Sparse:
         if self.ophys_module is None:
             self.init_2p_data()
             
-        # F_ch0, Fneu_ch0, F_dff_ch0, spks_ch0
-        # F_ch1, Fneu_ch1, F_dff_ch1
-            
-        F_ch0 = self.sess.timeseries.get('F')
+        # F_ch0
+        F = self.sess.timeseries.get('channel_0_F')
         roi_resp_series = RoiResponseSeries(
-            name = 'fluorescence',
+            name = 'channel 0 fluorescence',
             data = F.T,
-            rois = self.roi_table,
+            rois = self.roi_table_channel0,
             unit = 'arbitrary',
-            rate = self.sess.s2p_ops['fs'],
+            rate = self.sess.s2p_ops['channel_0']['fs']/2,
             description = 'raw fluorescence from channel 0 (gcamp)',
         )
-        fl = Fluorescence(roi_response_series=roi_resp_series, name='fluorescence')
+        fl = Fluorescence(roi_response_series=roi_resp_series, name='channel 0 fluorescence')
         self.ophys_module.add(fl)
         
-        Fneu = self.sess.timeseries.get('Fneu')
+        # Fneu_ch0 
+        F = self.sess.timeseries.get('channel_0_Fneu')
         roi_resp_series = RoiResponseSeries(
-            name = 'neuropil fluorescence',
-            data = Fneu.T,
-            rois = self.roi_table,
+            name = 'channel 0 neuropil fluorescence',
+            data = F.T,
+            rois = self.roi_table_channel0,
             unit = 'arbitrary',
-            rate = self.sess.s2p_ops['fs'],
+            rate = self.sess.s2p_ops['channel_0']['fs']/2,
             description = 'raw neuropil fluorescence from channel 0 (gcamp)',
         )
-        fl = Fluorescence(roi_response_series=roi_resp_series, name='neuropil')
+        fl = Fluorescence(roi_response_series=roi_resp_series, name='channel 0 neuropil fluorescence')
         self.ophys_module.add(fl)
         
-        dff = self.sess.timeseries.get('F_dff')
+        
+        # F_dff_ch0 
+        F = self.sess.timeseries.get('channel_0_F_dff')
         roi_resp_series = RoiResponseSeries(
-            name = 'dF',
-            data = dff.T,
-            rois = self.roi_table,
+            name = 'channel 0 df',
+            data = F.T,
+            rois = self.roi_table_channel0,
             unit = 'arbitrary',
-            rate = self.sess.s2p_ops['fs'],
-            description = 'dF/F from channel 0 (gcamp)',
+            rate = self.sess.s2p_ops['channel_0']['fs']/2,
+            description = 'df/f from channel 0 (gcamp)',
         )
-        fl = DfOverF(roi_response_series=roi_resp_series, name='dF')
+        fl =  DfOverF(roi_response_series=roi_resp_series, name='channel 0 df')
         self.ophys_module.add(fl)
+        
+
+        # spks_ch0
+        F = self.sess.timeseries.get('channel_0_spks')
+        roi_resp_series = RoiResponseSeries(
+            name = 'channel 0 deconvolved activity tau=0.7',
+            data = F.T,
+            rois = self.roi_table_channel0,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['channel_0']['fs']/2,
+            description = 'deconvolved activity from channel 0 (gcamp)',
+        )
+        fl =  DfOverF(roi_response_series=roi_resp_series, name = 'channel 0 deconvolved activity tau=0.7')
+        self.ophys_module.add(fl)
+
+         # F_ch1
+        F = self.sess.timeseries.get('channel_1_F')
+        roi_resp_series = RoiResponseSeries(
+            name = 'channel 1 fluorescence',
+            data = F.T,
+            rois = self.roi_table_channel1,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['channel_1']['fs']/2,
+            description = 'raw fluorescence from channel 1 (srgeco)',
+        )
+        fl = Fluorescence(roi_response_series=roi_resp_series, name='channel 1 fluorescence')
+        self.ophys_module.add(fl)
+        
+        # Fneu_ch1
+        F = self.sess.timeseries.get('channel_1_Fneu')
+        roi_resp_series = RoiResponseSeries(
+            name = 'channel 1 neuropil fluorescence',
+            data = F.T,
+            rois = self.roi_table_channel1,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['channel_1']['fs']/2,
+            description = 'raw neuropil fluorescence from channel 1 (srgeco)',
+        )
+        fl = Fluorescence(roi_response_series=roi_resp_series, name='channel 1 neuropil fluorescence')
+        self.ophys_module.add(fl)
+        
+        
+        # F_dff_ch0 
+        F = self.sess.timeseries.get('channel_1_F_dff')
+        roi_resp_series = RoiResponseSeries(
+            name = 'channel 1 df',
+            data = F.T,
+            rois = self.roi_table_channel1,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['channel_1']['fs']/2,
+            description = 'df/f from channel 1 (srgeco)',
+        )
+        fl =  DfOverF(roi_response_series=roi_resp_series, name='channel 1 df')
+        self.ophys_module.add(fl)
+        
+
+        # spks_ch0
+        F = self.sess.timeseries.get('channel_1_spks')
+        roi_resp_series = RoiResponseSeries(
+            name = 'channel 1 deconvolved activity tau=0.7',
+            data = F.T,
+            rois = self.roi_table_channel1,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['channel_1']['fs']/2,
+            description = 'deconvolved activity from channel 1 (srgeco)',
+        )
+        fl =  DfOverF(roi_response_series=roi_resp_series, name = 'channel 1 deconvolved activity tau=0.7')
+        self.ophys_module.add(fl)
+
+
+        # spks tau1.0
+        F = self.sess.timeseries.get('channel_1_spks_tau1.0')
+        roi_resp_series = RoiResponseSeries(
+            name = 'channel 1 deconvolved activity tau=1.0',
+            data = F.T,
+            rois = self.roi_table_channel1,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['channel_1']['fs']/2,
+            description = 'deconvolved activity from channel 1 (srgeco)',
+        )
+        fl =  DfOverF(roi_response_series=roi_resp_series, name = 'channel 1 deconvolved activity tau=1.0')
+        self.ophys_module.add(fl)
+
+        # spks tau1.2
+        F = self.sess.timeseries.get('channel_1_spks_tau1.2')
+        roi_resp_series = RoiResponseSeries(
+            name = 'channel 1 deconvolved activity tau=1.2',
+            data = F.T,
+            rois = self.roi_table_channel1,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['channel_1']['fs']/2,
+            description = 'deconvolved activity from channel 1 (srgeco)',
+        )
+        fl =  DfOverF(roi_response_series=roi_resp_series, name = 'channel 1 deconvolved activity tau=1.2')
+        self.ophys_module.add(fl)
+
+        # spks tau1.5
+        F = self.sess.timeseries.get('channel_1_spks_tau1.5')
+        roi_resp_series = RoiResponseSeries(
+            name = 'channel 1 deconvolved activity tau=1.5',
+            data = F.T,
+            rois = self.roi_table_channel1,
+            unit = 'arbitrary',
+            rate = self.sess.s2p_ops['channel_1']['fs']/2,
+            description = 'deconvolved activity from channel 1 (srgeco)',
+        )
+        fl =  DfOverF(roi_response_series=roi_resp_series, name = 'channel 1 deconvolved activity tau=1.5')
+        self.ophys_module.add(fl)
+            
+       
+        
         
         
     def build_file(self):
@@ -1141,9 +1237,7 @@ class SessNWBConverter_Sparse:
         with NWBHDF5IO(self.out_path, "w") as fio:
             fio.write(self.nwb_file)
             
-    def remove_sbx_data(self):
-        self.sbx_mat_path.unlink(missing_ok=True)
-        self.sbx_path.unlink(missing_ok=True)
+
         
     
 
