@@ -5,6 +5,7 @@ import subprocess
 from uuid import uuid4
 import hdmf
 from hdmf.backends.hdf5.h5_utils import H5DataIO
+import json
 
 import numpy as np
 import scipy
@@ -15,6 +16,7 @@ from pynwb.file import Subject
 
 import suite2p
 from pynwb import NWBHDF5IO, NWBFile
+from pynwb.misc import AnnotationSeries
 from pynwb.base import Images
 from pynwb.image import GrayscaleImage
 from pynwb.ophys import (
@@ -571,6 +573,7 @@ class SessNWBConverter_Dense:
         self.add_vr_data_aligned()
         self.init_2p_data()
         self.add_cell_timeseries()
+        self.add_trial_data()
         return self
         
     def write_file(self):
@@ -580,7 +583,46 @@ class SessNWBConverter_Dense:
     def remove_sbx_data(self):
         self.sbx_mat_path.unlink(missing_ok=True)
         # self.sbx_path.unlink(missing_ok=True)
-        
+
+    def _to_json_serializable(self, obj):
+        if obj is None:
+            return None
+        if isinstance(obj, (str, int, float, bool)):
+            return obj
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, (list, tuple)):
+            return [self._to_json_serializable(o) for o in obj]
+        if isinstance(obj, dict):
+            return {k: self._to_json_serializable(v) for k, v in obj.items()}
+        try:
+            import pandas as _pd
+
+            if isinstance(obj, _pd.DataFrame):
+                return obj.to_dict(orient='list')
+            if isinstance(obj, _pd.Series):
+                return obj.to_list()
+        except Exception:
+            pass
+        return str(obj)
+
+    def add_trial_data(self):
+        print(self.metadata['alias'])
+        meta = {
+            'mouse': self._to_json_serializable(self.metadata['alias']),
+            'mux': False,
+            'novel_arm': self._to_json_serializable(self.sess.novel_arm),
+            'day': self._to_json_serializable(self.day),
+            'novel_arm': self._to_json_serializable(self.sess.novel_arm),
+            'trial_info': self._to_json_serializable(getattr(self.sess, 'trial_info', None)),
+            'trial_start_inds': self._to_json_serializable(self.sess.trial_start_inds.to_numpy()),
+            'teleport_inds': self._to_json_serializable(self.sess.teleport_inds.to_numpy()),
+            'place_cell_info': self._to_json_serializable(getattr(self.sess, 'place_cell_info', None)),
+        }
+
+        meta_json = json.dumps(meta)
+        ann = AnnotationSeries(name='trial_cell_data', data=[meta_json], timestamps=[0.0])
+        self.nwb_file.add_acquisition(ann)
     
 
 class SessNWBConverter_Sparse:
@@ -1223,7 +1265,45 @@ class SessNWBConverter_Sparse:
             
        
         
-        
+    def _to_json_serializable(self, obj):
+        if obj is None:
+            return None
+        if isinstance(obj, (str, int, float, bool)):
+            return obj
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, (list, tuple)):
+            return [self._to_json_serializable(o) for o in obj]
+        if isinstance(obj, dict):
+            return {k: self._to_json_serializable(v) for k, v in obj.items()}
+        try:
+            import pandas as _pd
+
+            if isinstance(obj, _pd.DataFrame):
+                return obj.to_dict(orient='list')
+            if isinstance(obj, _pd.Series):
+                return obj.to_list()
+        except Exception:
+            pass
+        return str(obj)
+
+    def add_trial_data(self):
+
+        meta = {
+            'mouse': self._to_json_serializable(self.metadata['alias']),
+            'mux': True,
+            'novel_arm': self._to_json_serializable(self.sess.novel_arm),
+            'day': self._to_json_serializable(self.day),
+            'trial_info': self._to_json_serializable(getattr(self.sess, 'trial_info', None)),
+            'trial_start_inds': self._to_json_serializable({k:v.tolist() for k,v in self.sess.trial_starts}),
+            'teleport_ionds': self._to_json_serializable({k:v.tolist() for k,v in self.sess.trial_starts}),
+            'place_cell_info': self._to_json_serializable({'channel_0':self.sess.place_cell_info['channel_0_F_dff'],
+                                                           'channel_1': self.sess.place_cell_info['channel_1_F_dff']}),
+        }
+
+        meta_json = json.dumps(meta)
+        ann = AnnotationSeries(name='trial_cell_data', data=[meta_json], timestamps=[0.0])
+        self.nwb_file.add_acquisition(ann)
         
     def build_file(self):
         self.init_nwb_file()

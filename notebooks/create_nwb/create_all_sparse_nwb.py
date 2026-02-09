@@ -13,9 +13,9 @@ def run_single_sess(mouse, metadata, session, day,
         scan=scan,
         sub_notes=sub_notes, 
         )
-    if not nwb_maker.out_path.is_file():
-        nwb_maker.build_file()
-        nwb_maker.write_file()
+    # if not nwb_maker.out_path.is_file():
+    nwb_maker.build_file()
+    nwb_maker.write_file()
 
 
 

@@ -292,7 +292,7 @@ KO_sessions = {
 
 
 }
-
+ 
 
 CTRL_sessions = {
     '4467331.1': ({'date': '29_11_2020', 'scene': 'YMaze_LNovel', 'session': 1, 'scan': 3, 'novel_arm': -1, 'ravel_ind': 0},
