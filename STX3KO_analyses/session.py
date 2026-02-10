@@ -611,6 +611,8 @@ class ConcatYMazeSession:
         self.__dict__.update(attrs)
         trial_info_keys = []
 
+        # super(ConcatYMazeSession, self).__init__(**kwargs)
+
     @staticmethod
     def concat(_sess_list, common_roi_mapping, t_info_keys, t_mat_keys,
                timeseries_keys, run_place_cells, day_inds, load_ops, load_stats):
@@ -761,6 +763,30 @@ class ConcatYMazeSession:
                 return self.place_cell_info['left']['masks']
             else:
                 return self.place_cell_info[-1]['masks'].sum(axis=0) > 0
+   
+    def add_pos_binned_trial_matrix(self, ts_name, pos_key='pos', min_pos=0, max_pos=450, bin_size=10, mat_only=True,
+                                    **trial_matrix_kwargs):
+        """
+
+        :param ts_name:
+        :param pos_key:
+        :param min_pos:
+        :param max_pos:
+        :param bin_size:
+        :param mat_only:
+        :param trial_matrix_kwargs:
+        :return:
+        """
+        super(ConcatYMazeSession, self).add_pos_binned_trial_matrix(ts_name, pos_key,
+                                                              min_pos=min_pos,
+                                                              max_pos=max_pos,
+                                                              bin_size=bin_size,
+                                                              mat_only=mat_only,
+                                                              **trial_matrix_kwargs)
+
+        if 'bin_edges' not in self.trial_matrices.keys() or 'bin_centers' not in self.trial_matrices.keys():
+            self.trial_matrices['bin_edges'] = np.arange(min_pos, max_pos + bin_size, bin_size)
+            self.trial_matrices['bin_centers'] = self.trial_matrices['bin_edges'][:-1] + bin_size / 2
 
 
 class MorphSession(TwoPUtils.sess.Session):
